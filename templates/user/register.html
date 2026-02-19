@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card p-4">
+            <h3 class="text-center mb-4 text-success">สมัครสมาชิกใหม่</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label>ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" name="username" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label>รหัสผ่าน (Password)</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <hr class="my-4">
+                <h5 class="text-muted mb-3">🔐 ตั้งคำถามกรณีลืมรหัสผ่าน</h5>
+                <div class="mb-3">
+                    <label>คำถามกันลืม (เช่น ชื่อสัตว์เลี้ยงตัวแรก?)</label>
+                    <input type="text" name="question" class="form-control" placeholder="ตั้งคำถามที่คุณจำได้คนเดียว" required>
+                </div>
+                <div class="mb-3">
+                    <label>คำตอบของคุณ</label>
+                    <input type="text" name="answer" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-theme w-100">สมัครสมาชิก</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
