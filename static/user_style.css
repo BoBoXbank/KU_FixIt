@@ -1,0 +1,115 @@
+/* พื้นฐานหน้าจอ */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+}
+
+.main-container {
+    display: flex;
+    height: 100vh;
+}
+
+/* ฝั่งซ้าย (Login Form) */
+.left-side {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 50px;
+    background: #ffffff;
+}
+
+.login-header h1 {
+    font-size: 60px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.login-header p {
+    color: #888;
+    margin-bottom: 30px;
+}
+
+/* ช่อง Input */
+.input-box {
+    width: 350px;
+    margin-bottom: 15px;
+}
+
+.input-box input {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background-color: #f0fff4; /* สีเขียวอ่อนตามรูป */
+    font-size: 14px;
+}
+
+/* แถวของปุ่ม */
+.button-row {
+    display: flex;
+    gap: 10px;
+    width: 350px;
+    margin-top: 10px;
+}
+
+/* สไตล์ปุ่มหลัก (Login Now / For Student) */
+.btn-main {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    background: linear-gradient(to right, #72d694, #4e6d5e); /* สีจากรูป */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* สไตล์ปุ่มรอง (Create Account) */
+.btn-sub {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(to right, #83f7ae, #5a7b6c); /* สีสว่างกว่าตามรูป */
+}
+
+.forgot-link {
+    display: block;
+    margin: 15px 0;
+    color: #666;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+/* ฝั่งขวา (Green Graphic) */
+.right-side {
+    flex: 1;
+    background: linear-gradient(135deg, #4fb879 0%, #2d5a43 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.glass-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 30px;
+    padding: 60px;
+    width: 60%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.4;
+}
