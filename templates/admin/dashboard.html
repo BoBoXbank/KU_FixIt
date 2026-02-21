@@ -27,6 +27,17 @@
                     <td>
                         <div class="fw-bold">{{ item.title }}</div>
                         <small class="text-muted">{{ item.detail }}</small>
+                        
+                        {% if item.image_data %}
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#imageModal" 
+                                    data-image-src="data:image/jpeg;base64,{{ item.image_data }}">
+                                🖼️ ดูรูปภาพประกอบ
+                            </button>
+                        </div>
+                        {% endif %}
                     </td>
                     <td>📍 {{ item.location }}</td>
                     <td>
@@ -54,4 +65,38 @@
         </table>
     </div>
 </div>
+
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">📸 รูปภาพประกอบการแจ้งซ่อม</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center bg-light">
+                <img src="" id="modalImageDisplay" class="img-fluid rounded shadow-sm" alt="รูปภาพแจ้งซ่อม" style="max-height: 70vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var imageModal = document.getElementById('imageModal');
+        if (imageModal) {
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var imageUrl = button.getAttribute('data-image-src');
+                var modalImage = document.getElementById('modalImageDisplay');
+                modalImage.src = imageUrl;
+            });
+
+            // เคลียร์รูปภาพออกเมื่อปิดหน้าต่าง Modal
+            imageModal.addEventListener('hidden.bs.modal', function (event) {
+                document.getElementById('modalImageDisplay').src = '';
+            });
+        }
+    });
+</script>
+
 {% endblock %}

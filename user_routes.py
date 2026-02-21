@@ -1,3 +1,4 @@
+import base64
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -35,7 +36,7 @@ def register():
                 flash("❌ ชื่อผู้ใช้นี้ถูกใช้แล้ว", "danger")
                 return redirect(url_for('user.register'))
 
-            # 🚀 ทริค: หา ID ว่างตัวแรกให้ User ใหม่
+            # หา ID ว่างตัวแรกให้ User ใหม่
             cursor.execute("""
                 SELECT t1.id + 1 AS next_id
                 FROM users t1
@@ -61,7 +62,6 @@ def register():
             VALUES (%s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (new_id, username, hashed_pw, question, hashed_ans))
-            # ถ้าไม่ได้ใช้ autocommit=True ต้องใส่ conn.commit() ด้วย
 
             flash('✅ สมัครสมาชิกสำเร็จ!', 'success')
             return redirect(url_for('user.login'))
@@ -108,8 +108,7 @@ def login():
 
     return render_template('user/login.html')
 
-
-# ---------------- FORGOT PASSWORD (เพิ่มกลับมา) ----------------
+# ---------------- FORGOT PASSWORD ----------------
 @user_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -129,7 +128,7 @@ def forgot_password():
                 flash('❌ ไม่พบชื่อผู้ใช้นี้', 'danger')
     return render_template('user/forgot_password.html')
 
-# ---------------- RESET PASSWORD (เพิ่มกลับมา) ----------------
+# ---------------- RESET PASSWORD ----------------
 @user_bp.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     if 'reset_id' not in session: return redirect(url_for('user.forgot_password'))
@@ -158,7 +157,6 @@ def reset_password():
                 
     return render_template('user/reset_password.html', question=session.get('question'))
 
-
 # ---------------- REPORT ----------------
 @user_bp.route('/report', methods=['GET', 'POST'])
 def report():
@@ -166,6 +164,14 @@ def report():
         title = request.form['title']
         location = request.form['location']
         detail = request.form['detail']
+
+        # 📸 จัดการไฟล์รูปภาพ (แปลงเป็น Base64)
+        image = request.files.get('image')
+        image_base64 = None
+        
+        if image and image.filename != '':
+            # อ่านไฟล์รูปแล้วแปลงเป็นตัวอักษร Base64 ยาวๆ
+            image_base64 = base64.b64encode(image.read()).decode('utf-8')
 
         conn = get_db_connection()
         if conn:
@@ -192,14 +198,14 @@ def report():
             if cursor.fetchone()['c'] == 0:
                 new_id = 1
 
-            # insert ด้วย id ที่หาได้
-            sql = "INSERT INTO reports (id, title, location, detail) VALUES (%s, %s, %s, %s)"
-            cursor.execute(sql, (new_id, title, location, detail))
+            # 🚀 insert ด้วย id ที่หาได้ พร้อมบันทึกข้อมูลรูป (image_data)
+            sql = "INSERT INTO reports (id, title, location, detail, image_data) VALUES (%s, %s, %s, %s, %s)"
+            cursor.execute(sql, (new_id, title, location, detail, image_base64))
 
             conn.commit()
             conn.close()
 
-            flash('✅ ส่งเรื่องเรียบร้อย', 'success')
+            flash('✅ ส่งเรื่องและแนบรูปภาพเรียบร้อย', 'success')
             return redirect(url_for('user.home'))
 
     return render_template('user/report_form.html')
