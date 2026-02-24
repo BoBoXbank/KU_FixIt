@@ -1,24 +1,55 @@
-{% extends "layout.html" %}
-{% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card p-4">
-            <h2 class="text-center mb-4">เข้าสู่ระบบ</h2>
-            <form method="POST">
-                <div class="mb-3">
-                    <label>Username</label>
-                    <input type="text" name="username" class="form-control" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - KU_FIXIT</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='user_style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="left-side">
+            <div class="form-box">
+                <h1>LOGIN</h1>
+                <p class="subtitle">Hi employee, Let's get start!</p>
+
+                <form action="/login" method="POST">
+                    <div class="input-group">
+                        <i class="fa-regular fa-user"></i>
+                        <input type="text" name="username" placeholder="Username" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" name="password" placeholder="Password" required>
+                    </div>
+
+                    <button type="submit" class="btn-login">Login Now</button>
+
+                    <div class="forgot-text">
+                        <a href="#" style="text-decoration: none; color: inherit;">Forget password?</a>
+                    </div>
+
+                    <button type="button" class="btn-create">
+                        Create account<br>for student
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="right-side">
+            <div class="glass-card">
+                Very good works are waiting for you Login Now!!!
+                
+                <div class="bolt-circle">
+                    <i class="fa-solid fa-bolt-lightning"></i>
                 </div>
-                <div class="mb-3">
-                    <label>Password</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-theme w-100 mb-3">เข้าสู่ระบบ</button>
-                <div class="text-center">
-                    <a href="/forgot-password" class="text-muted text-decoration-none">ลืมรหัสผ่าน?</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+</body>
+</html>
