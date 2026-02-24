@@ -1,5 +1,5 @@
 from flask import Flask
-from KU_FixIt.user_routes import user_bp
+from user_routes import user_bp
 from admin_routes import admin_bp
 
 app = Flask(__name__)
