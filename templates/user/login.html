@@ -6,53 +6,78 @@
     <title>Login - KU FixIt</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Kanit', sans-serif; } </style>
+    <style>
+        body { font-family: 'Kanit', sans-serif; }
+        
+        /* ปุ่มเข้าสู่ระบบ สีเขียวเข้มตามแบบ */
+        .btn-login-dark {
+            background-color: #2E8B6F;
+            transition: all 0.3s;
+        }
+        .btn-login-dark:hover {
+            background-color: #246D57;
+            transform: translateY(-1px);
+        }
+
+        /* ปุ่มสมัครสมาชิก สีเขียว Gradient ตามแบบ */
+        .btn-register-gradient {
+            background: linear-gradient(90deg, #20A375 0%, #7CB695 100%);
+            transition: all 0.3s;
+        }
+        .btn-register-gradient:hover {
+            filter: brightness(1.05);
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
-<body class="bg-[#D1F2EB] min-h-screen flex items-center justify-center p-4">
+<body class="bg-[#E0F2F1] min-h-screen flex items-center justify-center p-4">
 
-    <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm text-center">
-        <div class="mb-6">
-            <h1 class="text-6xl font-black text-[#006652] m-0">KU</h1>
-            <p class="text-[#006652] text-[10px] tracking-[0.3em] font-bold uppercase">Kasetsart University</p>
+    <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm text-center border border-gray-100">
+        <div class="mb-4">
+            <img src="{{ url_for('static', filename='picture/logo.png') }}" alt="KU Logo" class="h-28 mx-auto mb-2 object-contain">
+            
+            <h2 class="text-3xl font-bold text-[#006652] mb-1">ระบบแจ้งซ่อม</h2>
+            <p class="text-gray-400 text-s mb-8">หอพักนักศึกษา</p>
         </div>
-
-        <h2 class="text-2xl font-bold text-[#004D40] mb-1">ระบบแจ้งซ่อม</h2>
-        <p class="text-gray-400 text-sm mb-8">หอพักนักศึกษา</p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="bg-red-50 text-red-500 text-xs p-2 rounded-lg mb-4">{{ message }}</div>
+                    <div class="text-red-500 text-xs mb-4 bg-red-50 py-2 rounded-xl border border-red-100">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
         <form action="{{ url_for('user.login') }}" method="POST" class="space-y-4">
             <div class="relative">
-                <span class="absolute left-4 top-3.5 text-gray-400">👤</span>
+                <span class="absolute left-4 top-3.5 text-gray-400 text-lg">👤</span>
                 <input type="text" name="username" placeholder="Username" required
-                    class="w-full pl-12 pr-4 py-3 bg-[#F0F7F5] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#2E7D32]">
+                    class="w-full pl-12 pr-4 py-3 bg-[#F1F8F6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#006652]/20 border-none placeholder:text-gray-400">
             </div>
 
             <div class="relative">
-                <span class="absolute left-4 top-3.5 text-gray-400">🔒</span>
+                <span class="absolute left-4 top-3.5 text-gray-400 text-lg">🔒</span>
                 <input type="password" name="password" placeholder="Password" required
-                    class="w-full pl-12 pr-4 py-3 bg-[#F0F7F5] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#2E7D32]">
+                    class="w-full pl-12 pr-4 py-3 bg-[#F1F8F6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#006652]/20 border-none placeholder:text-gray-400">
             </div>
 
-            <button type="submit" 
-                class="w-3/5 bg-[#4DB6AC] hover:bg-[#26A69A] text-white font-semibold py-3 rounded-2xl mt-4 shadow-lg transition-all active:scale-95">
-                เข้าสู่ระบบ
-            </button>
+            <div class="pt-2">
+                <button type="submit" 
+                    class="btn-login-dark w-3/5 text-white font-medium py-3 rounded-2xl shadow-lg shadow-gray-200 active:scale-95">
+                    เข้าสู่ระบบ
+                </button>
+            </div>
         </form>
 
         <div class="mt-4">
-            <a href="{{ url_for('user.forgot_password') }}" class="text-gray-400 text-xs hover:text-[#006652]">Forgot password?</a>
+            <a href="{{ url_for('user.forgot_password') }}" class="text-gray-500 text-s hover:text-[#006652] transition-colors">
+                Forget <span class="text-gray-400">password?</span>
+            </a>
         </div>
 
-        <div class="mt-8">
+        <div class="mt-0 border-t border-gray-50 pt-6">
             <a href="{{ url_for('user.register') }}" 
-                class="inline-block w-4/5 bg-[#66BB6A] hover:bg-[#43A047] text-white font-semibold py-3 rounded-2xl shadow-md transition-all active:scale-95">
+                class="btn-register-gradient inline-block w-4/5 text-white font-medium py-3 rounded-2xl shadow-lg shadow-green-100 active:scale-95 text-center transition-all">
                 สมัครสมาชิก
             </a>
         </div>
