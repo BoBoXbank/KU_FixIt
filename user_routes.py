@@ -5,6 +5,13 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 user_bp = Blueprint('user', __name__)
 
+# ---------------- LOGOUT (เพิ่มอันนี้เพื่อแก้ปัญหาเอ๋อเวลาเปลี่ยนคนใช้) ----------------
+@user_bp.route('/logout')
+def logout():
+    session.clear() # ล้างค่าทั้งหมด
+    flash('ออกจากระบบเรียบร้อย', 'info')
+    return redirect(url_for('user.login'))
+
 # ---------------- HOME ----------------
 @user_bp.route('/')
 def home():
@@ -78,33 +85,32 @@ def register():
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
 
         conn = get_db_connection()
         if not conn:
-            flash("Database error", "danger")
+            flash("❌ เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
             return redirect(url_for('user.login'))
 
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
             user = cursor.fetchone()
+            
+            if user and check_password_hash(user['password_hash'], password):
+                session['user_id'] = user['id']
+                session['role'] = user['role']
+                session['username'] = user['username']
 
+                # ถ้าเป็นแอดมินให้ไปหน้าแอดมิน ถ้าทั่วไปให้ไปหน้าแจ้งซ่อม
+                if user['role'] == 'admin':
+                    return redirect(url_for('admin.dashboard'))
+                return redirect(url_for('user.home'))
+            else:
+                flash('❌ ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
         finally:
-            cursor.close()
             conn.close()
-
-        if user and check_password_hash(user['password_hash'], password):
-            session['user_id'] = user['id']
-            session['role'] = user['role']
-            session['username'] = user['username']
-
-            if user['role'] == 'admin':
-                return redirect(url_for('admin.dashboard'))
-            return redirect(url_for('user.home'))
-
-        flash('❌ ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
 
     return render_template('user/login.html')
 
