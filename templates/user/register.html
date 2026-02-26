@@ -10,7 +10,6 @@
     
     <style>
         body {
-            /* สีพื้นหลังเขียวอ่อนตามรูป */
             background-color: #D8F2E9; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             min-height: 100vh;
@@ -27,19 +26,18 @@
             max-width: 500px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.05);
         }
-        .form-control, .form-select {
+        .form-control {
             border-radius: 10px;
             padding: 12px 15px;
             border: 1px solid #e0e0e0;
             margin-bottom: 15px;
             color: #555;
         }
-        .form-control:focus, .form-select:focus {
+        .form-control:focus {
             border-color: #0da360;
             box-shadow: 0 0 0 0.2rem rgba(13, 163, 96, 0.25);
         }
         .btn-success {
-            /* สีปุ่มเขียวเข้ม */
             background-color: #0da360; 
             border: none;
             border-radius: 12px;
@@ -81,12 +79,7 @@
             <input type="text" class="form-control" name="last_name" placeholder="นามสกุล*" required>
             <input type="email" class="form-control" name="email" placeholder="email*" required>
 
-            <select name="question" class="form-select" required>
-                <option value="" disabled selected>เลือกคำถามความปลอดภัย*</option>
-                <option value="สัตว์เลี้ยงตัวแรกชื่ออะไร?">สัตว์เลี้ยงตัวแรกชื่ออะไร?</option>
-                <option value="โรงเรียนประถมชื่ออะไร?">โรงเรียนประถมชื่ออะไร?</option>
-                <option value="เพื่อนสนิทตอนเด็กชื่ออะไร?">เพื่อนสนิทตอนเด็กชื่ออะไร?</option>
-            </select>
+            <input type="text" class="form-control" name="question" placeholder="คำถาม*" required>
             <input type="text" class="form-control" name="answer" placeholder="คำตอบ*" required>
 
             <div class="d-flex justify-content-center mb-3 mt-2">
