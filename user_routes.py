@@ -1,4 +1,6 @@
 import base64
+import os
+import requests  # 🚀 เพิ่มไลบรารีนี้สำหรับคุยกับ API ของ Google
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -21,13 +23,39 @@ def home():
 @user_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        # รับข้อมูลจากฟอร์มให้ครบตามหน้า UI ใหม่
         username = request.form['username'].strip()
         password = request.form['password']
+        room_number = request.form['room_number'].strip()
+        first_name = request.form['first_name'].strip()
+        last_name = request.form['last_name'].strip()
+        email = request.form['email'].strip()
         question = request.form['question']
         answer = request.form['answer']
 
+        # 🤖 === ระบบเช็ค Google reCAPTCHA v2 === 🤖
+        recaptcha_response = request.form.get('g-recaptcha-response')
+        secret_key = os.getenv('RECAPTCHA_SECRET_KEY') # ดึงคีย์ลับจากไฟล์ .env
+
+        # ส่งรหัสไปถาม Google ว่าคนนี้ติ๊กถูกจริงไหม
+        verify_response = requests.post(
+            url='https://www.google.com/recaptcha/api/siteverify',
+            data={'secret': secret_key, 'response': recaptcha_response}
+        )
+        result = verify_response.json()
+
+        # ถ้า Google บอกว่าไม่ใช่คน หรือไม่ได้ติ๊กกล่อง ให้เด้งกลับทันที
+        if not result.get('success'):
+            flash("❌ กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ (I'm not a robot)", "danger")
+            return redirect(url_for('user.register'))
+        # 🤖 ================================== 🤖
+
+        # เข้ารหัสผ่านและคำตอบ
         hashed_pw = generate_password_hash(password)
         hashed_ans = generate_password_hash(answer)
+
+        # 🚀 ทริค: กำหนดสิทธิ์ ถ้ากรอก 0000 ให้เป็นช่าง (admin) นอกนั้นเป็น user
+        role = 'admin' if room_number == '0000' else 'user'
 
         conn = get_db_connection()
         if not conn:
@@ -59,18 +87,18 @@ def register():
             else:
                 new_id = 1
 
-            # กรณีตารางว่าง
             cursor.execute("SELECT COUNT(*) AS c FROM users")
             if cursor.fetchone()['c'] == 0:
                 new_id = 1
 
+            # 🚀 เพิ่มคอลัมน์ใหม่ๆ ลงในคำสั่ง INSERT
             sql = """
-            INSERT INTO users (id, username, password_hash, security_question, security_answer_hash)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO users (id, username, password_hash, role, security_question, security_answer_hash, room_number, first_name, last_name, email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (new_id, username, hashed_pw, question, hashed_ans))
+            cursor.execute(sql, (new_id, username, hashed_pw, role, question, hashed_ans, room_number, first_name, last_name, email))
 
-            flash('✅ สมัครสมาชิกสำเร็จ!', 'success')
+            flash('✅ สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ', 'success')
             return redirect(url_for('user.login'))
 
         except Exception as e:

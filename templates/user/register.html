@@ -1,31 +1,105 @@
-{% extends "layout.html" %}
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card p-4">
-            <h3 class="text-center mb-4 text-success">สมัครสมาชิกใหม่</h3>
-            <form method="POST">
-                <div class="mb-3">
-                    <label>ชื่อผู้ใช้ (Username)</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label>รหัสผ่าน (Password)</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                <hr class="my-4">
-                <h5 class="text-muted mb-3">🔐 ตั้งคำถามกรณีลืมรหัสผ่าน</h5>
-                <div class="mb-3">
-                    <label>คำถามกันลืม (เช่น ชื่อสัตว์เลี้ยงตัวแรก?)</label>
-                    <input type="text" name="question" class="form-control" placeholder="ตั้งคำถามที่คุณจำได้คนเดียว" required>
-                </div>
-                <div class="mb-3">
-                    <label>    .คำตอบของคุณ   ...</label>
-                    <input type="text" name="answer" class="form-control" required>
-                </div>
-                <button type="submit" class="btn btn-theme w-100">สมัครสมาชิก</button>
-            </form>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครสมาชิก - KU FixIt</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    
+    <style>
+        body {
+            /* สีพื้นหลังเขียวอ่อนตามรูป */
+            background-color: #D8F2E9; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .register-card {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 15px;
+            color: #555;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #0da360;
+            box-shadow: 0 0 0 0.2rem rgba(13, 163, 96, 0.25);
+        }
+        .btn-success {
+            /* สีปุ่มเขียวเข้ม */
+            background-color: #0da360; 
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .btn-success:hover {
+            background-color: #0b8a51;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-dark">สมัครสมาชิก</h2>
+            <small class="text-muted">Create an account to enjoy</small>
         </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} rounded-3 text-center">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <input type="text" class="form-control" name="username" placeholder="username*" required>
+            <input type="password" class="form-control" name="password" placeholder="Password*" required minlength="6">
+
+            <input type="text" class="form-control" name="room_number" placeholder="หมายเลขห้อง (ถ้าเป็นช่างให้ตอบ 0000)*" required>
+            <input type="text" class="form-control" name="first_name" placeholder="ชื่อ*" required>
+            <input type="text" class="form-control" name="last_name" placeholder="นามสกุล*" required>
+            <input type="email" class="form-control" name="email" placeholder="email*" required>
+
+            <select name="question" class="form-select" required>
+                <option value="" disabled selected>เลือกคำถามความปลอดภัย*</option>
+                <option value="สัตว์เลี้ยงตัวแรกชื่ออะไร?">สัตว์เลี้ยงตัวแรกชื่ออะไร?</option>
+                <option value="โรงเรียนประถมชื่ออะไร?">โรงเรียนประถมชื่ออะไร?</option>
+                <option value="เพื่อนสนิทตอนเด็กชื่ออะไร?">เพื่อนสนิทตอนเด็กชื่ออะไร?</option>
+            </select>
+            <input type="text" class="form-control" name="answer" placeholder="คำตอบ*" required>
+
+            <div class="d-flex justify-content-center mb-3 mt-2">
+                <div class="g-recaptcha" data-sitekey="6LebUngsAAAAAPMg-oO9-SN_SqAU9zWdLK84Itx5"></div>
+            </div>
+
+            <button type="submit" class="btn btn-success">Create Account</button>
+            
+            <div class="text-center mt-4">
+                <small class="text-muted">Already Have An Account? <a href="/login" class="text-dark fw-bold text-decoration-none">Sign In</a></small>
+            </div>
+        </form>
     </div>
-</div>
-{% endblock %}
+
+</body>
+</html>
