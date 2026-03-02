@@ -1,27 +1,339 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <title>ฟอร์มแจ้งซ่อม</title>
-    <style>body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ใบแจ้งซ่อม</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Prompt', sans-serif;
+}
+
+body{
+    background:#bcd6cf;
+    display:flex;
+    min-height:100vh;
+}
+
+/* Sidebar */
+.sidebar{
+    width:260px;
+    background:#ffffff;
+    padding:25px 20px;
+    box-shadow:2px 0 10px rgba(0,0,0,0.05);
+}
+
+.logo img{
+    width:100px;
+    display:flex;
+    justify-content:center;
+    margin-bottom:10px;
+}
+
+.university{
+    font-size:13px;
+    color:#0b6b5e;
+    margin-bottom:20px;
+}
+
+.user{
+    margin:15px 0;
+    font-weight:500;
+}
+
+.menu{
+    margin-top:20px;
+}
+
+.menu-item{
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:8px;
+    cursor:pointer;
+    color:#444;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#0b6b5e;
+    font-weight:500;
+}
+
+.menu-item:hover{
+    background:#e6f2ef;
+}
+
+.logout{
+    margin-top:120px;
+    color:#0b6b5e;
+    font-weight:500;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    cursor:pointer;
+    color:#0b6b5e;
+    font-weight:500;
+    text-decoration:none;
+}
+
+/* Main */
+.main{
+    flex:1;
+    padding:40px;
+}
+
+.title{
+    font-size:26px;
+    font-weight:600;
+    margin-bottom:25px;
+    color:#2f4f4f;
+}
+
+/* Card */
+.card{
+    background:#ffffff;
+    padding:35px;
+    border-radius:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    max-width:700px;
+}
+
+.form-group{
+    margin-bottom:18px;
+}
+
+label{
+    font-size:14px;
+    font-weight:500;
+    color:#2f4f4f;
+    margin-bottom:6px;
+    display:block;
+}
+
+input, select, textarea{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid #cfded9;
+    background:#e9f2ef;
+    font-size:14px;
+    outline:none;
+}
+
+textarea{
+    resize:none;
+    height:90px;
+}
+
+.row{
+    display:flex;
+    gap:15px;
+}
+
+.row .form-group{
+    flex:1;
+}
+
+/* Upload Box */
+.upload-box{
+    border:2px dashed #cfded9;
+    background:#f4f9f8;
+    border-radius:12px;
+    padding:25px;
+    text-align:center;
+    color:#6a8a83;
+    font-size:14px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+.upload-box:hover{
+    background:#e6f2ef;
+}
+
+.upload-box.dragover{
+    border-color:#3aa482;
+    background:#e0f2ec;
+}
+
+/* Buttons */
+.button-group{
+    display:flex;
+    gap:15px;
+    margin-top:20px;
+}
+
+.btn-submit{
+    flex:1;
+    background:#3aa482;
+    color:white;
+    border:none;
+    padding:14px;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:500;
+    cursor:pointer;
+}
+
+.btn-submit:hover{
+    background:#2f8c6f;
+}
+
+.btn-cancel{
+    width:120px;
+    background:#e0ece8;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+}
+</style>
 </head>
+
 <body>
-    <h2>📝 แบบฟอร์มแจ้งซ่อม</h2>
-    
-    <form method="POST" enctype="multipart/form-data">
-        <label>หัวข้อปัญหา:</label><br>
-        <input type="text" name="title" required style="width: 100%;"><br><br>
-        
-        <label>สถานที่ (ตึก/ห้อง):</label><br>
-        <input type="text" name="location" required style="width: 100%;"><br><br>
-        
-        <label>รายละเอียดเพิ่มเติม:</label><br>
-        <textarea name="detail" rows="4" style="width: 100%;"></textarea><br><br>
-        
-        <label>อัปโหลดรูปภาพประกอบ (ถ้ามี):</label><br>
-        <input type="file" name="image" accept="image/*" style="width: 100%;"><br><br>
-        
-        <button type="submit" style="background: blue; color: white; padding: 10px; border: none; cursor: pointer;">ส่งเรื่องแจ้งซ่อม</button>
-        <a href="/">ยกเลิก</a>
-    </form>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo">
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoLzPcypWSJBJPazKtgRKGWTfrjx6L5w-lbQ&s" alt="KU Logo">
+    </div>
+
+    <div class="user">User<br><small>จัดการระบบแจ้งซ่อม</small></div>
+
+    <div class="menu">
+        <div class="menu-item">🏠 หน้าหลัก</div>
+        <div class="menu-item">🛠️ แจ้งซ่อม</div>
+        <div class="menu-item">📋 ประวัติแจ้งซ่อม</div>
+        <div class="menu-item">👤 โปรไฟล์</div>
+    </div>
+
+    <a href="{{ url_for('user.home') }}" class="logout">🚪 ออกจากระบบ</a>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+    <div class="title">📋 ใบแจ้งซ่อม</div>
+
+    <div class="card">
+        <form>
+
+            <div class="row">
+                <div class="form-group">
+                    <label>อาคาร</label>
+                    <select>
+                        <option>เลือกอาคาร</option>
+                        <option>อาคาร 1</option>
+                        <option>อาคาร 2</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>ห้อง</label>
+                    <input type="text" placeholder="เช่น 301">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>ประเภทปัญหา</label>
+                <select>
+                    <option>เลือกประเภท</option>
+                    <option>ไฟฟ้า</option>
+                    <option>ประปา</option>
+                    <option>แอร์</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>รายละเอียดปัญหา</label>
+                <textarea placeholder="อธิบายปัญหาที่พบ เช่น ตำแหน่ง อาคาร เวลาที่เกิดปัญหา..."></textarea>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="form-group">
+                <label>แนบรูปภาพ (ไม่บังคับ)</label>
+
+                <div class="upload-box" id="uploadBox">
+                    <p>
+                        คลิกเพื่อเลือกรูปภาพ หรือ ลากไฟล์มาวาง<br>
+                        รองรับ JPG, PNG ขนาดไม่เกิน 5MB
+                    </p>
+                    <input type="file" id="imageInput" accept="image/png, image/jpeg" hidden>
+                </div>
+
+                <div id="fileName" style="margin-top:8px; font-size:14px; color:#2f4f4f;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
+                <input type="datetime-local">
+            </div>
+
+            <div class="form-group">
+                <label>เบอร์โทรติดต่อ</label>
+                <input type="text" placeholder="0XX-XXX-XXXX">
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-submit">ส่งใบแจ้งซ่อม</button>
+                <button type="button" class="btn-cancel">ยกเลิก</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+const uploadBox = document.getElementById("uploadBox");
+const imageInput = document.getElementById("imageInput");
+const fileNameDisplay = document.getElementById("fileName");
+
+uploadBox.addEventListener("click", () => {
+    imageInput.click();
+});
+
+imageInput.addEventListener("change", function() {
+    handleFile(this.files[0]);
+});
+
+uploadBox.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    uploadBox.classList.add("dragover");
+});
+
+uploadBox.addEventListener("dragleave", () => {
+    uploadBox.classList.remove("dragover");
+});
+
+uploadBox.addEventListener("drop", (e) => {
+    e.preventDefault();
+    uploadBox.classList.remove("dragover");
+    const file = e.dataTransfer.files[0];
+    handleFile(file);
+});
+
+function handleFile(file){
+    if(!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const maxSize = 5 * 1024 * 1024;
+
+    if(!allowedTypes.includes(file.type)){
+        alert("อนุญาตเฉพาะไฟล์ JPG หรือ PNG เท่านั้น");
+        return;
+    }
+
+    if(file.size > maxSize){
+        alert("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
+        return;
+    }
+
+    fileNameDisplay.textContent = "ไฟล์ที่เลือก: " + file.name;
+}
+</script>
+
 </body>
 </html>
