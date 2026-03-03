@@ -1,0 +1,54 @@
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden;">
+            
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold" id="imageModalLabel" style="color: #2C5F4D;">
+                    <i class="bi bi-image me-2"></i>รูปภาพหลักฐานจากผู้แจ้ง
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body text-center p-4 bg-white">
+                <div class="img-container shadow-sm rounded-4 overflow-hidden" style="background-color: #f8f9fa; min-height: 200px; display: flex; align-items: center; justify-content: center;">
+                    <img src="" id="modalImageDisplay" class="img-fluid" alt="ไม่พบรูปภาพหลักฐาน" 
+                         style="max-height: 70vh; object-fit: contain; width: 100%;">
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary rounded-pill px-5" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // สคริปต์สำหรับจัดการการดึงรูปภาพมาแสดงเมื่อกดปุ่ม
+    document.addEventListener("DOMContentLoaded", function() {
+        var imageModal = document.getElementById('imageModal');
+        
+        if (imageModal) {
+            imageModal.addEventListener('show.bs.modal', function (event) {
+                // 'event.relatedTarget' คือปุ่มที่เรากดสั่งเปิด Modal
+                var button = event.relatedTarget;
+                
+                // ดึงข้อมูล Base64 จาก Attribute 'data-image-src' ของปุ่มนั้น
+                var imageData = button.getAttribute('data-image-src');
+                
+                // นำข้อมูลรูปไปใส่ในตัวแสดงผล
+                var modalImg = document.getElementById('modalImageDisplay');
+                if (imageData && imageData !== 'None') {
+                    modalImg.src = imageData;
+                } else {
+                    modalImg.src = "https://via.placeholder.com/500x300?text=No+Image+Available"; 
+                }
+            });
+
+            // ล้างค่ารูปทิ้งเมื่อปิด Modal เพื่อไม่ให้รูปเก่าค้างตอนเปิดครั้งหน้า
+            imageModal.addEventListener('hidden.bs.modal', function () {
+                document.getElementById('modalImageDisplay').src = '';
+            });
+        }
+    });
+</script>

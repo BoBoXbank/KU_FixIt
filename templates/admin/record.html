@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    <div class="d-flex align-items-center mb-4">
+        <span class="fs-2 me-2">📜</span>
+        <h2 class="fw-bold mb-0">ประวัติแจ้งซ่อม</h2>
+    </div>
+
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 30px;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #F0F9F6; color: #8BA99B;">
+                    <tr>
+                        <th class="ps-4">เลขที่</th>
+                        <th>ผู้แจ้ง (User)</th>
+                        <th>อาคาร/ห้อง</th>
+                        <th>ประเภท</th>
+                        <th class="text-center">สถานะ</th>
+                        <th class="text-center">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in reports %}
+                    <tr style="cursor: pointer;">
+                        <td class="ps-4" onclick="showDetail('{{ item.id }}', '{{ item.username }}', '{{ item.title }}', '{{ item.detail | replace('\n', '<br>') }}')">
+                            #REP-{{ "%03d" | format(item.id) }}
+                        </td>
+                        <td class="fw-bold" onclick="showDetail('{{ item.id }}', '{{ item.username }}', '{{ item.title }}', '{{ item.detail | replace('\n', '<br>') }}')">
+                            {{ item.username }}
+                        </td>
+                        <td onclick="showDetail('{{ item.id }}', '{{ item.username }}', '{{ item.title }}', '{{ item.detail | replace('\n', '<br>') }}')">
+                            {{ item.location }}
+                        </td>
+                        <td onclick="showDetail('{{ item.id }}', '{{ item.username }}', '{{ item.title }}', '{{ item.detail | replace('\n', '<br>') }}')">
+                            {{ item.title }}
+                        </td>
+                        
+                        <td style="min-width: 200px;">
+                            <form action="{{ url_for('admin.update_status', id=item.id) }}" method="POST" class="d-flex gap-2">
+                                <select name="status" class="form-select form-select-sm rounded-pill border-success text-center shadow-sm" style="font-size: 0.95rem; font-weight: 500;">
+                                    <option value="รอซ่อม" {% if item.status=='รอซ่อม' %}selected{% endif %}>รอซ่อม</option>
+                                    <option value="กำลังซ่อม" {% if item.status=='กำลังซ่อม' %}selected{% endif %}>กำลังซ่อม</option>
+                                    <option value="เสร็จสิ้น" {% if item.status=='เสร็จสิ้น' %}selected{% endif %}>เสร็จสิ้น</option>
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">บันทึก</button>
+                            </form>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                {% if item.image_data %}
+                                <button class="btn btn-sm btn-outline-info rounded-circle" data-bs-toggle="modal" data-bs-target="#imageModal" data-image-src="data:image/jpeg;base64,{{ item.image_data }}">
+                                    <i class="bi bi-image"></i>
+                                </button>
+                                {% endif %}
+                                <a href="{{ url_for('admin.delete_report', id=item.id) }}" class="btn btn-sm btn-outline-danger rounded-circle" onclick="return confirm('ยืนยันการลบ?');">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
+            <div class="modal-header border-0 bg-light">
+                <h5 class="modal-title fw-bold">📝 รายละเอียดปัญหา</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="small text-muted mb-1">ผู้แจ้ง: <span id="modalUser" class="fw-bold text-dark"></span></p>
+                <p class="small text-muted mb-3">ประเภท: <span id="modalTitle" class="badge bg-success-subtle text-success"></span></p>
+                <div id="modalDetail" class="p-3 bg-light rounded-4" style="line-height: 1.6;"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">ปิด</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showDetail(id, user, title, detail) {
+    document.getElementById('modalUser').innerText = user;
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalDetail').innerHTML = detail;
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+</script>
+
+{% include "components/image_modal.html" %} 
+{% endblock %}

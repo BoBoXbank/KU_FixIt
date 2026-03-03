@@ -14,64 +14,101 @@ def logout():
     flash('ออกจากระบบเรียบร้อย', 'info')
     return redirect(url_for('user.login'))
 
-# ---------------- HOME ----------------
+# ---------------- INDEX & HOME (บังคับเข้า Login หรือ Report) ----------------
 @user_bp.route('/')
-def home():
-    return render_template('user/home.html')
+def index():
+    # ถ้ายังไม่ล็อกอิน ให้ไปหน้า Login ทันที
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+    return redirect(url_for('user.home'))
 
-# ---------------- REGISTER ----------------
+@user_bp.route('/home')
+def home():
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+    
+    # แยกไปหน้าตาม Role
+    role = session.get('role')
+    if role == 'admin':
+        return redirect(url_for('admin.dashboard'))
+    elif role == 'technician':
+        return redirect(url_for('technician.dashboardtech')) # หน้าของช่าง
+    
+    # สำหรับ User ทั่วไป: ดึงสถิติเฉพาะของตัวเองมาโชว์
+    conn = get_db_connection()
+    stats = {'total': 0, 'pending': 0, 'ongoing': 0, 'finished': 0}
+    recent_reports = []
+    
+    if conn:
+        cursor = conn.cursor()
+        # ดึงเฉพาะรายการที่ username ตรงกับคนที่ล็อกอิน
+        cursor.execute("SELECT * FROM reports WHERE username = %s ORDER BY id DESC", (session.get('username'),))
+        reports = cursor.fetchall()
+        
+        stats['total'] = len(reports)
+        stats['pending'] = len([r for r in reports if r['status'] == 'รอซ่อม'])
+        stats['ongoing'] = len([r for r in reports if r['status'] == 'กำลังซ่อม'])
+        stats['finished'] = len([r for r in reports if r['status'] == 'เสร็จสิ้น'])
+        recent_reports = reports[:5] # เอาแค่ 5 รายการล่าสุด
+        conn.close()
+
+    return render_template('user/home.html', stats=stats, reports=recent_reports)
+
+# ---------------- REGISTER (ฉบับแก้ไขสมบูรณ์สำหรับก๊อปวาง) ----------------
 @user_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # รับข้อมูลจากฟอร์มให้ครบตามหน้า UI ใหม่
-        username = request.form['username'].strip()
-        password = request.form['password']
-        room_number = request.form['room_number'].strip()
-        first_name = request.form['first_name'].strip()
-        last_name = request.form['last_name'].strip()
-        email = request.form['email'].strip()
-        question = request.form['question']
-        answer = request.form['answer']
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password')
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        email = request.form.get('email', '').strip()
+        
+        # ใช้ .get เพื่อป้องกัน KeyError หากหน้า HTML ส่งค่ามาไม่ครบ
+        phone = request.form.get('phone', '').strip()       
+        building = request.form.get('building', '').strip() 
+        room_number = request.form.get('room_number', '').strip()
+        
+        question = request.form.get('question')
+        answer = request.form.get('answer')
 
         # 🤖 === ระบบเช็ค Google reCAPTCHA v2 === 🤖
         recaptcha_response = request.form.get('g-recaptcha-response')
-        secret_key = os.getenv('RECAPTCHA_SECRET_KEY') # ดึงคีย์ลับจากไฟล์ .env
+        secret_key = os.getenv('RECAPTCHA_SECRET_KEY')
 
-        # ส่งรหัสไปถาม Google ว่าคนนี้ติ๊กถูกจริงไหม
         verify_response = requests.post(
             url='https://www.google.com/recaptcha/api/siteverify',
             data={'secret': secret_key, 'response': recaptcha_response}
         )
         result = verify_response.json()
 
-        # ถ้า Google บอกว่าไม่ใช่คน หรือไม่ได้ติ๊กกล่อง ให้เด้งกลับทันที
         if not result.get('success'):
-            flash("❌ กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ (I'm not a robot)", "danger")
+            flash("❌ กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ (reCAPTCHA)", "danger")
             return redirect(url_for('user.register'))
         # 🤖 ================================== 🤖
 
-        # เข้ารหัสผ่านและคำตอบ
+        # 2. เข้ารหัสข้อมูลความปลอดภัย
         hashed_pw = generate_password_hash(password)
         hashed_ans = generate_password_hash(answer)
 
-        # 🚀 ทริค: กำหนดสิทธิ์ ถ้ากรอก 0000 ให้เป็นช่าง (admin) นอกนั้นเป็น user
+        # 🚀 ทริค: กำหนดสิทธิ์แอดมิน (ถ้ากรอก 0000)
         role = 'admin' if room_number == '0000' else 'user'
 
         conn = get_db_connection()
         if not conn:
-            flash("เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
+            flash("❌ เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
             return redirect(url_for('user.register'))
 
         try:
             cursor = conn.cursor()
 
-            # เช็ค username ซ้ำก่อน
+            # 3. ตรวจสอบ Username ซ้ำ
             cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
             if cursor.fetchone():
                 flash("❌ ชื่อผู้ใช้นี้ถูกใช้แล้ว", "danger")
                 return redirect(url_for('user.register'))
 
-            # หา ID ว่างตัวแรกให้ User ใหม่
+            # 4. ค้นหา ID ว่างตัวแรกสำหรับ User ใหม่
             cursor.execute("""
                 SELECT t1.id + 1 AS next_id
                 FROM users t1
@@ -80,24 +117,24 @@ def register():
                 ORDER BY t1.id
                 LIMIT 1
             """)
-            result = cursor.fetchone()
+            id_result = cursor.fetchone()
+            new_id = id_result['next_id'] if id_result and id_result['next_id'] else 1
 
-            if result and result['next_id']:
-                new_id = result['next_id']
-            else:
-                new_id = 1
-
+            # กรณีฐานข้อมูลยังว่างเปล่า
             cursor.execute("SELECT COUNT(*) AS c FROM users")
             if cursor.fetchone()['c'] == 0:
                 new_id = 1
 
-            # 🚀 เพิ่มคอลัมน์ใหม่ๆ ลงในคำสั่ง INSERT
+            # 5. บันทึกข้อมูลลงฐานข้อมูล (รวม 12 คอลัมน์ตามโครงสร้างล่าสุด)
             sql = """
-            INSERT INTO users (id, username, password_hash, role, security_question, security_answer_hash, room_number, first_name, last_name, email)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO users (id, username, password_hash, role, security_question, security_answer_hash, 
+                             room_number, first_name, last_name, email, phone, building)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(sql, (new_id, username, hashed_pw, role, question, hashed_ans, room_number, first_name, last_name, email))
-
+            cursor.execute(sql, (new_id, username, hashed_pw, role, question, hashed_ans, 
+                               room_number, first_name, last_name, email, phone, building))
+            
+            conn.commit() # มั่นใจว่ามีการบันทึกข้อมูล
             flash('✅ สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ', 'success')
             return redirect(url_for('user.login'))
 
@@ -134,6 +171,8 @@ def login():
                 # ถ้าเป็นแอดมินให้ไปหน้าแอดมิน ถ้าทั่วไปให้ไปหน้าแจ้งซ่อม
                 if user['role'] == 'admin':
                     return redirect(url_for('admin.dashboard'))
+                elif user['role']=='technician':
+                    return redirect(url_for('technician.dashboardtech'))
                 return redirect(url_for('user.home'))
             else:
                 flash('❌ ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
@@ -191,55 +230,92 @@ def reset_password():
                 
     return render_template('user/reset_password.html', question=session.get('question'))
 
-# ---------------- REPORT ----------------
+
+##----------report-----------------
 @user_bp.route('/report', methods=['GET', 'POST'])
 def report():
-    if request.method == 'POST':
-        title = request.form['title']
-        location = request.form['location']
-        detail = request.form['detail']
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
 
-        # 📸 จัดการไฟล์รูปภาพ (แปลงเป็น Base64)
+    if request.method == 'POST':
+        title = request.form.get('title')
+        building = request.form.get('location_building')
+        room = request.form.get('location_room')
+        detail = request.form.get('detail')
+        repair_time = request.form.get('repair_time')
+        phone = request.form.get('phone')
+        
+        # รวมสถานที่เพื่อเก็บลงคอลัมน์ location เดิม
+        location = f"{building} ห้อง {room}"
+        
+        # ดึง username จาก session มาบันทึกลงตาราง reports
+        current_username = session.get('username')
+
         image = request.files.get('image')
         image_base64 = None
-        
         if image and image.filename != '':
-            # อ่านไฟล์รูปแล้วแปลงเป็นตัวอักษร Base64 ยาวๆ
             image_base64 = base64.b64encode(image.read()).decode('utf-8')
 
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor()
-
-            # หา id ว่างตัวแรก
-            cursor.execute("""
-                SELECT t1.id + 1 AS next_id
-                FROM reports t1
-                LEFT JOIN reports t2 ON t1.id + 1 = t2.id
-                WHERE t2.id IS NULL
-                ORDER BY t1.id
-                LIMIT 1
-            """)
-            result = cursor.fetchone()
-
-            if result and result['next_id']:
-                new_id = result['next_id']
-            else:
-                new_id = 1
-
-            # กรณีตารางว่าง
-            cursor.execute("SELECT COUNT(*) AS c FROM reports")
-            if cursor.fetchone()['c'] == 0:
-                new_id = 1
-
-            # 🚀 insert ด้วย id ที่หาได้ พร้อมบันทึกข้อมูลรูป (image_data)
-            sql = "INSERT INTO reports (id, title, location, detail, image_data) VALUES (%s, %s, %s, %s, %s)"
-            cursor.execute(sql, (new_id, title, location, detail, image_base64))
-
+            
+            # ตัด room_number ออกจากรายการคอลัมน์ และใช้ location แทน
+            sql = """
+                INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            
+            # ส่งค่าให้ตรงกับจำนวน %s (8 ตัว)
+            # โดยที่ 'location' จะเก็บค่า f"{building} ห้อง {room}" ที่เรารวมไว้แล้ว
+            cursor.execute(sql, (
+                title,          # ประเภทปัญหา
+                detail,         # รายละเอียด
+                location,       # สถานที่ (อาคาร + ห้อง)
+                building,       # อาคาร
+                repair_time,    # วันเวลาที่สะดวก
+                phone,          # เบอร์โทร
+                current_username, # ชื่อผู้ใช้จาก session
+                image_base64    # รูปภาพ
+            ))
+            
             conn.commit()
             conn.close()
-
-            flash('✅ ส่งเรื่องและแนบรูปภาพเรียบร้อย', 'success')
+            flash('✅ ส่งเรื่องแจ้งซ่อมเรียบร้อย', 'success')
             return redirect(url_for('user.home'))
 
     return render_template('user/report_form.html')
+
+# ---------------- PROFILE ----------------
+@user_bp.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+        
+    conn = get_db_connection()
+    user_data = None
+    if conn:
+        cursor = conn.cursor()
+        # ดึงข้อมูลตาม user_id ที่เก็บไว้ใน session
+        cursor.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+        user_data = cursor.fetchone()
+        conn.close()
+        
+    return render_template('user/profile.html', user=user_data)
+
+
+##---------------- RECORD (ประวัติแจ้งซ่อมของ User คนนั้นๆ) ----------------
+@user_bp.route('/record_user')
+def record_user():
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+        
+    conn = get_db_connection()
+    reports = []
+    if conn:
+        cursor = conn.cursor()
+        # ดึงประวัติเฉพาะของ User คนนั้นๆ
+        cursor.execute("SELECT * FROM reports WHERE username = %s ORDER BY id DESC", (session.get('username'),))
+        reports = cursor.fetchall()
+        conn.close()
+    return render_template('user/record_user.html', reports=reports)

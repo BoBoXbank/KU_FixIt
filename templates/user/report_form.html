@@ -1,339 +1,90 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ใบแจ้งซ่อม</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Prompt', sans-serif;
-}
-
-body{
-    background:#bcd6cf;
-    display:flex;
-    min-height:100vh;
-}
-
-/* Sidebar */
-.sidebar{
-    width:260px;
-    background:#ffffff;
-    padding:25px 20px;
-    box-shadow:2px 0 10px rgba(0,0,0,0.05);
-}
-
-.logo img{
-    width:100px;
-    display:flex;
-    justify-content:center;
-    margin-bottom:10px;
-}
-
-.university{
-    font-size:13px;
-    color:#0b6b5e;
-    margin-bottom:20px;
-}
-
-.user{
-    margin:15px 0;
-    font-weight:500;
-}
-
-.menu{
-    margin-top:20px;
-}
-
-.menu-item{
-    padding:12px;
-    border-radius:8px;
-    margin-bottom:8px;
-    cursor:pointer;
-    color:#444;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    color:#0b6b5e;
-    font-weight:500;
-}
-
-.menu-item:hover{
-    background:#e6f2ef;
-}
-
-.logout{
-    margin-top:120px;
-    color:#0b6b5e;
-    font-weight:500;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    cursor:pointer;
-    color:#0b6b5e;
-    font-weight:500;
-    text-decoration:none;
-}
-
-/* Main */
-.main{
-    flex:1;
-    padding:40px;
-}
-
-.title{
-    font-size:26px;
-    font-weight:600;
-    margin-bottom:25px;
-    color:#2f4f4f;
-}
-
-/* Card */
-.card{
-    background:#ffffff;
-    padding:35px;
-    border-radius:20px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.08);
-    max-width:700px;
-}
-
-.form-group{
-    margin-bottom:18px;
-}
-
-label{
-    font-size:14px;
-    font-weight:500;
-    color:#2f4f4f;
-    margin-bottom:6px;
-    display:block;
-}
-
-input, select, textarea{
-    width:100%;
-    padding:12px;
-    border-radius:10px;
-    border:1px solid #cfded9;
-    background:#e9f2ef;
-    font-size:14px;
-    outline:none;
-}
-
-textarea{
-    resize:none;
-    height:90px;
-}
-
-.row{
-    display:flex;
-    gap:15px;
-}
-
-.row .form-group{
-    flex:1;
-}
-
-/* Upload Box */
-.upload-box{
-    border:2px dashed #cfded9;
-    background:#f4f9f8;
-    border-radius:12px;
-    padding:25px;
-    text-align:center;
-    color:#6a8a83;
-    font-size:14px;
-    cursor:pointer;
-    transition:0.2s;
-}
-
-.upload-box:hover{
-    background:#e6f2ef;
-}
-
-.upload-box.dragover{
-    border-color:#3aa482;
-    background:#e0f2ec;
-}
-
-/* Buttons */
-.button-group{
-    display:flex;
-    gap:15px;
-    margin-top:20px;
-}
-
-.btn-submit{
-    flex:1;
-    background:#3aa482;
-    color:white;
-    border:none;
-    padding:14px;
-    border-radius:12px;
-    font-size:15px;
-    font-weight:500;
-    cursor:pointer;
-}
-
-.btn-submit:hover{
-    background:#2f8c6f;
-}
-
-.btn-cancel{
-    width:120px;
-    background:#e0ece8;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-}
-</style>
-</head>
-
-<body>
-
-<!-- Sidebar -->
-<div class="sidebar">
-    <div class="logo">
-        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoLzPcypWSJBJPazKtgRKGWTfrjx6L5w-lbQ&s" alt="KU Logo">
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <span class="fs-2 me-2">📋</span>
+            <h2 class="fw-bold mb-0">ใบแจ้งซ่อม</h2>
+        </div>
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center bg-white" 
+                 style="width: 60px; height: 60px; overflow: hidden;">
+                <i class="bi bi-person-fill fs-2 text-secondary"></i>
+            </div>
+        </a>
     </div>
 
-    <div class="user">User<br><small>จัดการระบบแจ้งซ่อม</small></div>
-
-    <div class="menu">
-        <div class="menu-item">🏠 หน้าหลัก</div>
-        <div class="menu-item">🛠️ แจ้งซ่อม</div>
-        <div class="menu-item">📋 ประวัติแจ้งซ่อม</div>
-        <div class="menu-item">👤 โปรไฟล์</div>
-    </div>
-
-    <a href="{{ url_for('user.home') }}" class="logout">🚪 ออกจากระบบ</a>
-</div>
-
-<!-- Main Content -->
-<div class="main">
-    <div class="title">📋 ใบแจ้งซ่อม</div>
-
-    <div class="card">
-        <form>
-
-            <div class="row">
-                <div class="form-group">
-                    <label>อาคาร</label>
-                    <select>
-                        <option>เลือกอาคาร</option>
-                        <option>อาคาร 1</option>
-                        <option>อาคาร 2</option>
+    <div class="card border-0 shadow-lg mx-auto" style="max-width: 750px; border-radius: 35px; padding: 40px;">
+        <form action="{{ url_for('user.report') }}" method="POST" enctype="multipart/form-data">
+            
+            <div class="row g-3 mb-3">
+                <div class="col-md-7">
+                    <label class="text-success fw-bold small mb-1">อาคาร</label>
+                    <select name="location_building" class="form-select border-0 bg-light rounded-3 py-2">
+                        <option selected disabled>เลือกอาคาร</option>
+                        <option value="อาคาร A">อาคาร A</option>
+                        <option value="อาคาร B">อาคาร B</option>
+                        <option value="อาคาร C">อาคาร C</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label>ห้อง</label>
-                    <input type="text" placeholder="เช่น 301">
+                <div class="col-md-5">
+                    <label class="text-success fw-bold small mb-1">ห้อง</label>
+                    <input type="text" name="location_room" class="form-control border-0 bg-light rounded-3 py-2" placeholder="เช่น 301">
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>ประเภทปัญหา</label>
-                <select>
-                    <option>เลือกประเภท</option>
-                    <option>ไฟฟ้า</option>
-                    <option>ประปา</option>
-                    <option>แอร์</option>
+            <div class="mb-3">
+                <label class="text-success fw-bold small mb-1">ประเภทปัญหา</label>
+                <select name="title" class="form-select border-0 bg-light rounded-3 py-2">
+                    <option selected disabled>เลือกประเภท</option>
+                    <option value="ไฟฟ้า">ไฟฟ้า</option>
+                    <option value="ประปา">ประปา</option>
+                    <option value="แอร์">แอร์</option>
+                    <option value="อื่นๆ">อื่นๆ</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>รายละเอียดปัญหา</label>
-                <textarea placeholder="อธิบายปัญหาที่พบ เช่น ตำแหน่ง อาคาร เวลาที่เกิดปัญหา..."></textarea>
+            <div class="mb-3">
+                <label class="text-success fw-bold small mb-1">รายละเอียดปัญหา</label>
+                <textarea name="detail" class="form-control border-0 bg-light rounded-3 py-2" rows="3" placeholder="อธิบายปัญหาที่พบ เช่น ตำแหน่ง อาคาร เวลาที่เกิดปัญหา..."></textarea>
             </div>
 
-            <!-- Upload Section -->
-            <div class="form-group">
-                <label>แนบรูปภาพ (ไม่บังคับ)</label>
-
-                <div class="upload-box" id="uploadBox">
-                    <p>
-                        คลิกเพื่อเลือกรูปภาพ หรือ ลากไฟล์มาวาง<br>
-                        รองรับ JPG, PNG ขนาดไม่เกิน 5MB
-                    </p>
-                    <input type="file" id="imageInput" accept="image/png, image/jpeg" hidden>
+            <div class="mb-4">
+                <label class="text-success fw-bold small mb-1">แนบรูปภาพ (ไม่บังคับ)</label>
+                <div class="upload-area border-2 border-dashed rounded-4 p-4 text-center bg-light" 
+                     style="border-color: #cfded9 !important; cursor: pointer;"
+                     onclick="document.getElementById('imageInput').click()">
+                    <i class="bi bi-camera-fill fs-1 text-secondary"></i>
+                    <p class="mb-0 text-muted small mt-2">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวาง<br>รองรับ JPG, PNG ขนาดไม่เกิน 5MB</p>
+                    <input type="file" name="image" id="imageInput" accept="image/*" hidden onchange="updateFileName(this)">
+                    <div id="file-chosen" class="mt-2 fw-bold text-success small"></div>
                 </div>
-
-                <div id="fileName" style="margin-top:8px; font-size:14px; color:#2f4f4f;"></div>
             </div>
 
-            <div class="form-group">
-                <label>วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
-                <input type="datetime-local">
+            <div class="mb-3">
+                <label class="text-success fw-bold small mb-1">วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
+                <input type="datetime-local" name="repair_time" class="form-control border-0 bg-light rounded-3 py-2">
             </div>
 
-            <div class="form-group">
-                <label>เบอร์โทรติดต่อ</label>
-                <input type="text" placeholder="0XX-XXX-XXXX">
+            <div class="mb-4">
+                <label class="text-success fw-bold small mb-1">เบอร์โทรติดต่อ</label>
+                <input type="text" name="phone" class="form-control border-0 bg-light rounded-3 py-2" placeholder="0XX-XXX-XXXX">
             </div>
 
-            <div class="button-group">
-                <button type="submit" class="btn-submit">ส่งใบแจ้งซ่อม</button>
-                <button type="button" class="btn-cancel">ยกเลิก</button>
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-success flex-grow-1 rounded-pill py-3 fw-bold" style="background-color: #3AA482;">ส่งใบแจ้งซ่อม</button>
+                <button type="button" class="btn btn-light px-5 rounded-pill py-3 fw-bold text-muted" 
+                        onclick="window.history.back()" style="background-color: #F1F8F6;">ยกเลิก</button>
             </div>
-
         </form>
     </div>
 </div>
 
 <script>
-const uploadBox = document.getElementById("uploadBox");
-const imageInput = document.getElementById("imageInput");
-const fileNameDisplay = document.getElementById("fileName");
-
-uploadBox.addEventListener("click", () => {
-    imageInput.click();
-});
-
-imageInput.addEventListener("change", function() {
-    handleFile(this.files[0]);
-});
-
-uploadBox.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    uploadBox.classList.add("dragover");
-});
-
-uploadBox.addEventListener("dragleave", () => {
-    uploadBox.classList.remove("dragover");
-});
-
-uploadBox.addEventListener("drop", (e) => {
-    e.preventDefault();
-    uploadBox.classList.remove("dragover");
-    const file = e.dataTransfer.files[0];
-    handleFile(file);
-});
-
-function handleFile(file){
-    if(!file) return;
-
-    const allowedTypes = ["image/jpeg", "image/png"];
-    const maxSize = 5 * 1024 * 1024;
-
-    if(!allowedTypes.includes(file.type)){
-        alert("อนุญาตเฉพาะไฟล์ JPG หรือ PNG เท่านั้น");
-        return;
-    }
-
-    if(file.size > maxSize){
-        alert("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
-        return;
-    }
-
-    fileNameDisplay.textContent = "ไฟล์ที่เลือก: " + file.name;
+function updateFileName(input) {
+    const fileChosen = document.getElementById('file-chosen');
+    fileChosen.textContent = input.files.length > 0 ? "ไฟล์ที่เลือก: " + input.files[0].name : "";
 }
 </script>
-
-</body>
-</html>
+{% endblock %}

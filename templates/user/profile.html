@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('user.home') }}{% endif %}" 
+           class="text-decoration-none text-secondary me-3">
+            <i class="bi bi-arrow-left-circle fs-2"></i>
+        </a>
+        <h2 class="fw-bold mb-0">โปรไฟล์</h2>
+    </div>
+
+    <div class="card border-0 shadow-lg mx-auto" style="max-width: 650px; border-radius: 35px; padding: 40px;">
+        <div class="text-center mb-4">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold mb-3 shadow-sm" 
+                 style="width: 100px; height: 100px; background-color: #16A34A; font-size: 2.5rem;">
+                {{ user.first_name[0] if user.first_name else user.username[0] }}
+            </div>
+            <h3 class="fw-bold">{{ user.first_name if user.first_name else user.username }} {{ user.last_name if user.last_name else '' }}</h3>
+            <p class="text-muted small">สถานะ: {{ user.role }} | ห้อง: {{ user.room_number if user.room_number else '-' }}</p>
+        </div>
+
+        <form action="#" method="POST">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="text-success fw-bold small mb-1">ชื่อ</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.first_name }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-success fw-bold small mb-1">นามสกุล</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.last_name }}" readonly>
+                </div>
+                <div class="col-12">
+                    <label class="text-success fw-bold small mb-1">อีเมล</label>
+                    <input type="email" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.email }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-success fw-bold small mb-1">ตำแหน่ง (Role)</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.role }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-success fw-bold small mb-1">เลขห้อง</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.room_number }}" readonly>
+                </div>
+            </div>
+
+            <hr class="text-muted">
+            
+            <div class="mb-4 text-start">
+                <p class="fw-bold mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>เปลี่ยนรหัสผ่าน</p>
+                <div class="mb-2">
+                    <label class="text-success fw-bold small mb-1">รหัสผ่านปัจจุบัน</label>
+                    <input type="password" name="old_password" class="form-control border-0 bg-light rounded-3 py-2" placeholder="********">
+                </div>
+                <div class="mb-2">
+                    <label class="text-success fw-bold small mb-1">รหัสผ่านใหม่</label>
+                    <input type="password" name="new_password" class="form-control border-0 bg-light rounded-3 py-2" placeholder="อย่างน้อย 8 ตัวอักษร">
+                </div>
+                <div class="mb-3">
+                    <label class="text-success fw-bold small mb-1">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" name="confirm_password" class="form-control border-0 bg-light rounded-3 py-2" placeholder="ยืนยันรหัสผ่านใหม่">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold" style="background-color: #3AA482;">บันทึกข้อมูล</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

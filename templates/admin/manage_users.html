@@ -1,48 +1,102 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>จัดการสิทธิ์ผู้ใช้งาน</h2>
-    <a href="/admin" class="btn btn-outline-secondary rounded-pill">⬅ กลับ Dashboard</a>
-</div>
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <span class="fs-2 me-2">📜</span>
+            <h2 class="fw-bold mb-0">เลื่อนสถานะ</h2>
+        </div>
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center bg-white" 
+                 style="width: 60px; height: 60px; overflow: hidden;">
+                <i class="bi bi-person-fill fs-2 text-secondary"></i>
+            </div>
+        </a>
+    </div>
 
-<div class="card p-4 shadow-sm border-0 rounded-4">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead class="bg-light">
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Role ปัจจุบัน</th>
-                    <th>การจัดการ</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td class="fw-bold">{{ user.username }}</td>
-                    <td>
-                        {% if user.role == 'admin' %}
-                            <span class="badge bg-success rounded-pill px-3 py-2">👑 Admin</span>
-                        {% else %}
-                            <span class="badge bg-secondary rounded-pill px-3 py-2">👤 User</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="d-flex gap-2">
-                            {% if user.role == 'user' %}
-                                <a href="/admin/users/promote/{{ user.id }}" class="btn btn-sm btn-outline-success rounded-pill" onclick="return confirm('แต่งตั้งให้เป็น Admin?');">⬆ แต่งตั้งเป็น Admin</a>
-                            {% else %}
-                                <a href="/admin/users/demote/{{ user.id }}" class="btn btn-sm btn-outline-warning rounded-pill text-dark" onclick="return confirm('ปลดออกจาก Admin?');">⬇ ปลดเป็น User</a>
-                            {% endif %}
-                            
-                            <a href="/admin/users/delete/{{ user.id }}" class="btn btn-sm btn-outline-danger rounded-pill" onclick="return confirm('⚠️ ยืนยันว่าจะลบบัญชีผู้ใช้นี้ถาวร?');">🗑️ ลบ</a>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 30px;">
+        <form action="{{ url_for('admin.manage_users') }}" method="GET" class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="row align-items-center">
+                    <label class="col-sm-2 col-form-label text-muted">user :</label>
+                    <div class="col-sm-10">
+                        <input type="text" name="user" value="{{ request.args.get('user', '') }}" class="form-control border-0 bg-light rounded-pill px-3">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="row align-items-center">
+                    <label class="col-sm-2 col-form-label text-muted">แผนก :</label>
+                    <div class="col-sm-10">
+                        <input type="text" name="dept" class="form-control border-0 bg-light rounded-pill px-3" placeholder="ชั่วคราว">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="row align-items-center">
+                    <label class="col-sm-2 col-form-label text-muted">ชื่อ :</label>
+                    <div class="col-sm-10">
+                        <input type="text" name="first_name" value="{{ request.args.get('first_name', '') }}" class="form-control border-0 bg-light rounded-pill px-3">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="row align-items-center">
+                    <label class="col-sm-2 col-form-label text-muted">นามสกุล :</label>
+                    <div class="col-sm-10">
+                        <input type="text" name="last_name" value="{{ request.args.get('last_name', '') }}" class="form-control border-0 bg-light rounded-pill px-3">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-link text-dark fs-3 p-0">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm p-0" style="border-radius: 30px; overflow: hidden;">
+        <div class="p-4 bg-white border-bottom">
+            <h5 class="fw-bold mb-0">รายชื่อผู้ใช้งาน</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #F0F9F6; color: #8BA99B;">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">ชื่อ</th>
+                        <th class="py-3 border-0">นามสกุล</th>
+                        <th class="py-3 border-0">user</th>
+                        <th class="py-3 border-0">จัดการสถานะ</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% for user in users %}
+    <tr>
+        <td class="ps-4 py-3">{{ user.first_name if user.first_name else '-' }}</td>
+        <td class="py-3">{{ user.last_name if user.last_name else '-' }}</td>
+        <td class="py-3 text-muted">{{ user.username }}</td>
+        <td class="py-3 pe-4">
+            <form action="{{ url_for('admin.promote', id=user.id) }}" method="GET">
+                <select name="role" class="form-select border-success text-center rounded-pill" 
+                        onchange="this.form.submit()"
+                        style="background-color: #F0F9F6; color: #2C5F4D; border-width: 1px;">
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>นิสิต (User)</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>ผู้ดูแล (Admin)</option>
+                    <option value="technician_air" {% if user.role == 'technician_air' %}selected{% endif %}>ช่างแอร์</option>
+                    <option value="technician_wood" {% if user.role == 'technician_wood' %}selected{% endif %}>ช่างไม้</option>
+                    <option value="technician_wifi" {% if user.role == 'technician_wifi' %}selected{% endif %}>ช่าง WiFi</option>
+                    <option value="technician_plumb" {% if user.role == 'technician_plumb' %}selected{% endif %}>ช่างประปา</option>
+                </select>
+                <input type="hidden" name="id" value="{{ user.id }}">
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}
