@@ -51,6 +51,7 @@ source .venv/bin/activate
 
 สำหรับ Windows:
 py -m venv .venv
+set-executionpolicy RemoteSigned -Scope CurrentUser
 .venv\Scripts\activate
 
 3️⃣ ติดตั้ง Dependencies
