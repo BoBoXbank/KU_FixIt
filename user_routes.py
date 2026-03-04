@@ -27,21 +27,24 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('user.login'))
     
-    # แยกไปหน้าตาม Role
-    role = session.get('role')
+    # ดึง role มาเช็ค
+    role = session.get('role', '') # ใส่ '' กันเหนียวกรณีไม่มีค่า
+    
+    # 1. ถ้าเป็นแอดมิน ไปหน้าแอดมิน
     if role == 'admin':
         return redirect(url_for('admin.dashboard'))
-    elif role == 'technician':
-        return redirect(url_for('technician.dashboardtech')) # หน้าของช่าง
+        
+    # 2. ✅ ถ้า role ขึ้นต้นด้วยคำว่า 'technician_' ให้ไปหน้าช่าง ✅
+    elif role.startswith('technician_'): 
+        return redirect(url_for('technician.dashboardtech')) 
     
-    # สำหรับ User ทั่วไป: ดึงสถิติเฉพาะของตัวเองมาโชว์
+    # 3. นอกนั้น (User ทั่วไป) ค่อยดึงข้อมูลของ User มาแสดง
     conn = get_db_connection()
     stats = {'total': 0, 'pending': 0, 'ongoing': 0, 'finished': 0}
     recent_reports = []
     
     if conn:
         cursor = conn.cursor()
-        # ดึงเฉพาะรายการที่ username ตรงกับคนที่ล็อกอิน
         cursor.execute("SELECT * FROM reports WHERE username = %s ORDER BY id DESC", (session.get('username'),))
         reports = cursor.fetchall()
         
@@ -49,7 +52,7 @@ def home():
         stats['pending'] = len([r for r in reports if r['status'] == 'รอซ่อม'])
         stats['ongoing'] = len([r for r in reports if r['status'] == 'กำลังซ่อม'])
         stats['finished'] = len([r for r in reports if r['status'] == 'เสร็จสิ้น'])
-        recent_reports = reports[:5] # เอาแค่ 5 รายการล่าสุด
+        recent_reports = reports[:5]
         conn.close()
 
     return render_template('user/home.html', stats=stats, reports=recent_reports)
@@ -169,7 +172,6 @@ def login():
                 session['username'] = user['username']
 
                 # ถ้าเป็นแอดมินให้ไปหน้าแอดมิน ถ้าทั่วไปให้ไปหน้าแจ้งซ่อม
-                # ปรับจากเดิมใน user_routes.py 
                 if user['role'] == 'admin':
                     return redirect(url_for('admin.dashboard'))
                 elif user['role'].startswith('technician_'): # ใช้ startswith เพื่อครอบคลุมทุกแผนกช่าง
@@ -261,14 +263,13 @@ def report():
         if conn:
             cursor = conn.cursor()
             
-            # ตัด room_number ออกจากรายการคอลัมน์ และใช้ location แทน
+            # ✅ แก้ไขตรงนี้: เพิ่ม status เข้าไป และบังคับให้เป็น 'รอซ่อม'
             sql = """
-                INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data) 
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data, status) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'รอซ่อม')
             """
             
             # ส่งค่าให้ตรงกับจำนวน %s (8 ตัว)
-            # โดยที่ 'location' จะเก็บค่า f"{building} ห้อง {room}" ที่เรารวมไว้แล้ว
             cursor.execute(sql, (
                 title,          # ประเภทปัญหา
                 detail,         # รายละเอียด

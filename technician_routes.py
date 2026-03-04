@@ -4,11 +4,10 @@ from database import get_db_connection
 technician_bp = Blueprint('technician', __name__, url_prefix='/technician')
 
 # 1. สร้างตารางจับคู่ Role กับ "ประเภทงาน" ที่เก็บในคอลัมน์ title
-# ค่าทางขวาต้องตรงกับตัวเลือกในหน้า report_form.html ของคุณ
 ROLE_MAP = {
     'technician_air': 'แอร์',
-    'technician_wood': 'ไม้/เฟอร์นิเจอร์',
-    'technician_wifi': 'อินเทอร์เน็ต/WiFi',
+    'technician_wood': 'ไม้',     # เปลี่ยนจาก 'ไม้/เฟอร์นิเจอร์' เป็น 'ไม้'
+    'technician_wifi': 'WiFi',  # เปลี่ยนจาก 'อินเทอร์เน็ต/WiFi' เป็น 'WiFi'
     'technician_plumb': 'ประปา'
 }
 
@@ -16,6 +15,7 @@ def is_technician():
     role = session.get('role', '')
     return role.startswith('technician_') or role == 'admin'
 
+# ---------------- DASHBOARD TECH ----------------
 @technician_bp.route('/dashboard')
 def dashboardtech():
     if not is_technician():
@@ -36,14 +36,15 @@ def dashboardtech():
             # Admin เห็นงานทั้งหมด
             cursor.execute("SELECT * FROM reports ORDER BY id DESC")
         else:
-            # ช่างเห็น: 1. งานที่ตรงสายงานและยังไม่มีคนรับ OR 2. งานที่ตัวเองรับมาแล้ว
+            # ✅ แก้ไขตรงนี้: เปลี่ยนจากการหาคำเป๊ะๆ (=) เป็นการหาบางส่วน (LIKE)
             query = """
                 SELECT * FROM reports 
-                WHERE (title = %s AND (technician_id IS NULL OR status = 'รอซ่อม'))
+                WHERE (title LIKE %s AND (technician_id IS NULL OR status = 'รอซ่อม'))
                 OR (technician_id = %s)
                 ORDER BY id DESC
             """
-            cursor.execute(query, (category, user_id))
+            # ✅ ใส่ % คลุมตัวแปร category เพื่อให้หาคำว่า "แอร์" เจอชัวร์ๆ
+            cursor.execute(query, (f"%{category}%", user_id))
             
         reports = cursor.fetchall()
         conn.close()
@@ -57,6 +58,8 @@ def dashboardtech():
 
     return render_template('technician/dashbordtech.html', reports=reports, stats=stats)
 
+
+# ---------------- UPDATE STATUS ----------------
 @technician_bp.route('/update_status/<int:id>', methods=['POST'])
 def update_status(id):
     if not is_technician(): return redirect(url_for('user.login'))
@@ -83,3 +86,22 @@ def update_status(id):
         flash('✅ อัปเดตสถานะงานเรียบร้อย', 'success')
 
     return redirect(url_for('technician.dashboardtech'))
+
+
+# ---------------- RECORD TECH (เพิ่มให้เพื่อให้กดเมนูข้างได้) ----------------
+@technician_bp.route('/record_tech')
+def record_tech():
+    if not is_technician():
+        return redirect(url_for('user.login'))
+        
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+    reports = []
+    if conn:
+        cursor = conn.cursor()
+        # ดึงเฉพาะงานที่ช่างคนนั้นๆ กดรับไปทำ และซ่อมเสร็จแล้ว
+        cursor.execute("SELECT * FROM reports WHERE technician_id = %s AND status = 'เสร็จสิ้น' ORDER BY id DESC", (user_id,))
+        reports = cursor.fetchall()
+        conn.close()
+        
+    return render_template('technician/record_tech.html', reports=reports)

@@ -1,42 +1,116 @@
-<table class="table">
-    <thead>
-        <tr>
-            <th>เลขที่</th>
-            <th>ประเภท</th>
-            <th>ปัญหา</th>
-            <th>สถานะ</th>
-            <th>จัดการ</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for report in reports %}
-        <tr>
-            <td>#REP-{{ report.id }}</td>
-            <td>{{ report.title }}</td>
-            <td>{{ report.detail }}</td>
-            <td>
-                <span class="badge {% if report.status == 'รอซ่อม' %}bg-warning{% elif report.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-success{% endif %}">
-                    {{ report.status }}
-                </span>
-            </td>
-            <td>
-                {% if report.status == 'รอซ่อม' %}
-                <form action="{{ url_for('technician.update_status', id=report.id) }}" method="POST">
-                    <input type="hidden" name="status" value="กำลังซ่อม">
-                    <button type="submit" class="btn btn-success btn-sm">รับงาน</button>
-                </form>
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0 text-dark">สวัสดี, ช่าง{{ session.get('first_name', session.get('username')) }}</h2>
+            <p class="text-muted">คุณมีงานกำลังดำเนินการ {{ stats.ongoing }} รายการ และงานใหม่ {{ stats.pending }} รายการ</p>
+        </div>
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center bg-white" 
+                 style="width: 60px; height: 60px; overflow: hidden;">
+                <i class="bi bi-person-fill fs-2 text-secondary"></i>
+            </div>
+        </a>
+    </div>
 
-                {% elif report.status == 'กำลังซ่อม' %}
-                <form action="{{ url_for('technician.update_status', id=report.id) }}" method="POST">
-                    <input type="hidden" name="status" value="เสร็จสิ้น">
-                    <button type="submit" class="btn btn-info btn-sm">ซ่อมเสร็จ</button>
-                </form>
-                
-                {% else %}
-                <span class="text-muted">ดำเนินการแล้ว</span>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                <div class="mb-3">
+                    <span class="fs-3 bg-warning bg-opacity-10 text-warning p-3 rounded-circle">🏠</span>
+                </div>
+                <h2 class="fw-bold mb-0 text-dark">{{ stats.pending }}</h2>
+                <small class="text-muted">งานรอรับ (ทั้งหมดในแผนก)</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                <div class="mb-3">
+                    <span class="fs-3 bg-primary bg-opacity-10 text-primary p-3 rounded-circle">⏰</span>
+                </div>
+                <h2 class="fw-bold mb-0 text-dark">{{ stats.ongoing }}</h2>
+                <small class="text-muted">กำลังดำเนินการ (งานของคุณ)</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                <div class="mb-3">
+                    <span class="fs-3 bg-success bg-opacity-10 text-success p-3 rounded-circle">🌸</span>
+                </div>
+                <h2 class="fw-bold mb-0 text-dark">{{ stats.finished }}</h2>
+                <small class="text-muted">เสร็จแล้ว (ประวัติของคุณ)</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-0" style="border-radius: 20px; overflow: hidden;">
+        <div class="p-4 bg-white border-bottom">
+            <h5 class="fw-bold mb-0 text-dark">งานซ่อมที่ได้รับมอบหมาย</h5>
+        </div>
+        <div class="table-responsive bg-white">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #F0F9F6; color: #8BA99B;">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">เลขที่</th>
+                        <th class="py-3 border-0">อาคาร/ห้อง</th>
+                        <th class="py-3 border-0">แผนก</th>
+                        <th class="py-3 border-0">ปัญหา</th>
+                        <th class="py-3 border-0 text-center">สถานะ</th>
+                        <th class="py-3 border-0 text-center">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set active_jobs = 0 %}
+                    {% for item in reports %}
+                        {% if item.status in ['รอซ่อม', 'กำลังซ่อม'] %}
+                            {% set active_jobs = active_jobs + 1 %}
+                            <tr>
+                                <td class="ps-4 py-4 text-muted">#REP-{{ "%03d" | format(item.id) }}</td>
+                                <td class="py-4 fw-medium">{{ item.location }}</td>
+                                <td class="py-4 text-success">{{ item.title }}</td>
+                                <td class="py-4">{{ item.detail | truncate(40) }}</td>
+                                <td class="py-4 text-center">
+                                    {% if item.status == 'รอซ่อม' %}
+                                        <span class="badge rounded-pill" style="background-color: #FFF3CD; color: #856404; padding: 8px 15px;">รอรับงาน</span>
+                                    {% else %}
+                                        <span class="badge rounded-pill" style="background-color: #E6F0FF; color: #0066FF; padding: 8px 15px;">กำลังซ่อม</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-4 text-center">
+                                    {% if item.status == 'รอซ่อม' %}
+                                        <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST">
+                                            <input type="hidden" name="status" value="กำลังซ่อม">
+                                            <button type="submit" class="btn btn-success rounded-pill px-4 btn-sm fw-bold shadow-sm">
+                                                รับงาน
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST">
+                                            <input type="hidden" name="status" value="เสร็จสิ้น">
+                                            <button type="submit" class="btn btn-outline-success rounded-pill px-4 btn-sm fw-bold border-2">
+                                                ซ่อมเสร็จ
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if stats.pending == 0 and stats.ongoing == 0 %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
+                                ไม่มีงานค้างในระบบ เยี่ยมมาก!
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
