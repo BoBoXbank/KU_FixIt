@@ -78,18 +78,17 @@
         <td class="py-3">{{ user.last_name if user.last_name else '-' }}</td>
         <td class="py-3 text-muted">{{ user.username }}</td>
         <td class="py-3 pe-4">
-            <form action="{{ url_for('admin.promote', id=user.id) }}" method="GET">
-                <select name="role" class="form-select border-success text-center rounded-pill" 
-                        onchange="this.form.submit()"
-                        style="background-color: #F0F9F6; color: #2C5F4D; border-width: 1px;">
-                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>นิสิต (User)</option>
-                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>ผู้ดูแล (Admin)</option>
-                    <option value="technician_air" {% if user.role == 'technician_air' %}selected{% endif %}>ช่างแอร์</option>
-                    <option value="technician_wood" {% if user.role == 'technician_wood' %}selected{% endif %}>ช่างไม้</option>
-                    <option value="technician_wifi" {% if user.role == 'technician_wifi' %}selected{% endif %}>ช่าง WiFi</option>
-                    <option value="technician_plumb" {% if user.role == 'technician_plumb' %}selected{% endif %}>ช่างประปา</option>
-                </select>
-                <input type="hidden" name="id" value="{{ user.id }}">
+            <form action="{{ url_for('admin.change_role', id=user.id) }}" method="GET">
+            <select name="role" class="form-select border-success text-center rounded-pill" 
+                    onchange="this.form.submit()"
+                    style="background-color: #F0F9F6; color: #2C5F4D; border-width: 1px;">
+                <option value="user" {% if user.role == 'user' %}selected{% endif %}>นิสิต (User)</option>
+                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>ผู้ดูแล (Admin)</option>
+                <option value="technician_air" {% if user.role == 'technician_air' %}selected{% endif %}>ช่างแอร์</option>
+                <option value="technician_wood" {% if user.role == 'technician_wood' %}selected{% endif %}>ช่างไม้</option>
+                <option value="technician_wifi" {% if user.role == 'technician_wifi' %}selected{% endif %}>ช่าง WiFi</option>
+                <option value="technician_plumb" {% if user.role == 'technician_plumb' %}selected{% endif %}>ช่างประปา</option>
+            </select>
             </form>
         </td>
     </tr>

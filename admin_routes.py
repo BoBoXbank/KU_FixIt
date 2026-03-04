@@ -118,28 +118,26 @@ def manage_users():
         
     return render_template('admin/manage_users.html', users=users)
 
-@admin_bp.route('/users/promote/<int:id>')
-def promote(id):
+# แก้ไขใน admin_routes.py
+@admin_bp.route('/users/change_role/<int:id>')
+def change_role(id):
     if not is_admin(): return redirect(url_for('user.home'))
     
-    conn = get_db_connection()
-    if conn:
-        cursor = conn.cursor()
-        cursor.execute("UPDATE users SET role = 'admin' WHERE id = %s", (id,))
-        conn.close()
-        flash('✅ แต่งตั้ง Admin เรียบร้อย', 'success')
-    return redirect(url_for('admin.manage_users'))
+    # รับค่า role ใหม่จาก URL parameter (?role=...)
+    new_role = request.args.get('role')
+    
+    if id == session.get('user_id'):
+        flash('❌ ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้', 'danger')
+        return redirect(url_for('admin.manage_users'))
 
-@admin_bp.route('/users/demote/<int:id>')
-def demote(id):
-    if not is_admin(): return redirect(url_for('user.home'))
-    
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
-        cursor.execute("UPDATE users SET role = 'user' WHERE id = %s", (id,))
+        # อัปเดต role ตามที่เลือกมาจริง
+        cursor.execute("UPDATE users SET role = %s WHERE id = %s", (new_role, id))
         conn.close()
-        flash('⬇ ปลดสิทธิ์ Admin เรียบร้อย', 'warning')
+        flash(f'✅ เปลี่ยนสถานะเป็น {new_role} เรียบร้อย', 'success')
+        
     return redirect(url_for('admin.manage_users'))
 
 # ---------------- ลบผู้ใช้งาน (DELETE USER) ----------------
