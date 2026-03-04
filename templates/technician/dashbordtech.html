@@ -1,0 +1,42 @@
+<table class="table">
+    <thead>
+        <tr>
+            <th>เลขที่</th>
+            <th>ประเภท</th>
+            <th>ปัญหา</th>
+            <th>สถานะ</th>
+            <th>จัดการ</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for report in reports %}
+        <tr>
+            <td>#REP-{{ report.id }}</td>
+            <td>{{ report.title }}</td>
+            <td>{{ report.detail }}</td>
+            <td>
+                <span class="badge {% if report.status == 'รอซ่อม' %}bg-warning{% elif report.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-success{% endif %}">
+                    {{ report.status }}
+                </span>
+            </td>
+            <td>
+                {% if report.status == 'รอซ่อม' %}
+                <form action="{{ url_for('technician.update_status', id=report.id) }}" method="POST">
+                    <input type="hidden" name="status" value="กำลังซ่อม">
+                    <button type="submit" class="btn btn-success btn-sm">รับงาน</button>
+                </form>
+
+                {% elif report.status == 'กำลังซ่อม' %}
+                <form action="{{ url_for('technician.update_status', id=report.id) }}" method="POST">
+                    <input type="hidden" name="status" value="เสร็จสิ้น">
+                    <button type="submit" class="btn btn-info btn-sm">ซ่อมเสร็จ</button>
+                </form>
+                
+                {% else %}
+                <span class="text-muted">ดำเนินการแล้ว</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

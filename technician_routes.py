@@ -3,74 +3,83 @@ from database import get_db_connection
 
 technician_bp = Blueprint('technician', __name__, url_prefix='/technician')
 
-# ฟังก์ชันตรวจสอบว่าเป็นช่างจริงไหม
-def is_technician():
-    return session.get('role') == 'technician'
+# 1. สร้างตารางจับคู่ Role กับ "ประเภทงาน" ที่เก็บในคอลัมน์ title
+# ค่าทางขวาต้องตรงกับตัวเลือกในหน้า report_form.html ของคุณ
+ROLE_MAP = {
+    'technician_air': 'แอร์',
+    'technician_wood': 'ไม้/เฟอร์นิเจอร์',
+    'technician_wifi': 'อินเทอร์เน็ต/WiFi',
+    'technician_plumb': 'ประปา'
+}
 
-# ---------------- DASHBOARD TECH ----------------
+def is_technician():
+    role = session.get('role', '')
+    return role.startswith('technician_') or role == 'admin'
+
 @technician_bp.route('/dashboard')
 def dashboardtech():
     if not is_technician():
         flash('⛔ เฉพาะช่างเท่านั้นที่เข้าถึงหน้านี้ได้', 'danger')
         return redirect(url_for('user.login'))
 
+    user_role = session.get('role')
+    user_id = session.get('user_id')
+    category = ROLE_MAP.get(user_role)
+
     conn = get_db_connection()
     reports = []
-    stats = {'total': 0, 'pending': 0, 'ongoing': 0, 'finished': 0}
-
+    
     if conn:
         cursor = conn.cursor()
-        # ดึงงานทั้งหมดมาให้ช่างดู
-        cursor.execute("SELECT * FROM reports ORDER BY id DESC")
+        
+        if user_role == 'admin':
+            # Admin เห็นงานทั้งหมด
+            cursor.execute("SELECT * FROM reports ORDER BY id DESC")
+        else:
+            # ช่างเห็น: 1. งานที่ตรงสายงานและยังไม่มีคนรับ OR 2. งานที่ตัวเองรับมาแล้ว
+            query = """
+                SELECT * FROM reports 
+                WHERE (title = %s AND (technician_id IS NULL OR status = 'รอซ่อม'))
+                OR (technician_id = %s)
+                ORDER BY id DESC
+            """
+            cursor.execute(query, (category, user_id))
+            
         reports = cursor.fetchall()
-        
-        # คำนวณสถิติงาน
-        stats['total'] = len(reports)
-        stats['pending'] = len([r for r in reports if r['status'] == 'รอซ่อม'])
-        stats['ongoing'] = len([r for r in reports if r['status'] == 'กำลังซ่อม'])
-        stats['finished'] = len([r for r in reports if r['status'] == 'เสร็จสิ้น'])
-        
         conn.close()
 
-    # เรนเดอร์ไฟล์ตามโครงสร้างที่คุณวางไว้
+    # สรุปสถิติเฉพาะงานที่ช่างคนนั้นเห็น
+    stats = {
+        'pending': len([r for r in reports if r['status'] == 'รอซ่อม']),
+        'ongoing': len([r for r in reports if r['status'] == 'กำลังซ่อม']),
+        'finished': len([r for r in reports if r['status'] == 'เสร็จสิ้น'])
+    }
+
     return render_template('technician/dashbordtech.html', reports=reports, stats=stats)
 
-# ---------------- RECORD TECH (ประวัติงานซ่อม) ----------------
-@technician_bp.route('/record')
-def record_tech():
-    if not is_technician():
-        return redirect(url_for('user.login'))
-    
-    conn = get_db_connection()
-    reports = []
-    if conn:
-        cursor = conn.cursor()
-        # ดึงงานที่ซ่อมเสร็จแล้วมาแสดงในหน้าประวัติ
-        cursor.execute("SELECT * FROM reports WHERE status = 'เสร็จสิ้น' ORDER BY id DESC")
-        reports = cursor.fetchall()
-        conn.close()
-        
-    # เรนเดอร์ไฟล์ตามโครงสร้างที่คุณวางไว้
-    return render_template('technician/record_tech.html', reports=reports)
-
-# ---------------- UPDATE STATUS (สำหรับช่างกดรับงาน/ปิดงาน) ----------------
 @technician_bp.route('/update_status/<int:id>', methods=['POST'])
 def update_status(id):
-    if not is_technician():
-        return redirect(url_for('user.login'))
+    if not is_technician(): return redirect(url_for('user.login'))
 
     new_status = request.form.get('status')
+    user_id = session.get('user_id')
     
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
-        # อัปเดตสถานะงาน
-        cursor.execute(
-            "UPDATE reports SET status = %s WHERE id = %s",
-            (new_status, id)
-        )
-        conn.commit()
+        if new_status == 'กำลังซ่อม':
+            # ตอนกดรับงาน ให้บันทึก ID ของช่างที่กดด้วย
+            cursor.execute(
+                "UPDATE reports SET status = %s, technician_id = %s WHERE id = %s",
+                (new_status, user_id, id)
+            )
+        else:
+            # ตอนกดซ่อมเสร็จ เปลี่ยนแค่สถานะ (ID ช่างมีอยู่แล้ว)
+            cursor.execute(
+                "UPDATE reports SET status = %s WHERE id = %s",
+                (new_status, id)
+            )
         conn.close()
-        flash(f'✅ อัปเดตสถานะเป็น "{new_status}" เรียบร้อย', 'success')
+        flash('✅ อัปเดตสถานะงานเรียบร้อย', 'success')
 
     return redirect(url_for('technician.dashboardtech'))

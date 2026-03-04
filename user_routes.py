@@ -169,9 +169,10 @@ def login():
                 session['username'] = user['username']
 
                 # ถ้าเป็นแอดมินให้ไปหน้าแอดมิน ถ้าทั่วไปให้ไปหน้าแจ้งซ่อม
+                # ปรับจากเดิมใน user_routes.py 
                 if user['role'] == 'admin':
                     return redirect(url_for('admin.dashboard'))
-                elif user['role']=='technician':
+                elif user['role'].startswith('technician_'): # ใช้ startswith เพื่อครอบคลุมทุกแผนกช่าง
                     return redirect(url_for('technician.dashboardtech'))
                 return redirect(url_for('user.home'))
             else:
