@@ -6,8 +6,20 @@
             <h2 class="fw-bold mb-0">สวัสดี, {{ session.get('username') }}</h2>
             <p class="text-muted">ยินดีต้อนรับเข้าสู่ระบบแจ้งซ่อม</p>
         </div>
-        <div class="bg-white rounded-circle p-2 shadow-sm">
-            <i class="bi bi-person-circle fs-1 text-secondary"></i>
+        
+        <div>
+            {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+            {% set profile_style = 'style="width: 70px; height: 70px; font-size: 2.5rem; border: 4px solid white; background-color: ' ~ bg_color ~ ';"' %}
+            
+            <a href="{{ url_for('user.profile') }}" class="rounded-circle d-flex align-items-center justify-content-center text-white text-decoration-none shadow-sm" {{ profile_style | safe }}>
+                {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" alt="Profile" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                {% elif current_user_info and current_user_info.first_name %}
+                    {{ current_user_info.first_name[0] | upper }}
+                {% else %}
+                    <i class="bi bi-person-fill"></i>
+                {% endif %}
+            </a>
         </div>
     </div>
 
@@ -62,7 +74,7 @@
                     <div>
                         <h5 class="fw-bold mb-1">ประวัติแจ้งซ่อม</h5>
                         <p class="small text-muted mb-2">ดูสถานะและติดตามผลการซ่อม</p>
-                        <button class="btn btn-outline-secondary rounded-pill px-4">ดูประวัติ</button>
+                        <a href="{{ url_for('user.record_user') }}" class="btn btn-outline-secondary rounded-pill px-4">ดูประวัติ</a>
                     </div>
                 </div>
             </div>
@@ -86,7 +98,7 @@
                         <td>#REP-{{ "%03d" | format(item.id) }}</td>
                         <td>{{ item.title }}</td>
                         <td>
-                            <span class="badge rounded-pill {% if item.status == 'เสร็จสิ้น' %}bg-success{% elif item.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-warning{% endif %}">
+                            <span class="badge rounded-pill {% if item.status == 'เสร็จสิ้น' or item.status == 'เสร็จแล้ว' %}bg-success{% elif item.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-warning{% endif %}">
                                 {{ item.status }}
                             </span>
                         </td>

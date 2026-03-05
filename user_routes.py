@@ -184,6 +184,21 @@ def login():
 
     return render_template('user/login.html')
 
+
+# 🚀 เติมคำว่า app_ เข้าไป เพื่อให้หน้า Admin และช่าง มองเห็นรูปโปรไฟล์ด้วย!
+@user_bp.app_context_processor
+def inject_user_info():
+    user_info = None
+    if 'user_id' in session:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT first_name, profile_picture FROM users WHERE id = %s", (session['user_id'],))
+            user_info = cursor.fetchone()
+            cursor.close()
+            conn.close()
+    return dict(current_user_info=user_info)
+
 # ---------------- FORGOT PASSWORD ----------------
 @user_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
@@ -295,17 +310,29 @@ def profile():
         return redirect(url_for('user.login'))
         
     conn = get_db_connection()
+    
+    # 🚀 ถ้ามีการกดอัปโหลดรูปโปรไฟล์ (คลิกรูปดินสอ)
+    if request.method == 'POST':
+        image = request.files.get('profile_picture')
+        if image and image.filename != '':
+            image_base64 = base64.b64encode(image.read()).decode('utf-8')
+            if conn:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (image_base64, session['user_id']))
+                conn.commit()
+                cursor.close()
+                flash('✅ เปลี่ยนรูปโปรไฟล์สำเร็จ!', 'success')
+                return redirect(url_for('user.profile'))
+
     user_data = None
     if conn:
         cursor = conn.cursor()
-        # ดึงข้อมูลตาม user_id ที่เก็บไว้ใน session
         cursor.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
         user_data = cursor.fetchone()
+        cursor.close()
         conn.close()
         
     return render_template('user/profile.html', user=user_data)
-
-
 ##---------------- RECORD (ประวัติแจ้งซ่อมของ User คนนั้นๆ) ----------------
 @user_bp.route('/record_user')
 def record_user():

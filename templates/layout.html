@@ -28,48 +28,37 @@
             <img src="{{ url_for('static', filename='picture/logo.png') }}" alt="KU Logo" class="sidebar-logo">
             <h1 class="sidebar-title">
                 {% if session.get('role') == 'admin' %} ADMIN
-                {% elif session.get('role') == 'technician' %} TECHNICIAN
+                {% elif session.get('role', '').startswith('technician') %} TECHNICIAN
                 {% else %} ระบบแจ้งซ่อม
                 {% endif %}
             </h1>
         </div>
         
         <nav class="nav flex-column mt-4">
-            <a href="{{ url_for('user.home') }}" 
-               class="nav-link {% if request.endpoint in ['admin.dashboard', 'technician.dashboardtech', 'user.home'] %}active{% endif %}">
+            <a href="{{ url_for('user.home') }}" class="nav-link {% if request.endpoint in ['admin.dashboard', 'technician.dashboardtech', 'user.home'] %}active{% endif %}">
                 <i class="bi bi-house-door text-warning"></i> หน้าหลัก
             </a>
-
-            <a href="{{ url_for('user.report') }}" 
-               class="nav-link {% if request.endpoint == 'user.report' %}active{% endif %}">
+            <a href="{{ url_for('user.report') }}" class="nav-link {% if request.endpoint == 'user.report' %}active{% endif %}">
                 <i class="bi bi-calendar-event text-success"></i> แจ้งซ่อม
             </a>
-            
             {% if session.get('role') == 'admin' %}
-                <a href="{{ url_for('admin.record') }}" 
-                   class="nav-link {% if request.endpoint == 'admin.record' %}active{% endif %}"> 
+                <a href="{{ url_for('admin.record') }}" class="nav-link {% if request.endpoint == 'admin.record' %}active{% endif %}"> 
                     <i class="bi bi-clipboard-check text-primary"></i> ประวัติแจ้งซ่อม
                 </a>
-            {% elif session.get('role') == 'technician' %}
-                <a href="{{ url_for('technician.record_tech') }}" 
-                   class="nav-link {% if request.endpoint == 'technician.record_tech' %}active{% endif %}"> 
+            {% elif session.get('role', '').startswith('technician') %}
+                <a href="{{ url_for('technician.record_tech') }}" class="nav-link {% if request.endpoint == 'technician.record_tech' %}active{% endif %}"> 
                     <i class="bi bi-clipboard-check text-primary"></i> ประวัติงานซ่อม
                 </a>
             {% else %}
-                <a href="{{ url_for('user.record_user') }}" 
-                   class="nav-link {% if request.endpoint == 'user.record_user' %}active{% endif %}"> 
+                <a href="{{ url_for('user.record_user') }}" class="nav-link {% if request.endpoint == 'user.record_user' %}active{% endif %}"> 
                     <i class="bi bi-clipboard-check text-primary"></i> ประวัติการแจ้ง
                 </a>
             {% endif %}
-            
-            <a href="{{ url_for('user.profile') }}" 
-               class="nav-link {% if request.endpoint == 'user.profile' %}active{% endif %}">
+            <a href="{{ url_for('user.profile') }}" class="nav-link {% if request.endpoint == 'user.profile' %}active{% endif %}">
                 <i class="bi bi-person text-info"></i> โปรไฟล์
             </a>
-
             {% if session.get('role') == 'admin' %}
-            <a href="{{ url_for('admin.manage_users') }}" 
-               class="nav-link {% if request.endpoint == 'admin.manage_users' %}active{% endif %}">
+            <a href="{{ url_for('admin.manage_users') }}" class="nav-link {% if request.endpoint == 'admin.manage_users' %}active{% endif %}">
                 <i class="bi bi-arrow-up-circle text-danger"></i> เลื่อนสถานะ
             </a>
             {% endif %}

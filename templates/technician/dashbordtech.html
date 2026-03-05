@@ -1,116 +1,105 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
-    
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h2 class="fw-bold mb-0 text-dark">สวัสดี, ช่าง{{ session.get('first_name', session.get('username')) }}</h2>
-            <p class="text-muted">คุณมีงานกำลังดำเนินการ {{ stats.ongoing }} รายการ และงานใหม่ {{ stats.pending }} รายการ</p>
+            <h2 class="fw-bold mb-1" style="color: #006652;">แดชบอร์ดช่างซ่อม</h2>
+            <p class="text-muted small">รายการแจ้งซ่อมที่รอการดำเนินการ</p>
         </div>
+        
+        {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+        {% set profile_style = 'style="width: 60px; height: 60px; font-size: 2rem; border: 3px solid white; background-color: ' ~ bg_color ~ ';"' %}
+        
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
-            <div class="rounded-circle shadow-sm d-flex align-items-center justify-content-center bg-white" 
-                 style="width: 60px; height: 60px; overflow: hidden;">
-                <i class="bi bi-person-fill fs-2 text-secondary"></i>
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale" {{ profile_style | safe }}>
+                {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                {% elif current_user_info and current_user_info.first_name %}
+                    {{ current_user_info.first_name[0] | upper }}
+                {% else %}
+                    {{ session.get('username', 'T')[0] | upper }}
+                {% endif %}
             </div>
         </a>
     </div>
 
     <div class="row g-4 mb-5">
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
-                <div class="mb-3">
-                    <span class="fs-3 bg-warning bg-opacity-10 text-warning p-3 rounded-circle">🏠</span>
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <div class="fs-1 mb-2">📥</div>
+                <div class="h2 fw-bold mb-0 text-warning">
+                    {{ reports|selectattr('status', 'equalto', 'รอซ่อม')|list|length if reports else 0 }}
                 </div>
-                <h2 class="fw-bold mb-0 text-dark">{{ stats.pending }}</h2>
-                <small class="text-muted">งานรอรับ (ทั้งหมดในแผนก)</small>
+                <small class="text-muted">งานรอดำเนินการ</small>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
-                <div class="mb-3">
-                    <span class="fs-3 bg-primary bg-opacity-10 text-primary p-3 rounded-circle">⏰</span>
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <div class="fs-1 mb-2">🔧</div>
+                <div class="h2 fw-bold mb-0 text-primary">
+                    {{ reports|selectattr('status', 'equalto', 'กำลังซ่อม')|list|length if reports else 0 }}
                 </div>
-                <h2 class="fw-bold mb-0 text-dark">{{ stats.ongoing }}</h2>
-                <small class="text-muted">กำลังดำเนินการ (งานของคุณ)</small>
+                <small class="text-muted">งานที่กำลังซ่อม</small>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
-                <div class="mb-3">
-                    <span class="fs-3 bg-success bg-opacity-10 text-success p-3 rounded-circle">🌸</span>
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <div class="fs-1 mb-2">✅</div>
+                <div class="h2 fw-bold mb-0 text-success">
+                    {{ reports|selectattr('status', 'equalto', 'เสร็จสิ้น')|list|length if reports else 0 }}
                 </div>
-                <h2 class="fw-bold mb-0 text-dark">{{ stats.finished }}</h2>
-                <small class="text-muted">เสร็จแล้ว (ประวัติของคุณ)</small>
+                <small class="text-muted">งานที่เสร็จแล้ว</small>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm p-0" style="border-radius: 20px; overflow: hidden;">
-        <div class="p-4 bg-white border-bottom">
-            <h5 class="fw-bold mb-0 text-dark">งานซ่อมที่ได้รับมอบหมาย</h5>
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 25px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0" style="color: #2C5F4D;">งานที่ต้องรับผิดชอบล่าสุด</h5>
+            <a href="{{ url_for('technician.record_tech') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูประวัติงานทั้งหมด</a>
         </div>
-        <div class="table-responsive bg-white">
-            <table class="table table-hover align-middle mb-0">
-                <thead style="background-color: #F0F9F6; color: #8BA99B;">
+        
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead style="background-color: #F0F9F6; color: #7A9B8D;">
                     <tr>
-                        <th class="ps-4 py-3 border-0">เลขที่</th>
-                        <th class="py-3 border-0">อาคาร/ห้อง</th>
-                        <th class="py-3 border-0">แผนก</th>
+                        <th class="py-3 border-0 rounded-start ps-3">เลขที่</th>
+                        <th class="py-3 border-0">สถานที่</th>
                         <th class="py-3 border-0">ปัญหา</th>
-                        <th class="py-3 border-0 text-center">สถานะ</th>
-                        <th class="py-3 border-0 text-center">จัดการ</th>
+                        <th class="py-3 border-0">เบอร์ติดต่อ</th>
+                        <th class="py-3 border-0 rounded-end text-center">สถานะ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% set active_jobs = 0 %}
-                    {% for item in reports %}
-                        {% if item.status in ['รอซ่อม', 'กำลังซ่อม'] %}
-                            {% set active_jobs = active_jobs + 1 %}
-                            <tr>
-                                <td class="ps-4 py-4 text-muted">#REP-{{ "%03d" | format(item.id) }}</td>
-                                <td class="py-4 fw-medium">{{ item.location }}</td>
-                                <td class="py-4 text-success">{{ item.title }}</td>
-                                <td class="py-4">{{ item.detail | truncate(40) }}</td>
-                                <td class="py-4 text-center">
-                                    {% if item.status == 'รอซ่อม' %}
-                                        <span class="badge rounded-pill" style="background-color: #FFF3CD; color: #856404; padding: 8px 15px;">รอรับงาน</span>
-                                    {% else %}
-                                        <span class="badge rounded-pill" style="background-color: #E6F0FF; color: #0066FF; padding: 8px 15px;">กำลังซ่อม</span>
-                                    {% endif %}
-                                </td>
-                                <td class="py-4 text-center">
-                                    {% if item.status == 'รอซ่อม' %}
-                                        <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST">
-                                            <input type="hidden" name="status" value="กำลังซ่อม">
-                                            <button type="submit" class="btn btn-success rounded-pill px-4 btn-sm fw-bold shadow-sm">
-                                                รับงาน
-                                            </button>
-                                        </form>
-                                    {% else %}
-                                        <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST">
-                                            <input type="hidden" name="status" value="เสร็จสิ้น">
-                                            <button type="submit" class="btn btn-outline-success rounded-pill px-4 btn-sm fw-bold border-2">
-                                                ซ่อมเสร็จ
-                                            </button>
-                                        </form>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endif %}
+                    {% for item in reports[:5] %}
+                    <tr>
+                        <td class="text-muted small ps-3">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="text-muted">{{ item.location }}</td>
+                        <td class="fw-bold text-dark">{{ item.title }}</td>
+                        <td>{{ item.phone if item.phone else '-' }}</td>
+                        <td class="text-center">
+                            {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
+                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">รอรับงาน</span>
+                            {% elif item.status == 'กำลังซ่อม' %}
+                                <span class="badge" style="background-color: #DBEAFE; color: #2563EB; border-radius: 8px; padding: 8px 15px;">กำลังซ่อม</span>
+                            {% else %}
+                                <span class="badge" style="background-color: #DCFCE7; color: #16A34A; border-radius: 8px; padding: 8px 15px;">เสร็จสิ้น</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">🎉 ไม่มีงานค้างในขณะนี้</td>
+                    </tr>
                     {% endfor %}
-                    
-                    {% if stats.pending == 0 and stats.ongoing == 0 %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
-                                ไม่มีงานค้างในระบบ เยี่ยมมาก!
-                            </td>
-                        </tr>
-                    {% endif %}
                 </tbody>
             </table>
         </div>
     </div>
-
 </div>
+
+<style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
+</style>
 {% endblock %}

@@ -4,46 +4,76 @@
     <div class="d-flex align-items-center mb-4">
         <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('user.home') }}{% endif %}" 
            class="text-decoration-none text-secondary me-3">
-            <i class="bi bi-arrow-left-circle fs-2"></i>
+            <i class="bi bi-arrow-left-circle fs-2" style="color: #006652;"></i>
         </a>
-        <h2 class="fw-bold mb-0">โปรไฟล์</h2>
+        <h2 class="fw-bold mb-0 text-dark">โปรไฟล์ของฉัน</h2>
     </div>
 
-    <div class="card border-0 shadow-lg mx-auto" style="max-width: 650px; border-radius: 35px; padding: 40px;">
-        <div class="text-center mb-4">
-            <div class="rounded-circle d-inline-flex align-items-center justify-content-center text-white fw-bold mb-3 shadow-sm" 
-                 style="width: 100px; height: 100px; background-color: #16A34A; font-size: 2.5rem;">
-                {{ user.first_name[0] if user.first_name else user.username[0] }}
+    <div class="card border-0 shadow-lg mx-auto position-relative" style="max-width: 650px; border-radius: 35px; padding: 40px;">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} rounded-3 text-center fw-bold">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="text-center mb-5 relative">
+            <div class="position-relative d-inline-block">
+                
+                {% set bg_color = 'transparent' if user.profile_picture else '#16A34A' %}
+                {% set circle_style = 'style="width: 120px; height: 120px; font-size: 3rem; border: 4px solid white; background-color: ' ~ bg_color ~ ';"' %}
+                
+                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm overflow-hidden" 
+                     {{ circle_style | safe }}>
+                    
+                    {% if user.profile_picture %}
+                        <img src="data:image/jpeg;base64,{{ user.profile_picture }}" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
+                    {% elif user.first_name %}
+                        {{ user.first_name[0] | upper }}
+                    {% else %}
+                        {{ user.username[0] | upper }}
+                    {% endif %}
+                </div>
+                
+                <form action="{{ url_for('user.profile') }}" method="POST" enctype="multipart/form-data" class="position-absolute" style="bottom: 0; right: 0;">
+                    <label for="profile_picture" class="btn btn-warning rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; border: 3px solid white; cursor: pointer;">
+                        <i class="bi bi-pencil-fill text-white"></i>
+                    </label>
+                    <input type="file" id="profile_picture" name="profile_picture" class="d-none" accept="image/*" onchange="this.form.submit()">
+                </form>
             </div>
-            <h3 class="fw-bold">{{ user.first_name if user.first_name else user.username }} {{ user.last_name if user.last_name else '' }}</h3>
-            <p class="text-muted small">สถานะ: {{ user.role }} | ห้อง: {{ user.room_number if user.room_number else '-' }}</p>
+            
+            <h3 class="fw-bold mt-3">{{ user.first_name if user.first_name else user.username }} {{ user.last_name if user.last_name else '' }}</h3>
+            <p class="text-muted small mb-0">สถานะ: <span class="badge bg-success">{{ user.role }}</span> | ห้อง: <span class="fw-bold">{{ user.room_number if user.room_number else '-' }}</span></p>
         </div>
 
         <form action="#" method="POST">
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="text-success fw-bold small mb-1">ชื่อ</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.first_name }}" readonly>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.first_name }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="text-success fw-bold small mb-1">นามสกุล</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.last_name }}" readonly>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.last_name }}" readonly>
                 </div>
                 <div class="col-12">
                     <label class="text-success fw-bold small mb-1">อีเมล</label>
-                    <input type="email" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.email }}" readonly>
+                    <input type="email" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.email }}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">ตำแหน่ง (Role)</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.role }}" readonly>
+                    <label class="text-success fw-bold small mb-1">เบอร์โทร</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.phone if user.phone else '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">เลขห้อง</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2" value="{{ user.room_number }}" readonly>
+                    <label class="text-success fw-bold small mb-1">อาคาร</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.building if user.building else '-' }}" readonly>
                 </div>
             </div>
 
-            <hr class="text-muted">
+            <hr class="text-muted opacity-25">
             
             <div class="mb-4 text-start">
                 <p class="fw-bold mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>เปลี่ยนรหัสผ่าน</p>
@@ -61,7 +91,9 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold" style="background-color: #3AA482;">บันทึกข้อมูล</button>
+            <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold" style="background-color: #3AA482; box-shadow: 0 4px 15px rgba(58, 164, 130, 0.3);">
+                บันทึกการเปลี่ยนรหัสผ่าน
+            </button>
         </form>
     </div>
 </div>

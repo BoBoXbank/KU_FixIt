@@ -3,12 +3,23 @@
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h2 class="fw-bold mb-1">แดชบอร์ดผู้ดูแลระบบ</h2>
+            <h2 class="fw-bold mb-1" style="color: #006652;">แดชบอร์ดผู้ดูแลระบบ</h2>
             <p class="text-muted small">ภาพรวมระบบแจ้งซ่อมหอพัก</p>
         </div>
-        <div class="bg-white rounded-circle shadow-sm" style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;">
-            <i class="bi bi-person-fill fs-2 text-secondary"></i>
-        </div>
+        
+        {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+        {% set profile_style = 'style="width: 60px; height: 60px; font-size: 2rem; border: 3px solid white; background-color: ' ~ bg_color ~ ';"' %}
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale" {{ profile_style | safe }}>
+                {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                {% elif current_user_info and current_user_info.first_name %}
+                    {{ current_user_info.first_name[0] | upper }}
+                {% else %}
+                    {{ session.get('username', 'A')[0] | upper }}
+                {% endif %}
+            </div>
+        </a>
     </div>
 
     <div class="row g-4 mb-5">
@@ -43,28 +54,31 @@
     </div>
 
     <div class="card border-0 shadow-sm p-4" style="border-radius: 25px;">
-        <h5 class="fw-bold mb-4" style="color: #2C5F4D;">ใบแจ้งซ่อมล่าสุด</h5>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0" style="color: #2C5F4D;">ใบแจ้งซ่อมล่าสุด</h5>
+            <a href="{{ url_for('admin.record') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูทั้งหมด</a>
+        </div>
         <div class="table-responsive">
             <table class="table align-middle">
                 <thead style="background-color: #F0F9F6; color: #7A9B8D;">
                     <tr>
-                        <th class="py-3 border-0">เลขที่</th>
+                        <th class="py-3 border-0 rounded-start ps-3">เลขที่</th>
                         <th class="py-3 border-0">ผู้แจ้ง</th>
                         <th class="py-3 border-0">สถานที่</th>
                         <th class="py-3 border-0">ปัญหา</th>
-                        <th class="py-3 border-0">สถานะ</th>
+                        <th class="py-3 border-0 rounded-end text-center">สถานะ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in reports[:5] %}
                     <tr>
-                        <td class="text-muted small">#REP-{{ item.id }}</td>
-                        <td class="fw-bold">{{ item.username if item.username else 'นิสิต' }}</td>
-                        <td>{{ item.location }}</td>
+                        <td class="text-muted small ps-3">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="fw-bold text-dark">{{ item.username if item.username else 'นิสิต' }}</td>
+                        <td class="text-muted">{{ item.location }}</td>
                         <td>{{ item.title }}</td>
-                        <td>
-                            {% if item.status == 'รอซ่อม' %}
-                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">รอรับงาน</span>
+                        <td class="text-center">
+                            {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
+                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">รอดำเนินการ</span>
                             {% elif item.status == 'กำลังซ่อม' %}
                                 <span class="badge" style="background-color: #DBEAFE; color: #2563EB; border-radius: 8px; padding: 8px 15px;">กำลังซ่อม</span>
                             {% else %}
@@ -72,10 +86,18 @@
                             {% endif %}
                         </td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">ยังไม่มีรายการแจ้งซ่อม</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+<style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
+</style>
 {% endblock %}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประวัติแจ้งซ่อม - KU FixIt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #D8F2E9; }
+        .sidebar-item { transition: all 0.3s ease; border-radius: 12px; margin-bottom: 5px; }
+        .sidebar-item:hover { background-color: #f3f4f6; }
+        .sidebar-active { color: #006652; font-weight: 600; background-color: #f3f4f6; position: relative;}
+        .sidebar-active::before { content: ''; position: absolute; left: -16px; top: 10%; height: 80%; width: 5px; background-color: #006652; border-radius: 0 10px 10px 0; }
+        .table-container { background: white; border-radius: 20px; padding: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .custom-row { transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
+        .custom-row:last-child { border-bottom: none; }
+        .custom-row:hover { background-color: #fafafa; }
+    </style>
+</head>
+<body class="min-h-screen flex">
+
+    <aside class="w-[280px] bg-white flex flex-col shadow-lg z-10 sticky top-0 h-screen">
+        <div class="p-8 border-b border-gray-100 flex flex-col items-center text-center">
+            <h1 class="text-6xl font-bold text-[#006666] leading-none tracking-tighter mb-1">KU</h1>
+            <div class="h-1 bg-gradient-to-r from-[#006666] to-[#a6ce39] w-16 mb-2"></div>
+            <div class="text-[#006666] text-[0.65rem] font-bold tracking-widest leading-tight mb-8">KASETSART<br>UNIVERSITY</div>
+            <h2 class="text-2xl font-bold text-[#006652]">ระบบแจ้งซ่อม</h2>
+            <p class="text-gray-400 text-sm">หอพักนักศึกษา</p>
+        </div>
+
+        <nav class="flex-1 px-6 py-6 space-y-2">
+            <a href="/home" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-house-door text-2xl mr-4 text-orange-300"></i><span>หน้าหลัก</span></a>
+            <a href="/report" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-calendar-check text-2xl mr-4 text-green-400"></i><span>แจ้งซ่อม</span></a>
+            <a href="/record_user" class="sidebar-item sidebar-active flex items-center px-4 py-3"><i class="bi bi-clipboard2-check text-2xl mr-4 text-blue-400"></i><span>ประวัติแจ้งซ่อม</span></a>
+            <a href="/profile" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-person text-2xl mr-4 text-purple-400"></i><span>โปรไฟล์</span></a>
+        </nav>
+
+        <div class="p-6 border-t border-gray-100">
+            <a href="/logout" class="sidebar-item flex items-center px-4 py-3 text-gray-500 hover:text-red-500" onclick="return confirm('ยืนยันการออกจากระบบ?');"><i class="bi bi-door-open text-2xl mr-4 text-orange-800"></i><span>ออกจากระบบ</span></a>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-10 flex flex-col">
+        
+        <div class="flex justify-between items-end mb-8 relative">
+            <h2 class="text-3xl font-bold text-gray-800 flex items-center">
+                <span class="mr-3 text-3xl">📜</span> ประวัติแจ้งซ่อม
+            </h2>
+            
+            <div class="flex flex-col items-end">
+                {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+                {% set profile_style = 'style="background-color: ' ~ bg_color ~ ';"' %}
+                
+                <a href="/profile" class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl mb-3 shadow-md cursor-pointer hover:scale-105 transition overflow-hidden border-[3px] border-white" {{ profile_style | safe }}>
+                    {% if current_user_info and current_user_info.profile_picture %}
+                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-full h-full object-cover" alt="Profile">
+                    {% elif current_user_info and current_user_info.first_name %}
+                        {{ current_user_info.first_name[0] | upper }}
+                    {% else %}
+                        {{ session.get('username', 'U')[0] | upper }}
+                    {% endif %}
+                </a>
+                
+                <div class="relative">
+                    <select id="statusFilter" onchange="filterTable()" class="appearance-none bg-[#C1E8D9] text-[#006652] px-6 py-2 pr-10 rounded-full text-sm font-medium shadow-sm outline-none cursor-pointer hover:bg-[#aee0cd] transition">
+                        <option value="all">ทั้งหมด (All)</option>
+                        <option value="pending">รอดำเนินการ</option>
+                        <option value="ongoing">กำลังซ่อม</option>
+                        <option value="completed">เสร็จแล้ว</option>
+                    </select>
+                    <i class="bi bi-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-xs text-[#006652] pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="w-full text-left border-collapse" id="reportsTable">
+                <thead>
+                    <tr class="text-gray-400 text-sm font-medium border-b border-gray-100">
+                        <th class="py-5 px-6 font-medium text-center w-[15%]">เลขที่</th>
+                        <th class="py-5 px-6 font-medium text-center w-[15%]">ประเภท</th>
+                        <th class="py-5 px-6 font-medium w-[25%]">ปัญหา</th>
+                        <th class="py-5 px-6 font-medium text-center w-[15%]">สถานที่</th>
+                        <th class="py-5 px-6 font-medium text-center w-[15%]">สถานะ</th>
+                        <th class="py-5 px-6 font-medium text-center w-[15%]">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in reports %}
+                    {% set row_status = 'pending' %}
+                    {% if item.status == 'กำลังซ่อม' %}{% set row_status = 'ongoing' %}
+                    {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}{% set row_status = 'completed' %}{% endif %}
+
+                    <tr class="custom-row text-sm text-gray-600 report-row" data-status="{{ row_status }}">
+                        <td class="py-5 px-6 text-center text-[#006652] font-medium">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="py-5 px-6 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 text-blue-500 bg-blue-50 text-xs font-medium"><i class="bi bi-tools mr-1"></i> {{ item.title[:12] if item.title else 'ไม่ระบุ' }}</span></td>
+                        <td class="py-5 px-6 text-gray-500">{{ item.detail[:30] if item.detail else 'ไม่มีรายละเอียด' }}{% if item.detail and item.detail|length > 30 %}...{% endif %}</td>
+                        <td class="py-5 px-6 text-center text-gray-500">{{ item.location if item.location else '-' }}</td>
+                        <td class="py-5 px-6 text-center">
+                            {% if row_status == 'pending' %}<span class="bg-orange-100 text-orange-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">รอดำเนินการ</span>
+                            {% elif row_status == 'ongoing' %}<span class="bg-blue-100 text-blue-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">กำลังซ่อม</span>
+                            {% else %}<span class="bg-green-100 text-green-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">เสร็จแล้ว</span>{% endif %}
+                        </td>
+                        <td class="py-5 px-6 text-center">
+                            <button onclick="openModal('{{ item.id }}')" class="border border-[#006652] text-[#006652] px-4 py-1.5 rounded-full text-xs font-medium hover:bg-[#006652] hover:text-white transition w-full">ดูรายละเอียด</button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr id="emptyRow">
+                        <td colspan="6" class="py-12 text-center text-gray-400 text-lg">คุณยังไม่มีประวัติการแจ้งซ่อม</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    {% for item in reports %}
+        {% set row_status = 'pending' %}
+        {% if item.status == 'กำลังซ่อม' %}
+            {% set row_status = 'ongoing' %}
+        {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}
+            {% set row_status = 'completed' %}
+        {% endif %}
+
+        <div id="modal-{{ item.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity">
+            <div class="bg-white rounded-[20px] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
+                <button onclick="closeModal('{{ item.id }}')" class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"><i class="bi bi-x-circle-fill text-2xl"></i></button>
+                <h3 class="text-2xl font-bold text-[#006652] mb-6 flex items-center"><i class="bi bi-file-earmark-text mr-3 text-3xl text-orange-400"></i>รายละเอียดการแจ้งซ่อม #REP-{{ "%03d" | format(item.id) }}</h3>
+                <div class="bg-gray-50 p-6 rounded-xl space-y-4 text-gray-700 text-sm border border-gray-100">
+                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">หัวข้อปัญหา:</strong> <span class="w-2/3">{{ item.title if item.title else '-' }}</span></p>
+                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">สถานที่ / ห้อง:</strong> <span class="w-2/3">{{ item.location if item.location else '-' }}</span></p>
+                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">รายละเอียดเพิ่มเติม:</strong> <span class="w-2/3">{{ item.detail if item.detail else '-' }}</span></p>
+                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">วัน/เวลาที่สะดวก:</strong> <span class="w-2/3">{{ item.repair_time if item.repair_time else 'ไม่ระบุ' }}</span></p>
+                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">เบอร์ติดต่อกลับ:</strong> <span class="w-2/3">{{ item.phone if item.phone else 'ไม่ระบุ' }}</span></p>
+                    <p class="flex pb-2"><strong class="w-1/3 text-gray-900">สถานะปัจจุบัน:</strong> <span class="w-2/3 font-bold {% if row_status == 'pending' %}text-orange-500{% elif row_status == 'ongoing' %}text-blue-500{% else %}text-green-500{% endif %}">{{ item.status if item.status else 'รอดำเนินการ' }}</span></p>
+                </div>
+                {% if item.image_data %}
+                <div class="mt-6 text-center">
+                    <p class="font-bold text-gray-900 mb-3 text-left">📸 รูปภาพประกอบ:</p>
+                    <img src="data:image/jpeg;base64,{{ item.image_data }}" class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md border border-gray-200">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <script>
+        function filterTable() {
+            const filterValue = document.getElementById('statusFilter').value;
+            document.querySelectorAll('.report-row').forEach(row => {
+                if (filterValue === 'all' || row.getAttribute('data-status') === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        function openModal(id) { document.getElementById('modal-' + id).classList.replace('hidden', 'flex'); }
+        function closeModal(id) { document.getElementById('modal-' + id).classList.replace('flex', 'hidden'); }
+    </script>
+</body>
+</html>
