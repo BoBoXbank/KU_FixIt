@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ประวัติแจ้งซ่อม</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+body{
+margin:0;
+font-family:'Kanit',sans-serif;
+background:#cfe1db;
+}
+
+.container{
+display:flex;
+height:100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+width:260px;
+background:#ffffff;
+padding:20px;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+border-right:1px solid #ddd;
+box-shadow:2px 0 6px rgba(0,0,0,0.05);
+}
+/* LOGO */
+
+.logo-section{
+display:flex;
+flex-direction:column;
+align-items:flex-start;
+margin-bottom:20px;
+}
+
+.logo-section img{
+width:120px;
+height:auto;
+margin-bottom:10px;
+}
+
+.panel-title{
+font-size:22px;
+font-weight:600;
+color:#0f6b57;
+}
+
+.panel-sub{
+font-size:14px;
+color:#0f6b57;
+margin-bottom:20px;
+}
+
+/* MENU */
+
+.menu a{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px;
+text-decoration:none;
+color:#333;
+border-radius:8px;
+margin-bottom:5px;
+}
+
+.menu a:hover{
+background:#d9e7e3;
+}
+
+.logout{
+padding:12px;
+color:#8b4c00;
+}
+
+/* MAIN */
+
+.main{
+flex:1;
+padding:30px;
+}
+
+/* HEADER */
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.title{
+font-size:28px;
+font-weight:600;
+color:#0f6b57;
+}
+
+.user-profile{
+font-size:22px;
+background:#e7f0ec;
+padding:10px 14px;
+border-radius:50%;
+cursor:pointer;
+}
+
+/* CARD */
+
+.card{
+background:#e9efec;
+border-radius:20px;
+padding:20px;
+border:2px solid #a6c9bd;
+}
+
+/* FILTER */
+
+.filter{
+float:right;
+margin-bottom:10px;
+padding:6px 10px;
+border-radius:6px;
+border:1px solid #b5c9c2;
+font-family:'Kanit',sans-serif;
+}
+
+/* TABLE */
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#d6e5df;
+padding:12px;
+text-align:left;
+color:#4f6b63;
+}
+
+td{
+padding:12px;
+border-bottom:1px solid #c8d8d2;
+}
+
+.status{
+font-weight:500;
+}
+
+.btn{
+background:#dcdcdc;
+border:none;
+padding:6px 12px;
+border-radius:6px;
+cursor:pointer;
+}
+
+.btn:hover{
+background:#cfcfcf;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<div>
+
+<!-- LOGO -->
+
+<div class="logo-section">
+
+<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoLzPcypWSJBJPazKtgRKGWTfrjx6L5w-lbQ&s" alt="KU Logo">
+
+<div class="panel-title">
+Admin Panel
+</div>
+
+<div class="panel-sub">
+จัดการระบบแจ้งซ่อม
+</div>
+
+</div>
+
+<!-- MENU -->
+
+<div class="menu">
+
+<a href="#">🏠 หน้าหลัก</a>
+<a href="#">📝 แจ้งซ่อม</a>
+<a href="#">📋 ประวัติแจ้งซ่อม</a>
+<a href="#">👤 โปรไฟล์</a>
+
+</div>
+
+</div>
+
+<div class="logout">
+🚪 ออกจากระบบ
+</div>
+
+</div>
+
+<!-- MAIN -->
+
+<div class="main">
+
+<div class="header">
+
+<div class="title">
+📜 ประวัติแจ้งซ่อม
+</div>
+
+<div class="user-profile">
+👤
+</div>
+
+</div>
+
+<div class="card">
+
+<select class="filter">
+<option>ทุกสถานะ</option>
+<option>รอดำเนินการ</option>
+<option>กำลังซ่อม</option>
+<option>เสร็จสิ้น</option>
+<option>ยกเลิก</option>
+</select>
+
+<table>
+
+<tr>
+<th>เลขที่</th>
+<th>ผู้แจ้ง</th>
+<th>อาคาร/ห้อง</th>
+<th>ประเภท</th>
+<th>ปัญหา</th>
+<th>ช่างรับงาน</th>
+<th>สถานะ</th>
+<th>จัดการ</th>
+</tr>
+
+<tr>
+<td>#REP-010</td>
+<td>สมบัติ</td>
+<td>1102</td>
+<td>ประปา</td>
+<td>ท่อน้ำรั่ว</td>
+<td>-</td>
+<td class="status">ยกเลิก</td>
+<td><button class="btn">รับงาน</button></td>
+</tr>
+
+<tr>
+<td>#REP-009</td>
+<td>ปริชา</td>
+<td>7312</td>
+<td>ไฟฟ้า</td>
+<td>ไฟห้องน้ำเสีย</td>
+<td>พี่ยุ</td>
+<td class="status">กำลังซ่อม</td>
+<td><button class="btn">ดูรายละเอียด</button></td>
+</tr>
+
+<tr>
+<td>#REP-008</td>
+<td>อนุภา</td>
+<td>2302</td>
+<td>แอร์</td>
+<td>แอร์มีเสียงดัง</td>
+<td>-</td>
+<td class="status">รอดำเนินการ</td>
+<td><button class="btn">รับงาน</button></td>
+</tr>
+
+<tr>
+<td>#REP-011</td>
+<td>วิธี</td>
+<td>1502</td>
+<td>ประตู</td>
+<td>กุญแจห้องเสีย</td>
+<td>พี่ดาว</td>
+<td class="status">เสร็จสิ้น</td>
+<td><button class="btn">ดูรายละเอียด</button></td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
