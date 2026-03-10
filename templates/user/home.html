@@ -74,7 +74,7 @@
                     <div>
                         <h5 class="fw-bold mb-1">ประวัติแจ้งซ่อม</h5>
                         <p class="small text-muted mb-2">ดูสถานะและติดตามผลการซ่อม</p>
-                        <a href="{{ url_for('user.record_user') }}" class="btn btn-outline-secondary rounded-pill px-4">ดูประวัติ</a>
+                        <a href="{{ url_for('user.record_user') }}" class="btn btn-outline-secondary rounded-pill px-4">ดูประวัติทั้งหมด</a>
                     </div>
                 </div>
             </div>
@@ -94,14 +94,28 @@
                 </thead>
                 <tbody>
                     {% for item in reports %}
-                    <tr>
-                        <td>#REP-{{ "%03d" | format(item.id) }}</td>
-                        <td>{{ item.title }}</td>
+                    <tr style="cursor: pointer;" 
+                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                        data-building="{{ item.building }}"
+                        data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
+                        data-title="{{ item.title }}"
+                        data-detail="{{ item.detail }}"
+                        data-image="{{ item.image_data }}"
+                        data-date="{{ item.repair_time }}"
+                        data-phone="{{ item.phone }}"
+                        data-status="{{ item.status }}">
+                        
+                        <td class="text-muted">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="fw-bold">{{ item.title }}</td>
                         <td>
                             <span class="badge rounded-pill {% if item.status == 'เสร็จสิ้น' or item.status == 'เสร็จแล้ว' %}bg-success{% elif item.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-warning{% endif %}">
                                 {{ item.status }}
                             </span>
                         </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-muted">ยังไม่มีประวัติการแจ้งซ่อม</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -109,4 +123,13 @@
         </div>
     </div>
 </div>
+
+{% include 'components/image_modal.html' %}
+
+<style>
+    /* เอฟเฟกต์เมื่อเอาเมาส์ชี้ที่แถวตาราง */
+    .table-hover tbody tr:hover {
+        background-color: #f1f9f7 !important;
+    }
+</style>
 {% endblock %}

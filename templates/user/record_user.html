@@ -25,7 +25,7 @@
         <div class="p-8 border-b border-gray-100 flex flex-col items-center text-center">
             <h1 class="text-6xl font-bold text-[#006666] leading-none tracking-tighter mb-1">KU</h1>
             <div class="h-1 bg-gradient-to-r from-[#006666] to-[#a6ce39] w-16 mb-2"></div>
-            <div class="text-[#006666] text-[0.65rem] font-bold tracking-widest leading-tight mb-8">KASETSART<br>UNIVERSITY</div>
+            <div class="text-[#006666] text-[0.65rem] font-bold tracking-widest leading-tight mb-8 uppercase">Kasetsart University</div>
             <h2 class="text-2xl font-bold text-[#006652]">ระบบแจ้งซ่อม</h2>
             <p class="text-gray-400 text-sm">หอพักนักศึกษา</p>
         </div>
@@ -43,7 +43,6 @@
     </aside>
 
     <main class="flex-1 p-10 flex flex-col">
-        
         <div class="flex justify-between items-end mb-8 relative">
             <h2 class="text-3xl font-bold text-gray-800 flex items-center">
                 <span class="mr-3 text-3xl">📜</span> ประวัติแจ้งซ่อม
@@ -79,12 +78,12 @@
             <table class="w-full text-left border-collapse" id="reportsTable">
                 <thead>
                     <tr class="text-gray-400 text-sm font-medium border-b border-gray-100">
-                        <th class="py-5 px-6 font-medium text-center w-[15%]">เลขที่</th>
+                        <th class="py-5 px-6 font-medium text-center w-[12%]">เลขที่</th>
                         <th class="py-5 px-6 font-medium text-center w-[15%]">ประเภท</th>
                         <th class="py-5 px-6 font-medium w-[25%]">ปัญหา</th>
-                        <th class="py-5 px-6 font-medium text-center w-[15%]">สถานที่</th>
-                        <th class="py-5 px-6 font-medium text-center w-[15%]">สถานะ</th>
-                        <th class="py-5 px-6 font-medium text-center w-[15%]">จัดการ</th>
+                        <th class="py-5 px-4 font-medium text-center w-[15%]">สถานที่</th>
+                        <th class="py-5 px-4 font-medium text-center w-[15%]">สถานะ</th>
+                        <th class="py-5 px-6 font-medium text-center w-[18%]">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -95,20 +94,35 @@
 
                     <tr class="custom-row text-sm text-gray-600 report-row" data-status="{{ row_status }}">
                         <td class="py-5 px-6 text-center text-[#006652] font-medium">#REP-{{ "%03d" | format(item.id) }}</td>
-                        <td class="py-5 px-6 text-center"><span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 text-blue-500 bg-blue-50 text-xs font-medium"><i class="bi bi-tools mr-1"></i> {{ item.title[:12] if item.title else 'ไม่ระบุ' }}</span></td>
-                        <td class="py-5 px-6 text-gray-500">{{ item.detail[:30] if item.detail else 'ไม่มีรายละเอียด' }}{% if item.detail and item.detail|length > 30 %}...{% endif %}</td>
-                        <td class="py-5 px-6 text-center text-gray-500">{{ item.location if item.location else '-' }}</td>
                         <td class="py-5 px-6 text-center">
-                            {% if row_status == 'pending' %}<span class="bg-orange-100 text-orange-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">รอดำเนินการ</span>
-                            {% elif row_status == 'ongoing' %}<span class="bg-blue-100 text-blue-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">กำลังซ่อม</span>
-                            {% else %}<span class="bg-green-100 text-green-500 px-4 py-1.5 rounded-full text-xs font-bold w-full inline-block">เสร็จแล้ว</span>{% endif %}
+                            <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 text-blue-500 bg-blue-50 text-[11px] font-medium">
+                                <i class="bi bi-tools mr-1"></i> {{ item.title[:12] if item.title else 'ไม่ระบุ' }}
+                            </span>
+                        </td>
+                        <td class="py-5 px-6 text-gray-500">
+                            <div class="truncate max-w-[180px]" title="{{ item.detail }}">
+                                {{ item.detail if item.detail else 'ไม่มีรายละเอียด' }}
+                            </div>
+                        </td>
+                        <td class="py-5 px-4 text-center text-gray-400 text-xs">{{ item.location if item.location else '-' }}</td>
+                        <td class="py-5 px-4 text-center">
+                            {% if row_status == 'pending' %}<span class="bg-orange-100 text-orange-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">รอดำเนินการ</span>
+                            {% elif row_status == 'ongoing' %}<span class="bg-blue-100 text-blue-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">กำลังซ่อม</span>
+                            {% else %}<span class="bg-green-100 text-green-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">เสร็จแล้ว</span>{% endif %}
                         </td>
                         <td class="py-5 px-6 text-center">
-                            <button onclick="openModal('{{ item.id }}')" class="border border-[#006652] text-[#006652] px-4 py-1.5 rounded-full text-xs font-medium hover:bg-[#006652] hover:text-white transition w-full">ดูรายละเอียด</button>
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openModal('{{ item.id }}')" class="border border-[#006652] text-[#006652] px-3 py-1.5 rounded-full text-[11px] font-medium hover:bg-[#006652] hover:text-white transition flex-1">รายละเอียด</button>
+                                
+                                {# ✅ ปุ่มแก้ไข: จะโชว์เฉพาะเมื่องานยังรอดำเนินการ #}
+                                {% if row_status == 'pending' %}
+                                <a href="{{ url_for('user.edit_report', id=item.id) }}" class="bg-yellow-400 text-yellow-900 px-3 py-1.5 rounded-full text-[11px] font-bold hover:bg-yellow-500 transition no-underline flex-1">แก้ไข</a>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% else %}
-                    <tr id="emptyRow">
+                    <tr>
                         <td colspan="6" class="py-12 text-center text-gray-400 text-lg">คุณยังไม่มีประวัติการแจ้งซ่อม</td>
                     </tr>
                     {% endfor %}
@@ -119,14 +133,11 @@
 
     {% for item in reports %}
         {% set row_status = 'pending' %}
-        {% if item.status == 'กำลังซ่อม' %}
-            {% set row_status = 'ongoing' %}
-        {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}
-            {% set row_status = 'completed' %}
-        {% endif %}
+        {% if item.status == 'กำลังซ่อม' %}{% set row_status = 'ongoing' %}
+        {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}{% set row_status = 'completed' %}{% endif %}
 
-        <div id="modal-{{ item.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity">
-            <div class="bg-white rounded-[20px] w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
+        <div id="modal-{{ item.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity p-4">
+            <div class="bg-white rounded-[20px] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
                 <button onclick="closeModal('{{ item.id }}')" class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"><i class="bi bi-x-circle-fill text-2xl"></i></button>
                 <h3 class="text-2xl font-bold text-[#006652] mb-6 flex items-center"><i class="bi bi-file-earmark-text mr-3 text-3xl text-orange-400"></i>รายละเอียดการแจ้งซ่อม #REP-{{ "%03d" | format(item.id) }}</h3>
                 <div class="bg-gray-50 p-6 rounded-xl space-y-4 text-gray-700 text-sm border border-gray-100">

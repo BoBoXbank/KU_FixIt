@@ -1,312 +1,124 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <span class="fs-2 me-2">📜</span>
+            <h2 class="fw-bold mb-0 text-dark">ประวัติงานซ่อม (แผนก{{ session.get('role').replace('technician_', '').upper() }})</h2>
+        </div>
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white" 
+                 style="width: 60px; height: 60px; background-color: #16A34A; border: 3px solid white;">
+                {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                {% else %}
+                    {{ session.get('username', 'T')[0] | upper }}
+                {% endif %}
+            </div>
+        </a>
+    </div>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <div class="card border-0 shadow-sm p-0" style="border-radius: 20px; overflow: hidden;">
+        
+        <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">รายการแจ้งซ่อมทั้งหมด</h5>
+            <select id="statusFilter" class="form-select form-select-sm w-auto rounded-pill border-secondary px-3 py-2" onchange="filterTable()">
+                <option value="all">ทุกสถานะ</option>
+                <option value="รอซ่อม">รอรับงาน</option>
+                <option value="กำลังซ่อม">กำลังซ่อม</option>
+                <option value="เสร็จสิ้น">เสร็จสิ้นแล้ว</option>
+            </select>
+        </div>
 
-<title>ประวัติแจ้งซ่อม</title>
+        <div class="table-responsive bg-white">
+            <table class="table table-hover align-middle mb-0" id="recordTable">
+                <thead style="background-color: #F0F9F6; color: #8BA99B;">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">เลขที่</th>
+                        <th class="py-3 border-0">ผู้แจ้ง</th>
+                        <th class="py-3 border-0">ประเภท</th>
+                        <th class="py-3 border-0 text-center">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in reports %}
+                        <tr class="job-row" data-status="{{ item.status }}">
+                            <td class="ps-4 py-4 text-muted">#REP-{{ "%03d" | format(item.id) }}</td>
+                            <td class="py-4 fw-medium text-dark">{{ item.username }}</td>
+                            <td class="py-4 text-success">{{ item.title }}</td>
+                            
+                            <td class="py-4 text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" 
+                                            data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                                            data-building="{{ item.building }}"
+                                            data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
+                                            data-title="{{ item.title }}"
+                                            data-detail="{{ item.detail }}"
+                                            data-image="{{ item.image_data }}"
+                                            data-date="{{ item.repair_time }}"
+                                            data-phone="{{ item.phone }}"
+                                            data-status="{{ item.status }}">
+                                        🔍 รายละเอียด
+                                    </button>
 
-<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-<style>
-
-body{
-margin:0;
-font-family:'Kanit',sans-serif;
-background:#cfe1db;
-}
-
-.container{
-display:flex;
-height:100vh;
-}
-
-/* SIDEBAR */
-
-.sidebar{
-width:260px;
-background:#ffffff;
-padding:20px;
-display:flex;
-flex-direction:column;
-justify-content:space-between;
-border-right:1px solid #ddd;
-box-shadow:2px 0 6px rgba(0,0,0,0.05);
-}
-/* LOGO */
-
-.logo-section{
-display:flex;
-flex-direction:column;
-align-items:flex-start;
-margin-bottom:20px;
-}
-
-.logo-section img{
-width:120px;
-height:auto;
-margin-bottom:10px;
-}
-
-.panel-title{
-font-size:22px;
-font-weight:600;
-color:#0f6b57;
-}
-
-.panel-sub{
-font-size:14px;
-color:#0f6b57;
-margin-bottom:20px;
-}
-
-/* MENU */
-
-.menu a{
-display:flex;
-align-items:center;
-gap:10px;
-padding:12px;
-text-decoration:none;
-color:#333;
-border-radius:8px;
-margin-bottom:5px;
-}
-
-.menu a:hover{
-background:#d9e7e3;
-}
-
-.logout{
-padding:12px;
-color:#8b4c00;
-}
-
-/* MAIN */
-
-.main{
-flex:1;
-padding:30px;
-}
-
-/* HEADER */
-
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
-}
-
-.title{
-font-size:28px;
-font-weight:600;
-color:#0f6b57;
-}
-
-.user-profile{
-font-size:22px;
-background:#e7f0ec;
-padding:10px 14px;
-border-radius:50%;
-cursor:pointer;
-}
-
-/* CARD */
-
-.card{
-background:#e9efec;
-border-radius:20px;
-padding:20px;
-border:2px solid #a6c9bd;
-}
-
-/* FILTER */
-
-.filter{
-float:right;
-margin-bottom:10px;
-padding:6px 10px;
-border-radius:6px;
-border:1px solid #b5c9c2;
-font-family:'Kanit',sans-serif;
-}
-
-/* TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th{
-background:#d6e5df;
-padding:12px;
-text-align:left;
-color:#4f6b63;
-}
-
-td{
-padding:12px;
-border-bottom:1px solid #c8d8d2;
-}
-
-.status{
-font-weight:500;
-}
-
-.btn{
-background:#dcdcdc;
-border:none;
-padding:6px 12px;
-border-radius:6px;
-cursor:pointer;
-}
-
-.btn:hover{
-background:#cfcfcf;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<!-- SIDEBAR -->
-
-<div class="sidebar">
-
-<div>
-
-<!-- LOGO -->
-
-<div class="logo-section">
-
-<img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRoLzPcypWSJBJPazKtgRKGWTfrjx6L5w-lbQ&s" alt="KU Logo">
-
-<div class="panel-title">
-Admin Panel
+                                    {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
+                                        <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0">
+                                            <input type="hidden" name="status" value="กำลังซ่อม">
+                                            <button type="submit" class="btn btn-sm btn-warning rounded-pill px-3">รับงาน</button>
+                                        </form>
+                                    {% elif item.status == 'กำลังซ่อม' %}
+                                        <div class="dropdown d-inline-block">
+                                            <button class="btn btn-sm btn-primary dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                                                อัปเดตงาน
+                                            </button>
+                                            <ul class="dropdown-menu shadow-sm border-0" style="border-radius: 12px;">
+                                                <li>
+                                                    <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0 p-0">
+                                                        <input type="hidden" name="status" value="เสร็จสิ้น">
+                                                        <button type="submit" class="dropdown-item py-2 text-success fw-bold">✅ ซ่อมเสร็จสิ้น</button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0 p-0">
+                                                        <input type="hidden" name="status" value="รอซ่อม">
+                                                        <button type="submit" class="dropdown-item py-2 text-warning fw-bold">🔄 คืนคิวงาน</button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    {% else %}
+                                        <span class="badge bg-light text-success border px-3 py-2 rounded-pill">เสร็จสิ้น</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">ไม่พบข้อมูลงานซ่อม</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
-<div class="panel-sub">
-จัดการระบบแจ้งซ่อม
-</div>
+{% include 'components/image_modal.html' %}
 
-</div>
-
-<!-- MENU -->
-
-<div class="menu">
-
-<a href="#">🏠 หน้าหลัก</a>
-<a href="#">📝 แจ้งซ่อม</a>
-<a href="#">📋 ประวัติแจ้งซ่อม</a>
-<a href="#">👤 โปรไฟล์</a>
-
-</div>
-
-</div>
-
-<div class="logout">
-🚪 ออกจากระบบ
-</div>
-
-</div>
-
-<!-- MAIN -->
-
-<div class="main">
-
-<div class="header">
-
-<div class="title">
-📜 ประวัติแจ้งซ่อม
-</div>
-
-<div class="user-profile">
-👤
-</div>
-
-</div>
-
-<div class="card">
-
-<select class="filter">
-<option>ทุกสถานะ</option>
-<option>รอดำเนินการ</option>
-<option>กำลังซ่อม</option>
-<option>เสร็จสิ้น</option>
-<option>ยกเลิก</option>
-</select>
-
-<table>
-
-<tr>
-<th>เลขที่</th>
-<th>ผู้แจ้ง</th>
-<th>อาคาร/ห้อง</th>
-<th>ประเภท</th>
-<th>ปัญหา</th>
-<th>ช่างรับงาน</th>
-<th>สถานะ</th>
-<th>จัดการ</th>
-</tr>
-
-<tr>
-<td>#REP-010</td>
-<td>สมบัติ</td>
-<td>1102</td>
-<td>ประปา</td>
-<td>ท่อน้ำรั่ว</td>
-<td>-</td>
-<td class="status">ยกเลิก</td>
-<td><button class="btn">รับงาน</button></td>
-</tr>
-
-<tr>
-<td>#REP-009</td>
-<td>ปริชา</td>
-<td>7312</td>
-<td>ไฟฟ้า</td>
-<td>ไฟห้องน้ำเสีย</td>
-<td>พี่ยุ</td>
-<td class="status">กำลังซ่อม</td>
-<td><button class="btn">ดูรายละเอียด</button></td>
-</tr>
-
-<tr>
-<td>#REP-008</td>
-<td>อนุภา</td>
-<td>2302</td>
-<td>แอร์</td>
-<td>แอร์มีเสียงดัง</td>
-<td>-</td>
-<td class="status">รอดำเนินการ</td>
-<td><button class="btn">รับงาน</button></td>
-</tr>
-
-<tr>
-<td>#REP-011</td>
-<td>วิธี</td>
-<td>1502</td>
-<td>ประตู</td>
-<td>กุญแจห้องเสีย</td>
-<td>พี่ดาว</td>
-<td class="status">เสร็จสิ้น</td>
-<td><button class="btn">ดูรายละเอียด</button></td>
-</tr>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
-</body>
-</html>
+<script>
+    function filterTable() {
+        const selectedStatus = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('.job-row');
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute('data-status');
+            if (selectedStatus === 'all' || rowStatus === selectedStatus) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
