@@ -1,22 +1,77 @@
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; overflow: hidden;">
-            
-            <div class="modal-header border-0 bg-light">
-                <h5 class="modal-title fw-bold" id="imageModalLabel" style="color: #2C5F4D;">
-                    <i class="bi bi-image me-2"></i>รูปภาพหลักฐานจากผู้แจ้ง
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="reportDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px; background-color: #f8fbfb;">
+            <div class="modal-header border-0 bg-transparent px-4 pt-4 pb-0">
+                <h5 class="fw-bold mb-0" style="color: #006652;"><i class="bi bi-info-circle me-2"></i>รายละเอียดปัญหา</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+            <div class="modal-body p-4">
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="text-success small fw-bold">อาคาร</label>
+                                    <div id="m-building" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-success small fw-bold">ห้อง</label>
+                                    <div id="m-room" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-success small fw-bold">ประเภทปัญหา</label>
+                                <div id="m-title" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-success small fw-bold">รายละเอียดปัญหา</label>
+                                <div id="m-detail" class="p-2 bg-light rounded-3 mt-1 small" style="min-height: 80px;"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-success small fw-bold">รูปภาพ</label>
+                                <div class="p-2 border border-dashed rounded-4 text-center mt-1">
+                                    <img id="m-image" src="" class="img-fluid rounded-3" style="max-height: 150px; display: none;">
+                                    <small id="m-no-image" class="text-muted">ไม่มีรูปภาพแนบมา</small>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="text-success small fw-bold">วันที่แจ้ง</label>
+                                    <div id="m-date" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-success small fw-bold">เบอร์โทรติดต่อ</label>
+                                    <div id="m-phone" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="modal-body text-center p-4 bg-white">
-                <div class="img-container shadow-sm rounded-4 overflow-hidden" style="background-color: #f8f9fa; min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                    <img src="" id="modalImageDisplay" class="img-fluid" alt="ไม่พบรูปภาพหลักฐาน" 
-                         style="max-height: 70vh; object-fit: contain; width: 100%;">
+                    <div class="col-md-5">
+                        <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                            <h5 class="fw-bold mb-4" style="color: #006652;">ไทม์ไลน์</h5>
+                            <div class="ps-3 border-start border-2 border-success border-opacity-25 ms-2">
+                                <div class="mb-4 position-relative">
+                                    <i class="bi bi-file-text position-absolute start-0 translate-middle-x bg-white text-success fs-5 ms-n3"></i>
+                                    <p class="mb-0 fw-bold small">ไทม์ไลน์</p>
+                                    <small id="t-start" class="text-muted"></small>
+                                </div>
+                                <div class="mb-4 position-relative">
+                                    <i class="bi bi-eye position-absolute start-0 translate-middle-x bg-white text-info fs-5 ms-n3"></i>
+                                    <p class="mb-0 fw-bold small">รับเรื่องแล้ว</p>
+                                    <small class="text-muted">เจ้าหน้าที่กำลังตรวจสอบ</small>
+                                </div>
+                                <div class="position-relative">
+                                    <i class="bi bi-check-circle position-absolute start-0 translate-middle-x bg-white text-secondary fs-5 ms-n3"></i>
+                                    <p class="mb-0 fw-bold small">สถานะการซ่อม</p>
+                                    <span id="m-status" class="badge rounded-pill bg-success-subtle text-success"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="modal-footer border-0 bg-light justify-content-center">
+            <div class="modal-footer border-0 justify-content-center pb-4">
                 <button type="button" class="btn btn-secondary rounded-pill px-5" data-bs-dismiss="modal">ปิด</button>
             </div>
         </div>
@@ -24,31 +79,35 @@
 </div>
 
 <script>
-    // สคริปต์สำหรับจัดการการดึงรูปภาพมาแสดงเมื่อกดปุ่ม
+    // สคริปต์จัดการข้อมูล Modal
     document.addEventListener("DOMContentLoaded", function() {
-        var imageModal = document.getElementById('imageModal');
-        
-        if (imageModal) {
-            imageModal.addEventListener('show.bs.modal', function (event) {
-                // 'event.relatedTarget' คือปุ่มที่เรากดสั่งเปิด Modal
-                var button = event.relatedTarget;
-                
-                // ดึงข้อมูล Base64 จาก Attribute 'data-image-src' ของปุ่มนั้น
-                var imageData = button.getAttribute('data-image-src');
-                
-                // นำข้อมูลรูปไปใส่ในตัวแสดงผล
-                var modalImg = document.getElementById('modalImageDisplay');
-                if (imageData && imageData !== 'None') {
-                    modalImg.src = imageData;
-                } else {
-                    modalImg.src = "https://via.placeholder.com/500x300?text=No+Image+Available"; 
-                }
-            });
+        var modalEl = document.getElementById('reportDetailModal');
+        modalEl.addEventListener('show.bs.modal', function (event) {
+            var btn = event.relatedTarget;
+            
+            // ดึงข้อมูลจาก Data Attributes
+            document.getElementById('m-building').innerText = btn.getAttribute('data-building');
+            document.getElementById('m-room').innerText = btn.getAttribute('data-room');
+            document.getElementById('m-title').innerText = btn.getAttribute('data-title');
+            document.getElementById('m-detail').innerText = btn.getAttribute('data-detail');
+            document.getElementById('m-date').innerText = btn.getAttribute('data-date');
+            document.getElementById('m-phone').innerText = btn.getAttribute('data-phone');
+            document.getElementById('m-status').innerText = btn.getAttribute('data-status');
+            document.getElementById('t-start').innerText = btn.getAttribute('data-date');
 
-            // ล้างค่ารูปทิ้งเมื่อปิด Modal เพื่อไม่ให้รูปเก่าค้างตอนเปิดครั้งหน้า
-            imageModal.addEventListener('hidden.bs.modal', function () {
-                document.getElementById('modalImageDisplay').src = '';
-            });
-        }
+            // จัดการรูปภาพ
+            var imgData = btn.getAttribute('data-image');
+            var imgTag = document.getElementById('m-image');
+            var noImg = document.getElementById('m-no-image');
+
+            if (imgData && imgData !== 'None') {
+                imgTag.src = imgData;
+                imgTag.style.display = 'block';
+                noImg.style.display = 'none';
+            } else {
+                imgTag.style.display = 'none';
+                noImg.style.display = 'block';
+            }
+        });
     });
 </script>

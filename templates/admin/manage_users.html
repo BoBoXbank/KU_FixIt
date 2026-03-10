@@ -68,9 +68,13 @@
                                 </button>
                                 <ul class="dropdown-menu shadow border-0" style="border-radius: 15px;">
                                     <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='user') }}">เปลี่ยนเป็น User</a></li>
-                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_แอร์') }}">ช่างแอร์</a></li>
-                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_ประปา') }}">ช่างประปา</a></li>
-                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_ไฟ') }}">ช่างไฟ</a></li>
+                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_air') }}">ช่างแอร์</a></li>
+                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_plumb') }}">ช่างประปา</a></li>
+                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_wood') }}">ช่างไม้</a></li>
+                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_wifi') }}">ช่าง WiFi</a></li>
+                                    
+                                    <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_elec') }}">ช่างไฟ</a></li>
+                                    
                                     <li><a class="dropdown-item py-2 text-danger fw-bold" href="{{ url_for('admin.change_role', id=u.id, role='admin') }}">ตั้งเป็น Admin</a></li>
                                 </ul>
                             </div>

@@ -59,7 +59,7 @@
             <a href="{{ url_for('admin.record') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูทั้งหมด</a>
         </div>
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table table-hover align-middle">
                 <thead style="background-color: #F0F9F6; color: #7A9B8D;">
                     <tr>
                         <th class="py-3 border-0 rounded-start ps-3">เลขที่</th>
@@ -71,7 +71,17 @@
                 </thead>
                 <tbody>
                     {% for item in reports[:5] %}
-                    <tr>
+                    <tr style="cursor: pointer;" 
+                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                        data-building="{{ item.building }}"
+                        data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
+                        data-title="{{ item.title }}"
+                        data-detail="{{ item.detail }}"
+                        data-image="{{ item.image_data }}"
+                        data-date="{{ item.repair_time }}"
+                        data-phone="{{ item.phone }}"
+                        data-status="{{ item.status }}">
+                        
                         <td class="text-muted small ps-3">#REP-{{ "%03d" | format(item.id) }}</td>
                         <td class="fw-bold text-dark">{{ item.username if item.username else 'นิสิต' }}</td>
                         <td class="text-muted">{{ item.location }}</td>
@@ -96,8 +106,15 @@
         </div>
     </div>
 </div>
+
+{% include 'components/image_modal.html' %}
+
 <style>
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.08); }
+    /* เพิ่มเอฟเฟกต์ hover ให้แถวตารางดูเด่นขึ้นเมื่อเอาเมาส์ชี้ */
+    .table-hover tbody tr:hover {
+        background-color: #f8fbfb !important;
+    }
 </style>
 {% endblock %}

@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="main-content">
+        <div class="report-card">
+            <div class="card-header">
+                <i class="bi bi-pencil-square"></i> แก้ไขใบแจ้งซ่อม #REP-{{ "%03d" | format(item.id) }}
+            </div>
+
+            <form action="{{ url_for('user.edit_report', id=item.id) }}" method="POST" enctype="multipart/form-data">
+                <div class="grid-row">
+                    <div>
+                        <label>อาคาร</label>
+                        <select name="location_building" required>
+                            <option value="{{ item.building }}">{{ item.building }} (เดิม)</option>
+                            <option value="อาคาร 1">อาคาร 1</option>
+                            </select>
+                    </div>
+                    <div>
+                        <label>ห้อง</label>
+                        <input type="text" name="location_room" value="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>แผนก / ประเภทปัญหา</label>
+                    <select name="title" required>
+                        <option value="{{ item.title }}">{{ item.title }} (เดิม)</option>
+                        <option value="แอร์">แอร์ / เครื่องปรับอากาศ</option>
+                        <option value="ประปา">ระบบประปา / ท่อน้ำ</option>
+                        <option value="ไม้">งานไม้ / เฟอร์นิเจอร์</option>
+                        <option value="WiFi">อินเทอร์เน็ต / WiFi</option>
+                        <option value="ไฟ">ไฟฟ้า / อุปกรณ์ไฟฟ้า</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>รายละเอียดปัญหา</label>
+                    <textarea name="detail" rows="4" required>{{ item.detail }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>เปลี่ยนรูปภาพ (ไม่บังคับ)</label>
+                    <input type="file" name="image" accept="image/*" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
+                    <input type="datetime-local" name="repair_time" value="{{ item.repair_time }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label>เบอร์โทรติดต่อ</label>
+                    <input type="tel" name="phone" value="{{ item.phone }}" required>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-success rounded-pill">บันทึกการแก้ไข</button>
+                    <a href="{{ url_for('user.home') }}" class="btn btn-light rounded-pill">ยกเลิก</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
