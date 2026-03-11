@@ -1,14 +1,14 @@
 <div class="modal fade" id="reportDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px; background-color: #f8fbfb;">
+        <div class="modal-content border-0" style="border-radius: 30px; background-color: #f8fbfb; box-shadow: none !important; border: 1px solid #ddd !important;">
             <div class="modal-header border-0 bg-transparent px-4 pt-4 pb-0">
                 <h5 class="fw-bold mb-0" style="color: #006652;"><i class="bi bi-info-circle me-2"></i>รายละเอียดปัญหา</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" style="box-shadow: none !important;"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="row g-4">
                     <div class="col-md-7">
-                        <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                        <div class="bg-white p-4 rounded-4 h-100" style="box-shadow: none !important; border: 1px solid #eee;">
                             <div class="row mb-3">
                                 <div class="col-6">
                                     <label class="text-success small fw-bold">อาคาร</label>
@@ -28,9 +28,9 @@
                                 <div id="m-detail" class="p-2 bg-light rounded-3 mt-1 small" style="min-height: 80px;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="text-success small fw-bold">รูปภาพ</label>
-                                <div class="p-2 border border-dashed rounded-4 text-center mt-1">
-                                    <img id="m-image" src="" class="img-fluid rounded-3" style="max-height: 150px; display: none;">
+                                <label class="text-success small fw-bold">รูปภาพประกอบ</label>
+                                <div class="p-2 border border-dashed rounded-4 text-center mt-1" style="min-height: 120px; display: flex; align-items: center; justify-content: center; background: #fafafa;">
+                                    <img id="m-image" src="" class="img-fluid rounded-3" style="max-height: 200px; width: auto; display: none; margin: 0 auto; object-fit: contain;">
                                     <small id="m-no-image" class="text-muted">ไม่มีรูปภาพแนบมา</small>
                                 </div>
                             </div>
@@ -48,23 +48,29 @@
                     </div>
 
                     <div class="col-md-5">
-                        <div class="bg-white p-4 rounded-4 shadow-sm h-100">
+                        <div class="bg-white p-4 rounded-4 h-100" style="box-shadow: none !important; border: 1px solid #eee;">
                             <h5 class="fw-bold mb-4" style="color: #006652;">ไทม์ไลน์</h5>
-                            <div class="ps-3 border-start border-2 border-success border-opacity-25 ms-2">
-                                <div class="mb-4 position-relative">
-                                    <i class="bi bi-file-text position-absolute start-0 translate-middle-x bg-white text-success fs-5 ms-n3"></i>
-                                    <p class="mb-0 fw-bold small">ไทม์ไลน์</p>
-                                    <small id="t-start" class="text-muted"></small>
+                            <div class="ps-4 border-start border-2 border-success border-opacity-25 ms-2">
+                                <div class="mb-5 position-relative">
+                                    <i class="bi bi-file-text position-absolute start-0 translate-middle bg-white text-success fs-5" style="left: -17px !important;"></i>
+                                    <div class="ms-3">
+                                        <p class="mb-0 fw-bold small">แจ้งซ่อมสำเร็จ</p>
+                                        <small id="t-start" class="text-muted d-block mt-1"></small>
+                                    </div>
                                 </div>
-                                <div class="mb-4 position-relative">
-                                    <i class="bi bi-eye position-absolute start-0 translate-middle-x bg-white text-info fs-5 ms-n3"></i>
-                                    <p class="mb-0 fw-bold small">รับเรื่องแล้ว</p>
-                                    <small class="text-muted">เจ้าหน้าที่กำลังตรวจสอบ</small>
+                                <div class="mb-5 position-relative">
+                                    <i class="bi bi-eye position-absolute start-0 translate-middle bg-white text-info fs-5" style="left: -17px !important;"></i>
+                                    <div class="ms-3">
+                                        <p class="mb-0 fw-bold small">รับเรื่องแล้ว</p>
+                                        <small class="text-muted d-block mt-1">เจ้าหน้าที่กำลังตรวจสอบ</small>
+                                    </div>
                                 </div>
                                 <div class="position-relative">
-                                    <i class="bi bi-check-circle position-absolute start-0 translate-middle-x bg-white text-secondary fs-5 ms-n3"></i>
-                                    <p class="mb-0 fw-bold small">สถานะการซ่อม</p>
-                                    <span id="m-status" class="badge rounded-pill bg-success-subtle text-success"></span>
+                                    <i class="bi bi-check-circle position-absolute start-0 translate-middle bg-white text-secondary fs-5" style="left: -17px !important;"></i>
+                                    <div class="ms-3">
+                                        <p class="mb-0 fw-bold small">สถานะการซ่อม</p>
+                                        <span id="m-status" class="badge rounded-pill bg-success-subtle text-success mt-1 px-3 py-2"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -72,42 +78,54 @@
                 </div>
             </div>
             <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-secondary rounded-pill px-5" data-bs-dismiss="modal">ปิด</button>
+                <button type="button" class="btn btn-danger rounded-pill px-5 border-0" data-bs-dismiss="modal" style="background-color: #e74c3c; box-shadow: none !important;">ปิด</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // สคริปต์จัดการข้อมูล Modal
     document.addEventListener("DOMContentLoaded", function() {
         var modalEl = document.getElementById('reportDetailModal');
-        modalEl.addEventListener('show.bs.modal', function (event) {
-            var btn = event.relatedTarget;
-            
-            // ดึงข้อมูลจาก Data Attributes
-            document.getElementById('m-building').innerText = btn.getAttribute('data-building');
-            document.getElementById('m-room').innerText = btn.getAttribute('data-room');
-            document.getElementById('m-title').innerText = btn.getAttribute('data-title');
-            document.getElementById('m-detail').innerText = btn.getAttribute('data-detail');
-            document.getElementById('m-date').innerText = btn.getAttribute('data-date');
-            document.getElementById('m-phone').innerText = btn.getAttribute('data-phone');
-            document.getElementById('m-status').innerText = btn.getAttribute('data-status');
-            document.getElementById('t-start').innerText = btn.getAttribute('data-date');
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function (event) {
+                var btn = event.relatedTarget;
+                
+                // ใส่ข้อมูล Text
+                document.getElementById('m-building').innerText = btn.getAttribute('data-building') || '-';
+                document.getElementById('m-room').innerText = btn.getAttribute('data-room') || '-';
+                document.getElementById('m-title').innerText = btn.getAttribute('data-title') || '-';
+                document.getElementById('m-detail').innerText = btn.getAttribute('data-detail') || '-';
+                document.getElementById('m-date').innerText = btn.getAttribute('data-date') || '-';
+                document.getElementById('m-phone').innerText = btn.getAttribute('data-phone') || '-';
+                document.getElementById('m-status').innerText = btn.getAttribute('data-status') || 'รอซ่อม';
+                document.getElementById('t-start').innerText = btn.getAttribute('data-date') || '-';
 
-            // จัดการรูปภาพ
-            var imgData = btn.getAttribute('data-image');
-            var imgTag = document.getElementById('m-image');
-            var noImg = document.getElementById('m-no-image');
+                // --- ส่วนแก้ไขรูปภาพ: รองรับทั้ง Path และ Base64 ---
+                var imgData = btn.getAttribute('data-image'); 
+                var imgTag = document.getElementById('m-image');
+                var noImg = document.getElementById('m-no-image');
 
-            if (imgData && imgData !== 'None') {
-                imgTag.src = imgData;
-                imgTag.style.display = 'block';
-                noImg.style.display = 'none';
-            } else {
-                imgTag.style.display = 'none';
-                noImg.style.display = 'block';
-            }
-        });
+                if (imgData && imgData !== 'None' && imgData.trim() !== "") {
+                    var finalSrc = "";
+                    
+                    // 1. ถ้าเป็น Base64 (เริ่มด้วยสัญลักษณ์ของไฟล์ภาพ)
+                    if (imgData.length > 100 || imgData.startsWith('data:image')) {
+                        finalSrc = imgData.startsWith('data:image') ? imgData : "data:image/jpeg;base64," + imgData;
+                    } 
+                    // 2. ถ้าเป็นชื่อไฟล์ปกติ
+                    else {
+                        finalSrc = imgData.includes('/') ? imgData : "/static/picture/" + imgData;
+                    }
+
+                    imgTag.src = finalSrc;
+                    imgTag.style.display = 'block';
+                    noImg.style.display = 'none';
+                } else {
+                    imgTag.style.display = 'none';
+                    noImg.style.display = 'block';
+                }
+            });
+        }
     });
 </script>
