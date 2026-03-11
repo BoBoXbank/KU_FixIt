@@ -1,65 +1,221 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="container-fluid p-0">
-    <div class="main-content">
-        <div class="report-card">
-            <div class="card-header">
-                <i class="bi bi-pencil-square"></i> แก้ไขใบแจ้งซ่อม #REP-{{ "%03d" | format(item.id) }}
-            </div>
 
-            <form action="{{ url_for('user.edit_report', id=item.id) }}" method="POST" enctype="multipart/form-data">
-                <div class="grid-row">
-                    <div>
-                        <label>อาคาร</label>
-                        <select name="location_building" required>
-                            <option value="{{ item.building }}">{{ item.building }} (เดิม)</option>
-                            <option value="อาคาร 1">อาคาร 1</option>
-                            </select>
-                    </div>
-                    <div>
-                        <label>ห้อง</label>
-                        <input type="text" name="location_room" value="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}" required>
-                    </div>
-                </div>
+<style>
+    /* --- 1. ล้างเงาทุกจุด 100% --- */
+    * {
+        box-shadow: none !important;
+        -webkit-box-shadow: none !important;
+        outline: none !important;
+        border: none;
+    }
 
-                <div class="form-group">
-                    <label>แผนก / ประเภทปัญหา</label>
-                    <select name="title" required>
-                        <option value="{{ item.title }}">{{ item.title }} (เดิม)</option>
-                        <option value="แอร์">แอร์ / เครื่องปรับอากาศ</option>
-                        <option value="ประปา">ระบบประปา / ท่อน้ำ</option>
-                        <option value="ไม้">งานไม้ / เฟอร์นิเจอร์</option>
-                        <option value="WiFi">อินเทอร์เน็ต / WiFi</option>
-                        <option value="ไฟ">ไฟฟ้า / อุปกรณ์ไฟฟ้า</option>
+    :root {
+        --primary-green: #2d6a4f;
+        --error-red: #e74c3c; /* สีแดงสำหรับปุ่มยกเลิก */
+        --bg-color: #e1f2e9; 
+        --input-bg: #f1f3f2;
+    }
+
+    .main-wrapper {
+        padding: 60px 20px;
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        font-family: 'Kanit', sans-serif;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* --- 2. การ์ดขาว Flat (ไม่มีเงาขอบขาว) --- */
+    .report-card {
+        background: #ffffff;
+        border-radius: 28px;
+        width: 100%;
+        max-width: 650px;
+        padding: 45px;
+    }
+
+    .card-header h2 {
+        color: var(--primary-green);
+        font-weight: 700;
+        font-size: 1.6rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    /* --- 3. อินพุตและเลย์เอาต์ --- */
+    .form-label {
+        color: var(--primary-green);
+        font-weight: 600;
+        margin-bottom: 8px;
+        display: block;
+        font-size: 0.9rem;
+    }
+
+    .form-control, .form-select {
+        background-color: var(--input-bg) !important;
+        border-radius: 14px !important;
+        padding: 14px 18px !important;
+        width: 100%;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    /* --- 4. โซนรูปภาพเส้นประ --- */
+    .upload-area {
+        border: 2px dashed #cbdadb;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    #previewImg {
+        width: 100%;
+        max-height: 250px;
+        object-fit: contain;
+        border-radius: 15px;
+        margin-top: 15px;
+    }
+
+    /* --- 5. ปุ่มกด (จัดตรงกลาง + สมดุล) --- */
+    .action-buttons {
+        display: flex;
+        justify-content: center; /* วางปุ่มตรงกลาง */
+        gap: 20px; /* เว้นระยะห่างระหว่างปุ่ม */
+        margin-top: 40px;
+    }
+
+    .btn-base {
+        flex: 1; /* ทำให้ทั้งสองปุ่มมีขนาดกว้างเท่ากัน (สมดุล) */
+        max-width: 200px; /* จำกัดความกว้างไม่ให้ใหญ่เกินไป */
+        padding: 15px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        transition: opacity 0.2s;
+        display: inline-block;
+    }
+
+    .btn-save {
+        background-color: var(--primary-green);
+        color: white;
+    }
+
+    .btn-cancel {
+        background-color: var(--error-red); /* สีแดง */
+        color: white;
+    }
+
+    .btn-base:hover {
+        opacity: 0.85;
+    }
+
+    @media (max-width: 480px) {
+        .grid-2 { grid-template-columns: 1fr; }
+        .btn-base { max-width: 100%; } /* มือถือให้ปุ่มเต็มความกว้าง */
+    }
+</style>
+
+<div class="main-wrapper">
+    <div class="report-card">
+        <div class="card-header">
+            <h2>🛠️ แก้ไขใบแจ้งซ่อม</h2>
+        </div>
+        
+        <form action="{{ url_for('user.edit_report', id=item.id) }}" method="POST" enctype="multipart/form-data">
+            
+            <div class="grid-2">
+                <div>
+                    <label class="form-label">อาคาร</label>
+                    <select name="location_building" class="form-select" required>
+                        <option value="{{ item.building }}">{{ item.building }}</option>
+                        <option value="อาคาร 1">อาคาร 1</option>
+                        <option value="อาคาร 2">อาคาร 2</option>
                     </select>
                 </div>
-
-                <div class="form-group">
-                    <label>รายละเอียดปัญหา</label>
-                    <textarea name="detail" rows="4" required>{{ item.detail }}</textarea>
+                <div>
+                    <label class="form-label">ห้อง</label>
+                    <input type="text" name="location_room" class="form-control" 
+                           value="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}" required>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label>เปลี่ยนรูปภาพ (ไม่บังคับ)</label>
-                    <input type="file" name="image" accept="image/*" class="form-control">
-                </div>
+            <div style="margin-bottom: 25px;">
+                <label class="form-label">ประเภทปัญหา ⚙️</label>
+                <select name="title" class="form-select" required>
+                    <option value="{{ item.title }}">{{ item.title }} (เดิม)</option>
+                        <option value="แอร์">แอร์ / เครื่องปรับอากาศ </option>
+                        <option value="ประปา">ระบบประปา / ท่อน้ำ </option>
+                        <option value="ไม้">งานไม้ / เฟอร์นิเจอร์ </option>
+                        <option value="WiFi">อินเทอร์เน็ต / WiFi</option>
+                        <option value="ไฟ">ไฟฟ้า / อุปกรณ์ไฟฟ้า</option>
+                </select>
+            </div>
 
-                <div class="form-group">
-                    <label>วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
-                    <input type="datetime-local" name="repair_time" value="{{ item.repair_time }}" required>
-                </div>
+            <div style="margin-bottom: 25px;">
+                <label class="form-label">รายละเอียดปัญหา 📝</label>
+                <textarea name="detail" class="form-control" rows="3" required>{{ item.detail }}</textarea>
+            </div>
 
-                <div class="form-group">
-                    <label>เบอร์โทรติดต่อ</label>
-                    <input type="tel" name="phone" value="{{ item.phone }}" required>
+            <div style="margin-bottom: 25px;">
+                <label class="form-label">รูปภาพประกอบ</label>
+                <div class="upload-area" onclick="document.getElementById('imgInput').click()">
+                    <span style="font-size: 2rem; display: block;">📸</span>
+                    <span style="color: #95a5a6; font-size: 0.85rem;">คลิกเพื่อเปลี่ยนรูปภาพ</span>
+                    <input type="file" name="image" id="imgInput" hidden accept="image/*">
+                    
+                    <div id="previewContainer">
+                        {% if item.image %}
+                            <img src="{{ url_for('static', filename='uploads/' + item.image) }}" id="previewImg">
+                        {% else %}
+                            <img src="" id="previewImg" style="display: none;">
+                        {% endif %}
+                    </div>
                 </div>
+            </div>
 
-                <div class="button-group">
-                    <button type="submit" class="btn btn-success rounded-pill">บันทึกการแก้ไข</button>
-                    <a href="{{ url_for('user.home') }}" class="btn btn-light rounded-pill">ยกเลิก</a>
+            <div class="grid-2">
+                <div>
+                    <label class="form-label">วันที่นัดหมาย 📅</label>
+                    <input type="datetime-local" name="repair_time" class="form-control" value="{{ item.repair_time }}" required>
                 </div>
-            </form>
-        </div>
+                <div>
+                    <label class="form-label">เบอร์ติดต่อ 📞</label>
+                    <input type="tel" name="phone" class="form-control" value="{{ item.phone }}" required>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button type="submit" class="btn-base btn-save">บันทึก</button>
+                <a href="{{ url_for('user.home') }}" class="btn-base btn-cancel">ยกเลิก</a>
+            </div>
+        </form>
     </div>
 </div>
+
+<script>
+    const imgInput = document.getElementById('imgInput');
+    const previewImg = document.getElementById('previewImg');
+
+    imgInput.onchange = evt => {
+        const [file] = imgInput.files;
+        if (file) {
+            previewImg.src = URL.createObjectURL(file);
+            previewImg.style.display = 'block';
+        }
+    }
+</script>
+
 {% endblock %}
