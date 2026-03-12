@@ -99,19 +99,27 @@
 </div>
 
 <script>
-    // 🚀 JS ดักจับตรวจสอบชนิดไฟล์รูปโปรไฟล์ก่อนอัปโหลด
     function checkAndSubmitProfilePic(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
             const fileType = file.type;
+            const fileSize = file.size;
             
             if (fileType !== 'image/jpeg' && fileType !== 'image/png') {
                 alert('กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
-                input.value = ''; // เคลียร์ไฟล์ทิ้ง
+                input.value = '';
+                return;
+            }
+
+            const MAX_SIZE_MB = 10;
+            const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+            
+            if (fileSize > MAX_SIZE_BYTES) {
+                alert(`ภาพมีขนาดใหญ่เกินไป (สูงสุด ${MAX_SIZE_MB}MB) กรุณาเลือกภาพใหม่ครับ`);
+                input.value = '';
                 return;
             }
             
-            // ถ้าไฟล์ถูกต้อง ค่อยสั่ง submit ฟอร์ม
             document.getElementById('profilePicForm').submit();
         }
     }
