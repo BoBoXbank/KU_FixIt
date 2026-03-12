@@ -135,10 +135,10 @@
                         <small class="text-muted">For further inquiries:</small>
                     </div>
                 </div>
-                <div class="bg-light rounded-4 py-3 px-4 d-flex align-items-center justify-content-center shadow-sm border border-white">
+                <a href="tel:0657162623" class="bg-light rounded-4 py-3 px-4 d-flex align-items-center justify-content-center shadow-sm border border-white text-decoration-none text-dark">
                     <i class="bi bi-telephone-fill text-dark me-2"></i>
                     <span class="fw-bold fs-5">065-7162623</span>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -168,6 +168,12 @@
     /* เอฟเฟกต์เมื่อเอาเมาส์ชี้ที่แถวตาราง */
     .table-hover tbody tr:hover {
         background-color: #f1f9f7 !important;
+    }
+    /* เอฟเฟกต์ Hover สำหรับแถบเบอร์โทร */
+    a.bg-light:hover {
+        background-color: #e9ecef !important;
+        transform: translateY(-2px);
+        transition: all 0.2s ease;
     }
 </style>
 {% endblock %}
