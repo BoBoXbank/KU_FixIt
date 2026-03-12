@@ -21,8 +21,7 @@
                 </thead>
                 <tbody>
                     {% for item in reports %}
-                    <tr style="cursor: pointer;" 
-                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                    <tr class="record-row" style="cursor: pointer;" 
                         data-building="{{ item.building }}"
                         data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
                         data-title="{{ item.title }}"
@@ -37,7 +36,7 @@
                         <td>{{ item.location }}</td>
                         <td>{{ item.title }}</td>
                         
-                        <td style="min-width: 200px;" onclick="event.stopPropagation();">
+                        <td style="min-width: 200px;">
                             <form action="{{ url_for('admin.update_status', id=item.id) }}" method="POST" class="d-flex gap-2 m-0">
                                 <select name="status" class="form-select form-select-sm rounded-pill border-success text-center shadow-sm">
                                     <option value="รอซ่อม" {% if item.status=='รอซ่อม' %}selected{% endif %}>รอซ่อม</option>
@@ -48,7 +47,7 @@
                             </form>
                         </td>
 
-                        <td class="text-center" onclick="event.stopPropagation();">
+                        <td class="text-center">
                             <a href="{{ url_for('admin.delete_report', id=item.id) }}" class="btn btn-sm btn-outline-danger rounded-circle" onclick="return confirm('ยืนยันการลบ?');">
                                 <i class="bi bi-trash"></i>
                             </a>
@@ -72,4 +71,37 @@
         font-size: 0.9rem !important;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.record-row');
+        
+        rows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // เช็คว่าเป้าหมายที่ถูกคลิก อยู่ในฟอร์ม, dropdown, ปุ่มกด หรือปุ่มลบ (ถังขยะ) หรือไม่
+                const isInteractiveElement = e.target.closest('form') || 
+                                             e.target.closest('select') || 
+                                             e.target.closest('button') || 
+                                             e.target.closest('a');
+                
+                // ถ้ากดโดนของพวกนี้ ให้จบการทำงานทันที ปล่อยให้ปุ่มหรือฟอร์มทำงานตามปกติ (ไม่เปิด Modal)
+                if (isInteractiveElement) {
+                    return;
+                }
+                
+                // แต่ถ้ากดโดนพื้นที่ว่างๆ ในแถว ให้เปิด Modal แทน
+                const modalElement = document.getElementById('reportDetailModal');
+                
+                // ดึง Instance ของ Modal เดิม หรือสร้างใหม่ถ้ายังไม่มี
+                let modal = bootstrap.Modal.getInstance(modalElement);
+                if (!modal) {
+                    modal = new bootstrap.Modal(modalElement);
+                }
+                
+                // สั่งแสดง Modal และส่ง 'this' (แถวที่ถูกกด) ไปเพื่อให้ Modal ดึงค่า data-* ได้ถูกต้อง
+                modal.show(this);
+            });
+        });
+    });
+</script>
 {% endblock %}
