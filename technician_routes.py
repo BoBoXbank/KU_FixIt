@@ -9,7 +9,7 @@ ROLE_MAP = {
     'technician_wood': 'ไม้',     
     'technician_wifi': 'WiFi',  
     'technician_plumb': 'ประปา',
-    'technician_elec': 'ไฟ'      
+    'technician_elec': 'ไฟ'       
 }
 
 def is_technician():

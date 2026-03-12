@@ -9,6 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
+        /* =========================================
+           💻 โหมดหน้าจอคอมพิวเตอร์ (Desktop)
+           ========================================= */
         body { font-family: 'Prompt', sans-serif; margin: 0; display: flex; min-height: 100vh; background-color: #D8F2E9; }
         .sidebar { width: 280px; background-color: white; display: flex; flex-direction: column; position: fixed; height: 100vh; border-right: 1px solid #dee2e6; z-index: 1000; }
         .sidebar-header { padding: 40px 20px 20px; text-align: center; }
@@ -20,6 +23,77 @@
         .main-content { margin-left: 280px; flex-grow: 1; padding: 40px; width: calc(100% - 280px); }
         .logout-box { margin-top: auto; padding: 25px; border-top: 1px solid #eee; }
         .logout-link { color: #854d0e; text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+
+        /* =========================================
+           📱 โหมดหน้าจอมือถือ (Mobile Responsive)
+           ========================================= */
+        @media (max-width: 768px) {
+            body { 
+                flex-direction: column; 
+            }
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                position: relative; 
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+            .main-content { 
+                margin-left: 0; 
+                width: 100%; 
+                padding: 20px 15px; 
+            }
+            .sidebar-header { 
+                padding: 15px; 
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                gap: 15px; 
+            }
+            .sidebar-logo { 
+                width: 45px; 
+                margin-bottom: 0; 
+            }
+            .sidebar-title {
+                font-size: 1.2rem;
+            }
+            .nav { 
+                flex-direction: row !important; 
+                overflow-x: auto; 
+                flex-wrap: nowrap; 
+                padding: 0 10px 10px 10px;
+                margin-top: 0 !important;
+                /* ซ่อน Scrollbar แต่อยู่ให้เลื่อนได้ */
+                scrollbar-width: none; 
+            }
+            .nav::-webkit-scrollbar {
+                display: none;
+            }
+            .nav-link { 
+                padding: 8px 15px; 
+                font-size: 0.9rem; 
+                white-space: nowrap; 
+                border-radius: 20px;
+                margin-right: 5px;
+            }
+            .nav-link.active {
+                border-left: none;
+                border-bottom: 3px solid #006633;
+                border-radius: 10px;
+            }
+            .logout-box { 
+                padding: 10px 15px; 
+                border-top: none; 
+                margin-top: 0;
+                display: flex;
+                justify-content: flex-end;
+                background-color: #fcfcfc;
+            }
+            .logout-link {
+                font-size: 0.9rem;
+            }
+        }
     </style>
 </head>
 <body>

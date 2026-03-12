@@ -27,25 +27,20 @@
             <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius: 25px;">
                 <h4 class="fw-bold mb-4" style="color: #2C5F4D;"><i class="bi bi-tools text-success me-2"></i> ใบแจ้งซ่อม</h4>
 
-                <form action="{{ url_for('user.report') }}" method="POST" enctype="multipart/form-data">
+                <form id="reportForm" action="{{ url_for('user.report') }}" method="POST" enctype="multipart/form-data">
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-success">อาคาร</label>
                             <select name="location_building" class="form-select rounded-4 bg-light border-0 py-2 px-3" required>
                                 <option value="">เลือกอาคาร</option>
-                                <option value="อาคาร 1">อาคาร 1</option>
-                                <option value="อาคาร 2">อาคาร 2</option>
-                                <option value="อาคาร 3">อาคาร 3</option>
-                                <option value="อาคาร 4">อาคาร 4</option>
-                                <option value="อาคาร 5">อาคาร 5</option>
-                                <option value="อาคาร 6">อาคาร 6</option>
-                                <option value="อาคาร 7">อาคาร 7</option>
-                                <option value="อาคาร 8">อาคาร 8</option>
+                                {% for i in range(1, 27) %}
+                                    <option value="อาคาร {{ i }}">อาคาร {{ i }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-6 mt-3 mt-md-0">
                             <label class="form-label fw-bold text-success">ห้อง</label>
-                            <input type="text" name="location_room" class="form-control rounded-4 bg-light border-0 py-2 px-3" placeholder="เช่น 301" required>
+                            <input type="text" id="roomInput" name="location_room" class="form-control rounded-4 bg-light border-0 py-2 px-3" placeholder="เช่น 301, 301A" maxlength="6" required>
                         </div>
                     </div>
 
@@ -62,28 +57,71 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-bold text-success">รายละเอียดปัญหา</label>
-                        <textarea name="detail" class="form-control rounded-4 bg-light border-0 py-2 px-3" rows="4" placeholder="อธิบายปัญหาที่พบ เช่น แอร์ไม่เย็น น้ำหยด..." required></textarea>
+                        <label class="form-label fw-bold text-success">รายละเอียดปัญหา <span class="text-muted small fw-normal">(สูงสุด 500 ตัวอักษร)</span></label>
+                        <textarea id="detailInput" name="detail" class="form-control rounded-4 bg-light border-0 py-2 px-3" rows="4" placeholder="อธิบายปัญหาที่พบ เช่น แอร์ไม่เย็น น้ำหยด..." maxlength="500" required></textarea>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-bold text-success">แนบรูปภาพ (ไม่บังคับ)</label>
                         <div class="p-4 text-center rounded-4" style="border: 2px dashed #a3c9be; background-color: #f8fbfb; cursor: pointer; transition: 0.3s;" onclick="document.getElementById('file-input').click()" onmouseover="this.style.backgroundColor='#eaf5f4'" onmouseout="this.style.backgroundColor='#f8fbfb'">
                             <i class="bi bi-cloud-arrow-up text-success" style="font-size: 2.5rem;"></i><br>
-                            <span id="file-name-display" class="text-secondary">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวาง</span><br>
-                            <small class="text-muted">รองรับ JPG, PNG ขนาดไม่เกิน 5MB</small>
-                            <input type="file" id="file-input" name="image" accept="image/*" style="display: none;" onchange="updateFileName(this)">
+                            <span id="file-name-display" class="text-secondary fw-bold">คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวาง</span><br>
+                            <small class="text-danger fw-bold">รองรับเฉพาะไฟล์ .JPG และ .PNG เท่านั้น</small>
+                            <input type="file" id="file-input" name="image" accept=".jpg, .jpeg, .png" style="display: none;" onchange="updateFileName(this)">
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold text-success">วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
-                        <input type="datetime-local" name="repair_time" class="form-control rounded-4 bg-light border-0 py-2 px-3" required>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-success">วัน-เวลาที่สะดวกให้ช่างเข้าซ่อม</label>
+                        <div class="card border-0 bg-light rounded-4 p-3">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="time_type" id="time_any" value="anytime" checked onchange="toggleTimeConfig()">
+                                <label class="form-check-label fw-bold text-dark" for="time_any">
+                                    สะดวกทุกวัน และทุกช่วงเวลา <span class="badge bg-success ms-1">แนะนำ</span><br>
+                                    <small class="text-muted fw-normal">ช่างสามารถดำเนินการเข้าซ่อมได้ทันทีที่รับเรื่อง</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="time_type" id="time_specific" value="specific" onchange="toggleTimeConfig()">
+                                <label class="form-check-label fw-bold text-dark" for="time_specific">
+                                    ระบุวัน และช่วงเวลาที่สะดวก
+                                </label>
+                            </div>
+
+                            <div id="specific_time_config" class="mt-3 p-3 bg-white rounded-3 shadow-sm border border-success border-opacity-25" style="display: none;">
+                                <p class="small fw-bold text-danger mb-2">กรุณาเลือกวันและเวลาอย่างน้อย 1 รายการ</p>
+                                
+                                <p class="small fw-bold text-success mb-2"><i class="bi bi-calendar-check"></i> เลือกวันที่สะดวก</p>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="จันทร์" id="day_mon"><label class="form-check-label small" for="day_mon">จันทร์</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="อังคาร" id="day_tue"><label class="form-check-label small" for="day_tue">อังคาร</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="พุธ" id="day_wed"><label class="form-check-label small" for="day_wed">พุธ</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="พฤหัสบดี" id="day_thu"><label class="form-check-label small" for="day_thu">พฤหัสฯ</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="ศุกร์" id="day_fri"><label class="form-check-label small" for="day_fri">ศุกร์</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="เสาร์" id="day_sat"><label class="form-check-label small" for="day_sat">เสาร์</label></div>
+                                    <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="อาทิตย์" id="day_sun"><label class="form-check-label small" for="day_sun">อาทิตย์</label></div>
+                                </div>
+
+                                <p class="small fw-bold text-success mb-2"><i class="bi bi-clock"></i> เลือกช่วงเวลา</p>
+                                <div class="d-flex flex-wrap gap-3 mb-3">
+                                    <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="เช้า (09:00-12:00)" id="time_m"><label class="form-check-label small" for="time_m">ช่วงเช้า (09:00-12:00)</label></div>
+                                    <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="บ่าย (13:00-16:00)" id="time_a"><label class="form-check-label small" for="time_a">ช่วงบ่าย (13:00-16:00)</label></div>
+                                    <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="เย็น (16:00-19:00)" id="time_e"><label class="form-check-label small" for="time_e">ช่วงเย็น (16:00-19:00)</label></div>
+                                </div>
+
+                                <p class="small fw-bold text-success mb-2"><i class="bi bi-pencil-square"></i> รายละเอียดเพิ่มเติม (ตัวเลือกเสริม)</p>
+                                <input type="text" name="time_note" class="form-control form-control-sm rounded-3" placeholder="เช่น วันจันทร์สะดวกช่วงเช้า, วันศุกร์สะดวกช่วงบ่าย">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mb-4">
                         <label class="form-label fw-bold text-success">เบอร์โทรติดต่อ</label>
-                        <input type="tel" name="phone" class="form-control rounded-4 bg-light border-0 py-2 px-3" placeholder="0XX-XXX-XXXX" required>
+                        <input type="text" id="phoneInput" name="phone" class="form-control rounded-4 bg-light border-0 py-2 px-3" 
+                               placeholder="08XXXXXXXX (ตัวเลข 10 หลัก ขึ้นต้นด้วย 0)" 
+                               pattern="0[0-9]{9}" maxlength="10" minlength="10" 
+                               title="กรุณากรอกเบอร์โทรศัพท์จริงๆ" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
                     </div>
 
                     <div class="d-flex gap-3 mt-4">
@@ -100,21 +138,82 @@
     function updateFileName(input) {
         const display = document.getElementById('file-name-display');
         if (input.files && input.files[0]) {
-            display.innerHTML = '<strong class="text-success"><i class="bi bi-check-circle-fill"></i> เลือกไฟล์: ' + input.files[0].name + '</strong>';
+            const file = input.files[0];
+            const fileType = file.type;
+            if(fileType !== 'image/jpeg' && fileType !== 'image/png') {
+                alert('กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
+                input.value = ''; 
+                display.innerHTML = 'คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวาง';
+                return;
+            }
+            display.innerHTML = '<strong class="text-success"><i class="bi bi-check-circle-fill"></i> เลือกไฟล์: ' + file.name + '</strong>';
         } else {
             display.innerHTML = 'คลิกเพื่อเลือกรูปภาพ หรือลากไฟล์มาวาง';
         }
     }
+
+    function toggleTimeConfig() {
+        const isSpecific = document.getElementById('time_specific').checked;
+        const configBox = document.getElementById('specific_time_config');
+        
+        if(isSpecific) {
+            configBox.style.display = 'block';
+            configBox.style.animation = 'fadeIn 0.3s ease-in-out';
+        } else {
+            configBox.style.display = 'none';
+        }
+    }
+
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        // 🚀 ดักจับการพิมพ์แค่ Spacebar (เว้นวรรค)
+        const roomValue = document.getElementById('roomInput').value;
+        const detailValue = document.getElementById('detailInput').value;
+
+        if (roomValue.trim().length === 0) {
+            e.preventDefault();
+            alert('กรุณากรอกข้อมูล "ห้อง" ให้ถูกต้อง');
+            document.getElementById('roomInput').focus();
+            return;
+        }
+
+        if (detailValue.trim().length === 0) {
+            e.preventDefault();
+            alert('กรุณากรอก "รายละเอียดปัญหา" ให้ถูกต้อง');
+            document.getElementById('detailInput').focus();
+            return;
+        }
+
+        const phoneInput = document.getElementById('phoneInput').value;
+        if (!phoneInput.startsWith('0')) {
+            e.preventDefault();
+            alert('กรุณากรอก "เบอร์โทรติดต่อ" ให้ถูกต้อง');
+            return;
+        }
+
+        const isSpecific = document.getElementById('time_specific').checked;
+        if (isSpecific) {
+            const daysChecked = document.querySelectorAll('.time-checkbox-day:checked').length;
+            const timesChecked = document.querySelectorAll('.time-checkbox-time:checked').length;
+            
+            if (daysChecked === 0 || timesChecked === 0) {
+                e.preventDefault(); 
+                alert('กรุณาระบุ "วัน" และ "ช่วงเวลา" ที่สะดวกอย่างน้อย 1 รายการครับ ช่างจะได้ทราบเวลาเข้าซ่อมที่ชัดเจน');
+            }
+        }
+    });
 </script>
 
 <style>
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.08); }
-    /* ทำให้ช่อง Input ตอนกดดูเด่นขึ้นแบบกลมกลืน */
     .form-control:focus, .form-select:focus {
         background-color: #fff !important;
         border: 1px solid #198754 !important;
         box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 </style>
 {% endblock %}

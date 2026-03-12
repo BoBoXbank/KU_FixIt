@@ -21,13 +21,15 @@ def get_current_user_data():
             cursor = conn.cursor()
             # ดึงข้อมูลที่จำเป็นสำหรับ Sidebar และ Profile Badge
             cursor.execute("SELECT id, username, first_name, last_name, profile_picture FROM users WHERE id = %s", (user_id,))
-            user_data = cursor.fetchone()
+            row = cursor.fetchone()
             
-            if user_data:
-                user_data = dict(user_data) # แปลงเป็น dictionary เพื่อให้แก้ไขค่าได้ง่าย
-                # ถ้ามีรูปโปรไฟล์ ให้แปลงเป็น Base64
-                if user_data['profile_picture']:
-                    user_data['profile_picture'] = base64.b64encode(user_data['profile_picture']).decode('utf-8')
+            if row:
+                user_data = dict(row) # แปลงเป็น dictionary เพื่อให้แก้ไขค่าได้ง่าย
+                # ✅ เช็คชนิดข้อมูลรูปภาพแบบเดียวกับหน้า User ป้องกันการ Encode ซ้อนกันจนรูปพัง
+                pic = user_data.get('profile_picture')
+                if pic:
+                    if isinstance(pic, bytes):
+                        user_data['profile_picture'] = pic.decode('utf-8')
         finally:
             conn.close()
     return user_data

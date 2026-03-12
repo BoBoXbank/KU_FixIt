@@ -37,11 +37,11 @@
                     {% endif %}
                 </div>
                 
-                <form action="{{ url_for('user.profile') }}" method="POST" enctype="multipart/form-data" class="position-absolute" style="bottom: 0; right: 0;">
-                    <label for="profile_picture" class="btn btn-warning rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; border: 3px solid white; cursor: pointer;">
+                <form id="profilePicForm" action="{{ url_for('user.profile') }}" method="POST" enctype="multipart/form-data" class="position-absolute" style="bottom: 0; right: 0;">
+                    <label for="profile_picture" class="btn btn-warning rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; border: 3px solid white; cursor: pointer;" title="เปลี่ยนรูปโปรไฟล์ (เฉพาะ JPG, PNG)">
                         <i class="bi bi-pencil-fill text-white"></i>
                     </label>
-                    <input type="file" id="profile_picture" name="profile_picture" class="d-none" accept="image/*" onchange="this.form.submit()">
+                    <input type="file" id="profile_picture" name="profile_picture" class="d-none" accept=".jpg, .jpeg, .png" onchange="checkAndSubmitProfilePic(this)">
                 </form>
             </div>
             
@@ -97,4 +97,23 @@
         </form>
     </div>
 </div>
+
+<script>
+    // 🚀 JS ดักจับตรวจสอบชนิดไฟล์รูปโปรไฟล์ก่อนอัปโหลด
+    function checkAndSubmitProfilePic(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const fileType = file.type;
+            
+            if (fileType !== 'image/jpeg' && fileType !== 'image/png') {
+                alert('กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
+                input.value = ''; // เคลียร์ไฟล์ทิ้ง
+                return;
+            }
+            
+            // ถ้าไฟล์ถูกต้อง ค่อยสั่ง submit ฟอร์ม
+            document.getElementById('profilePicForm').submit();
+        }
+    }
+</script>
 {% endblock %}

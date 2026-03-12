@@ -2,7 +2,6 @@
 {% block content %}
 
 <style>
-    /* --- 1. ล้างเงาทุกจุด 100% --- */
     * {
         box-shadow: none !important;
         -webkit-box-shadow: none !important;
@@ -12,7 +11,7 @@
 
     :root {
         --primary-green: #2d6a4f;
-        --error-red: #e74c3c; /* สีแดงสำหรับปุ่มยกเลิก */
+        --error-red: #e74c3c; 
         --bg-color: #e1f2e9; 
         --input-bg: #f1f3f2;
     }
@@ -26,13 +25,13 @@
         justify-content: center;
     }
 
-    /* --- 2. การ์ดขาว Flat (ไม่มีเงาขอบขาว) --- */
     .report-card {
         background: #ffffff;
         border-radius: 28px;
         width: 100%;
         max-width: 650px;
         padding: 45px;
+        border: 1px solid #e0e0e0; 
     }
 
     .card-header h2 {
@@ -45,7 +44,6 @@
         margin-bottom: 30px;
     }
 
-    /* --- 3. อินพุตและเลย์เอาต์ --- */
     .form-label {
         color: var(--primary-green);
         font-weight: 600;
@@ -61,6 +59,20 @@
         width: 100%;
     }
 
+    .time-card {
+        background-color: var(--input-bg);
+        border-radius: 14px;
+        padding: 20px;
+    }
+    
+    .time-config-box {
+        background-color: #ffffff;
+        border: 2px solid #a3c9be;
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+
     .grid-2 {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -68,7 +80,6 @@
         margin-bottom: 25px;
     }
 
-    /* --- 4. โซนรูปภาพเส้นประ --- */
     .upload-area {
         border: 2px dashed #cbdadb;
         border-radius: 20px;
@@ -76,6 +87,7 @@
         text-align: center;
         cursor: pointer;
         margin-top: 10px;
+        background-color: #fcfcfc;
     }
 
     #previewImg {
@@ -86,17 +98,16 @@
         margin-top: 15px;
     }
 
-    /* --- 5. ปุ่มกด (จัดตรงกลาง + สมดุล) --- */
     .action-buttons {
         display: flex;
-        justify-content: center; /* วางปุ่มตรงกลาง */
-        gap: 20px; /* เว้นระยะห่างระหว่างปุ่ม */
+        justify-content: center;
+        gap: 20px;
         margin-top: 40px;
     }
 
     .btn-base {
-        flex: 1; /* ทำให้ทั้งสองปุ่มมีขนาดกว้างเท่ากัน (สมดุล) */
-        max-width: 200px; /* จำกัดความกว้างไม่ให้ใหญ่เกินไป */
+        flex: 1;
+        max-width: 200px;
         padding: 15px;
         border-radius: 50px;
         font-weight: 600;
@@ -108,83 +119,70 @@
         display: inline-block;
     }
 
-    .btn-save {
-        background-color: var(--primary-green);
-        color: white;
-    }
-
-    .btn-cancel {
-        background-color: var(--error-red); /* สีแดง */
-        color: white;
-    }
-
-    .btn-base:hover {
-        opacity: 0.85;
-    }
+    .btn-save { background-color: var(--primary-green); color: white; }
+    .btn-cancel { background-color: var(--error-red); color: white; }
+    .btn-base:hover { opacity: 0.85; }
 
     @media (max-width: 480px) {
         .grid-2 { grid-template-columns: 1fr; }
-        .btn-base { max-width: 100%; } /* มือถือให้ปุ่มเต็มความกว้าง */
+        .btn-base { max-width: 100%; }
     }
 </style>
 
 <div class="main-wrapper">
     <div class="report-card">
         <div class="card-header">
-            <h2>🛠️ แก้ไขใบแจ้งซ่อม</h2>
+            <h2><i class="bi bi-tools"></i> แก้ไขใบแจ้งซ่อม</h2>
         </div>
         
-        <form action="{{ url_for('user.edit_report', id=item.id) }}" method="POST" enctype="multipart/form-data">
+        <form id="editForm" action="{{ url_for('user.edit_report', id=item.id) }}" method="POST" enctype="multipart/form-data">
             
             <div class="grid-2">
                 <div>
                     <label class="form-label">อาคาร</label>
                     <select name="location_building" class="form-select" required>
                         <option value="{{ item.building }}">{{ item.building }}</option>
-                        <option value="อาคาร 1">อาคาร 1</option>
-                        <option value="อาคาร 2">อาคาร 2</option>
-                        <option value="อาคาร 3">อาคาร 3</option>
-                        <option value="อาคาร 4">อาคาร 4</option>
-                        <option value="อาคาร 5">อาคาร 5</option>
-                        <option value="อาคาร 6">อาคาร 6</option>
-                        <option value="อาคาร 7">อาคาร 7</option>
-                        <option value="อาคาร 8">อาคาร 8</option>
+                        {% for i in range(1, 27) %}
+                            {% if "อาคาร " ~ i != item.building %}
+                                <option value="อาคาร {{ i }}">อาคาร {{ i }}</option>
+                            {% endif %}
+                        {% endfor %}
                     </select>
                 </div>
                 <div>
                     <label class="form-label">ห้อง</label>
-                    <input type="text" name="location_room" class="form-control" 
-                           value="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}" required>
+                    <input type="text" id="roomEditInput" name="location_room" class="form-control" 
+                           value="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}" maxlength="6" required>
                 </div>
             </div>
 
             <div style="margin-bottom: 25px;">
-                <label class="form-label">ประเภทปัญหา ⚙️</label>
+                <label class="form-label">ประเภทปัญหา</label>
                 <select name="title" class="form-select" required>
                     <option value="{{ item.title }}">{{ item.title }} (เดิม)</option>
-                        <option value="แอร์">แอร์ / เครื่องปรับอากาศ </option>
-                        <option value="ประปา">ระบบประปา / ท่อน้ำ </option>
-                        <option value="ไม้">งานไม้ / เฟอร์นิเจอร์ </option>
+                        <option value="แอร์">แอร์ / เครื่องปรับอากาศ</option>
+                        <option value="ประปา">ระบบประปา / ท่อน้ำ</option>
+                        <option value="ไม้">งานไม้ / เฟอร์นิเจอร์</option>
                         <option value="WiFi">อินเทอร์เน็ต / WiFi</option>
                         <option value="ไฟ">ไฟฟ้า / อุปกรณ์ไฟฟ้า</option>
                 </select>
             </div>
 
             <div style="margin-bottom: 25px;">
-                <label class="form-label">รายละเอียดปัญหา 📝</label>
-                <textarea name="detail" class="form-control" rows="3" required>{{ item.detail }}</textarea>
+                <label class="form-label">รายละเอียดปัญหา <span style="color: #95a5a6; font-size: 0.8rem; font-weight: normal;">(สูงสุด 500 ตัวอักษร)</span></label>
+                <textarea id="detailEditInput" name="detail" class="form-control" rows="3" maxlength="500" required>{{ item.detail }}</textarea>
             </div>
 
             <div style="margin-bottom: 25px;">
                 <label class="form-label">รูปภาพประกอบ</label>
                 <div class="upload-area" onclick="document.getElementById('imgInput').click()">
-                    <span style="font-size: 2rem; display: block;">📸</span>
-                    <span style="color: #95a5a6; font-size: 0.85rem;">คลิกเพื่อเปลี่ยนรูปภาพ</span>
-                    <input type="file" name="image" id="imgInput" hidden accept="image/*">
+                    <i class="bi bi-cloud-arrow-up text-success" style="font-size: 2.5rem; display: block; margin-bottom: 10px;"></i>
+                    <span id="edit-file-name" style="color: #95a5a6; font-size: 0.85rem; font-weight: bold;">คลิกเพื่อเปลี่ยนรูปภาพ (เฉพาะ JPG, PNG)</span>
+                    <input type="file" name="image" id="imgInput" hidden accept=".jpg, .jpeg, .png">
                     
                     <div id="previewContainer">
-                        {% if item.image %}
-                            <img src="{{ url_for('static', filename='uploads/' + item.image) }}" id="previewImg">
+                        {% if item.image_data %}
+                            <img src="data:image/jpeg;base64,{{ item.image_data }}" id="previewImg">
                         {% else %}
                             <img src="" id="previewImg" style="display: none;">
                         {% endif %}
@@ -192,20 +190,52 @@
                 </div>
             </div>
 
-            <div class="grid-2">
-                <div>
-                    <label class="form-label">วันที่นัดหมาย 📅</label>
-                    <input type="datetime-local" name="repair_time" class="form-control" value="{{ item.repair_time }}" required>
-                </div>
-                <div>
-                    <label class="form-label">เบอร์ติดต่อ 📞</label>
-                    <input type="tel" name="phone" class="form-control" value="{{ item.phone }}" required>
+            {% set is_anytime = (item.repair_time == 'สะดวกทุกวัน และทุกช่วงเวลา') %}
+            <div style="margin-bottom: 25px;">
+                <label class="form-label">วัน-เวลาที่สะดวกให้เข้าซ่อม</label>
+                <div class="time-card">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="time_type" id="time_any" value="anytime" {% if is_anytime %}checked{% endif %} onchange="toggleTimeConfig()">
+                        <label class="form-check-label fw-bold" for="time_any">สะดวกทุกวัน และทุกช่วงเวลา</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="time_type" id="time_specific" value="specific" {% if not is_anytime %}checked{% endif %} onchange="toggleTimeConfig()">
+                        <label class="form-check-label fw-bold" for="time_specific">ระบุวัน และช่วงเวลาที่สะดวก</label>
+                    </div>
+
+                    <div id="specific_time_config" class="time-config-box" {% if is_anytime %}style="display: none;"{% else %}style="display: block;"{% endif %}>
+                        <p class="small fw-bold" style="color: var(--primary-green);">วัน (เลือกได้หลายวัน)</p>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="จันทร์" id="day_mon" {% if 'จันทร์' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_mon">จันทร์</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="อังคาร" id="day_tue" {% if 'อังคาร' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_tue">อังคาร</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="พุธ" id="day_wed" {% if 'พุธ' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_wed">พุธ</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="พฤหัสบดี" id="day_thu" {% if 'พฤหัสบดี' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_thu">พฤหัสฯ</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="ศุกร์" id="day_fri" {% if 'ศุกร์' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_fri">ศุกร์</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="เสาร์" id="day_sat" {% if 'เสาร์' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_sat">เสาร์</label></div>
+                            <div class="form-check form-check-inline m-0"><input class="form-check-input time-checkbox-day" type="checkbox" name="days" value="อาทิตย์" id="day_sun" {% if 'อาทิตย์' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="day_sun">อาทิตย์</label></div>
+                        </div>
+
+                        <p class="small fw-bold" style="color: var(--primary-green);">ช่วงเวลา (เลือกได้หลายช่วง)</p>
+                        <div class="d-flex flex-wrap gap-3 mb-3">
+                            <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="เช้า (09:00-12:00)" id="time_m" {% if 'เช้า' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="time_m">เช้า (09:00-12:00)</label></div>
+                            <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="บ่าย (13:00-16:00)" id="time_a" {% if 'บ่าย' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="time_a">บ่าย (13:00-16:00)</label></div>
+                            <div class="form-check"><input class="form-check-input time-checkbox-time" type="checkbox" name="times" value="เย็น (16:00-19:00)" id="time_e" {% if 'เย็น' in item.repair_time %}checked{% endif %}><label class="form-check-label small" for="time_e">เย็น (16:00-19:00)</label></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
+            <div style="margin-bottom: 25px;">
+                <label class="form-label">เบอร์โทรติดต่อ</label>
+                <input type="text" id="phoneEditInput" name="phone" class="form-control" value="{{ item.phone }}" 
+                       pattern="0[0-9]{9}" maxlength="10" minlength="10" 
+                       title="กรุณากรอกเบอร์โทรศัพท์เป็นตัวเลข 10 หลัก เริ่มต้นด้วย 0" 
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+            </div>
+
             <div class="action-buttons">
-                <button type="submit" class="btn-base btn-save">บันทึก</button>
-                <a href="{{ url_for('user.home') }}" class="btn-base btn-cancel">ยกเลิก</a>
+                <button type="submit" class="btn-base btn-save">บันทึกข้อมูล</button>
+                <a href="{{ url_for('user.record_user') }}" class="btn-base btn-cancel">ยกเลิก</a>
             </div>
         </form>
     </div>
@@ -214,14 +244,67 @@
 <script>
     const imgInput = document.getElementById('imgInput');
     const previewImg = document.getElementById('previewImg');
+    const fileNameDisplay = document.getElementById('edit-file-name');
 
     imgInput.onchange = evt => {
         const [file] = imgInput.files;
         if (file) {
+            const fileType = file.type;
+            if(fileType !== 'image/jpeg' && fileType !== 'image/png') {
+                alert('กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
+                imgInput.value = ''; 
+                return;
+            }
             previewImg.src = URL.createObjectURL(file);
             previewImg.style.display = 'block';
+            fileNameDisplay.innerHTML = ' เลือกไฟล์รูปภาพใหม่แล้ว';
+            fileNameDisplay.style.color = '#2d6a4f';
         }
     }
+
+    function toggleTimeConfig() {
+        const isSpecific = document.getElementById('time_specific').checked;
+        const configBox = document.getElementById('specific_time_config');
+        configBox.style.display = isSpecific ? 'block' : 'none';
+    }
+
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        // 🚀 ดักจับการพิมพ์แค่ Spacebar (เว้นวรรค)
+        const roomValue = document.getElementById('roomEditInput').value;
+        const detailValue = document.getElementById('detailEditInput').value;
+
+        if (roomValue.trim().length === 0) {
+            e.preventDefault();
+            alert('กรุณากรอกข้อมูล "ห้อง" ให้ถูกต้อง');
+            document.getElementById('roomEditInput').focus();
+            return;
+        }
+
+        if (detailValue.trim().length === 0) {
+            e.preventDefault();
+            alert('กรุณากรอก "รายละเอียดปัญหา" ให้ถูกต้อง');
+            document.getElementById('detailEditInput').focus();
+            return;
+        }
+
+        const phoneInput = document.getElementById('phoneEditInput').value;
+        if (!phoneInput.startsWith('0')) {
+            e.preventDefault();
+            alert('กรุณากรอก "เบอร์โทรติดต่อ" ให้ถูกต้อง');
+            return;
+        }
+
+        const isSpecific = document.getElementById('time_specific').checked;
+        if (isSpecific) {
+            const daysChecked = document.querySelectorAll('.time-checkbox-day:checked').length;
+            const timesChecked = document.querySelectorAll('.time-checkbox-time:checked').length;
+            
+            if (daysChecked === 0 || timesChecked === 0) {
+                e.preventDefault(); 
+                alert('กรุณาระบุ "วัน" และ "ช่วงเวลา" อย่างน้อย 1 รายการ');
+            }
+        }
+    });
 </script>
 
 {% endblock %}

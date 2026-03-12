@@ -27,7 +27,8 @@
                         data-title="{{ item.title }}"
                         data-detail="{{ item.detail }}"
                         data-image="{{ item.image_data }}"
-                        data-date="{{ item.repair_time }}"
+                        data-created="{{ item.created_at }}"
+                        data-repair-time="{{ item.repair_time }}"
                         data-phone="{{ item.phone }}"
                         data-status="{{ item.status }}">
                         
@@ -63,7 +64,6 @@
 {% include "components/image_modal.html" %} 
 
 <style>
-    /* ล้างสไตล์เดิมเพื่อให้ตารางนิ่งสนิทและดูสะอาดตา */
     .table-hover tbody tr:hover {
         background-color: #f1f9f7 !important;
     }
@@ -78,27 +78,19 @@
         
         rows.forEach(row => {
             row.addEventListener('click', function(e) {
-                // เช็คว่าเป้าหมายที่ถูกคลิก อยู่ในฟอร์ม, dropdown, ปุ่มกด หรือปุ่มลบ (ถังขยะ) หรือไม่
                 const isInteractiveElement = e.target.closest('form') || 
                                              e.target.closest('select') || 
                                              e.target.closest('button') || 
                                              e.target.closest('a');
-                
-                // ถ้ากดโดนของพวกนี้ ให้จบการทำงานทันที ปล่อยให้ปุ่มหรือฟอร์มทำงานตามปกติ (ไม่เปิด Modal)
                 if (isInteractiveElement) {
                     return;
                 }
                 
-                // แต่ถ้ากดโดนพื้นที่ว่างๆ ในแถว ให้เปิด Modal แทน
                 const modalElement = document.getElementById('reportDetailModal');
-                
-                // ดึง Instance ของ Modal เดิม หรือสร้างใหม่ถ้ายังไม่มี
                 let modal = bootstrap.Modal.getInstance(modalElement);
                 if (!modal) {
                     modal = new bootstrap.Modal(modalElement);
                 }
-                
-                // สั่งแสดง Modal และส่ง 'this' (แถวที่ถูกกด) ไปเพื่อให้ Modal ดึงค่า data-* ได้ถูกต้อง
                 modal.show(this);
             });
         });
