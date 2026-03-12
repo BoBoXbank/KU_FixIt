@@ -37,7 +37,7 @@
             <img src="{{ url_for('static', filename='picture/logo.png') }}" alt="KU Logo" class="h-28 mx-auto mb-2 object-contain">
             
             <h2 class="text-3xl font-bold text-[#006652] mb-1">ระบบแจ้งซ่อม</h2>
-            <p class="text-gray-400 text-s mb-8">หอพักนักศึกษา</p>
+            <p class="text-gray-400 text-sm mb-8">หอพักนักศึกษา</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -70,7 +70,7 @@
         </form>
 
         <div class="mt-4">
-            <a href="{{ url_for('user.forgot_password') }}" class="text-gray-500 text-s hover:text-[#006652] transition-colors">
+            <a href="{{ url_for('user.forgot_password') }}" class="text-gray-500 text-sm hover:text-[#006652] transition-colors">
                 Forget <span class="text-gray-400">password?</span>
             </a>
         </div>

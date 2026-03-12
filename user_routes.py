@@ -26,7 +26,7 @@ def process_and_compress_image(file):
         base64_encoded = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
         return base64_encoded
     except Exception as e:
-        print(f"❌ Error compressing image: {e}")
+        print(f"Error compressing image: {e}")
         return None
 # ==========================================
 
@@ -108,7 +108,7 @@ def register():
             )
             result = verify_response.json()
             if not result.get('success'):
-                flash("❌ กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ (reCAPTCHA)", "danger")
+                flash("กรุณายืนยันว่าคุณไม่ใช่โปรแกรมอัตโนมัติ (reCAPTCHA)", "danger")
                 return redirect(url_for('user.register'))
 
         hashed_pw = generate_password_hash(password)
@@ -117,14 +117,14 @@ def register():
 
         conn = get_db_connection()
         if not conn:
-            flash("❌ เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
+            flash("เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
             return redirect(url_for('user.register'))
 
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM users WHERE username=%s", (username,))
             if cursor.fetchone():
-                flash("❌ ชื่อผู้ใช้นี้ถูกใช้แล้ว", "danger")
+                flash("ชื่อผู้ใช้นี้ถูกใช้แล้ว", "danger")
                 return redirect(url_for('user.register'))
 
             cursor.execute("""
@@ -145,38 +145,71 @@ def register():
             cursor.execute(sql, (new_id, username, hashed_pw, role, question, hashed_ans, 
                                room_number, first_name, last_name, email, phone, building))
             conn.commit()
-            flash('✅ สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ', 'success')
+            flash('สมัครสมาชิกสำเร็จ! กรุณาเข้าสู่ระบบ', 'success')
             return redirect(url_for('user.login'))
         except Exception as e:
-            flash(f'❌ บันทึกข้อมูลไม่ได้: {e}', 'danger')
+            flash(f'บันทึกข้อมูลไม่ได้: {e}', 'danger')
         finally:
             conn.close()
     return render_template('user/register.html')
 
+# ---------------- LOGIN (ระบบป้องกัน Brute Force ผิด 10 ครั้ง ล็อค 2 นาที) ----------------
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username'].strip()
         password = request.form['password']
+        
         conn = get_db_connection()
         if not conn:
-            flash("❌ เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
+            flash("เชื่อมต่อฐานข้อมูลไม่ได้", "danger")
             return redirect(url_for('user.login'))
+            
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
             user = cursor.fetchone()
-            if user and check_password_hash(user['password_hash'], password):
-                session['user_id'] = user['id']
-                session['role'] = user['role']
-                session['username'] = user['username']
-                if user['role'] == 'admin': return redirect(url_for('admin.dashboard'))
-                elif user['role'].startswith('technician_'): return redirect(url_for('technician.dashboardtech'))
-                return redirect(url_for('user.home'))
+            
+            if user:
+                # 🚀 1. ตรวจสอบว่าบัญชีติดล็อคอยู่หรือไม่
+                if user['lockout_until'] and user['lockout_until'] > datetime.datetime.now():
+                    time_left = (user['lockout_until'] - datetime.datetime.now()).seconds // 60 + 1
+                    flash(f'🔒 บัญชีถูกล็อคชั่วคราว กรุณารออีก {time_left} นาที', 'danger')
+                    return redirect(url_for('user.login'))
+
+                # 🚀 2. ตรวจสอบรหัสผ่าน
+                if check_password_hash(user['password_hash'], password):
+                    # ถ้ารหัสถูก -> ล้างค่าการนับผิด และล้างเวลาล็อค
+                    cursor.execute("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = %s", (user['id'],))
+                    conn.commit()
+
+                    session['user_id'] = user['id']
+                    session['role'] = user['role']
+                    session['username'] = user['username']
+                    
+                    if user['role'] == 'admin': return redirect(url_for('admin.dashboard'))
+                    elif user['role'].startswith('technician_'): return redirect(url_for('technician.dashboardtech'))
+                    return redirect(url_for('user.home'))
+                else:
+                    # ถ้ารหัสผิด -> นับจำนวนครั้งที่ผิดเพิ่ม
+                    failed_attempts = (user['failed_attempts'] or 0) + 1
+                    
+                    # 🚀 แก้ไขให้ผิดครบ 10 ครั้ง ล็อค 2 นาที
+                    if failed_attempts >= 10:
+                        lockout_time = datetime.datetime.now() + datetime.timedelta(minutes=2)
+                        cursor.execute("UPDATE users SET failed_attempts = %s, lockout_until = %s WHERE id = %s", (failed_attempts, lockout_time, user['id']))
+                        conn.commit()
+                        flash('คุณใส่รหัสผิดครบ 10 ครั้ง บัญชีถูกล็อค 2 นาทีเพื่อความปลอดภัย', 'danger')
+                    else:
+                        cursor.execute("UPDATE users SET failed_attempts = %s WHERE id = %s", (failed_attempts, user['id']))
+                        conn.commit()
+                        flash(f'ชื่อผู้ใช้หรือรหัสผ่านผิด (เหลือโอกาสอีก {10 - failed_attempts} ครั้ง)', 'danger')
             else:
-                flash('❌ ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
+                flash('ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
+                
         finally:
             conn.close()
+            
     return render_template('user/login.html')
 
 @user_bp.route('/forgot-password', methods=['GET', 'POST'])
@@ -194,7 +227,7 @@ def forgot_password():
                     session['question'] = user['security_question']
                     return redirect(url_for('user.reset_password'))
                 else:
-                    flash('❌ ไม่พบชื่อผู้ใช้นี้', 'danger')
+                    flash('ไม่พบชื่อผู้ใช้นี้', 'danger')
             finally:
                 conn.close()
     return render_template('user/forgot_password.html')
@@ -213,18 +246,17 @@ def reset_password():
                 user = cursor.fetchone()
                 if user and check_password_hash(user['security_answer_hash'], answer):
                     new_hash = generate_password_hash(new_pass)
-                    cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (new_hash, session['reset_id']))
+                    cursor.execute("UPDATE users SET password_hash = %s, failed_attempts = 0, lockout_until = NULL WHERE id = %s", (new_hash, session['reset_id']))
                     conn.commit()
                     session.pop('reset_id', None)
-                    flash('✅ เปลี่ยนรหัสผ่านสำเร็จ! ล็อกอินได้เลย', 'success')
+                    flash('เปลี่ยนรหัสผ่านสำเร็จ! ล็อกอินได้เลย', 'success')
                     return redirect(url_for('user.login'))
                 else:
-                    flash('❌ คำตอบไม่ถูกต้อง', 'danger')
+                    flash('คำตอบไม่ถูกต้อง', 'danger')
             finally:
                 conn.close()
     return render_template('user/reset_password.html', question=session.get('question'))
 
-# ---------------- REPORT (แจ้งซ่อมโฉมใหม่) ----------------
 @user_bp.route('/report', methods=['GET', 'POST'])
 def report():
     if 'user_id' not in session: return redirect(url_for('user.login'))
@@ -238,7 +270,6 @@ def report():
         location = f"{building} ห้อง {room}"
         current_username = session.get('username')
 
-        # 🚀 ประมวลผล "เวลาที่สะดวกเข้าซ่อม"
         time_type = request.form.get('time_type')
         if time_type == 'anytime':
             repair_time_str = "สะดวกทุกวัน และทุกช่วงเวลา"
@@ -253,7 +284,6 @@ def report():
             if note:
                 repair_time_str += f" | หมายเหตุ: {note}"
 
-        # 🚀 สร้างเวลาแจ้งซ่อมปัจจุบัน (ของจริง)
         created_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         image = request.files.get('image')
@@ -273,7 +303,7 @@ def report():
                     title, detail, location, building, repair_time_str, phone, current_username, image_base64, created_at
                 ))
                 conn.commit()
-                flash('✅ ส่งเรื่องแจ้งซ่อมเรียบร้อย', 'success')
+                flash('ส่งเรื่องแจ้งซ่อมเรียบร้อย', 'success')
                 return redirect(url_for('user.home'))
             finally:
                 conn.close()
@@ -293,7 +323,7 @@ def profile():
                     cursor = conn.cursor()
                     cursor.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (image_base64, session['user_id']))
                     conn.commit()
-                    flash('✅ เปลี่ยนรูปโปรไฟล์สำเร็จ!', 'success')
+                    flash('เปลี่ยนรูปโปรไฟล์สำเร็จ!', 'success')
                     return redirect(url_for('user.profile'))
                 finally:
                     conn.close()
@@ -332,10 +362,10 @@ def edit_report(id):
     report = cursor.fetchone()
     
     if not report:
-        flash('❌ ไม่พบข้อมูลแจ้งซ่อม', 'danger')
+        flash('ไม่พบข้อมูลแจ้งซ่อม', 'danger')
         return redirect(url_for('user.record_user'))
     if report['status'] != 'รอซ่อม' and report['status'] != 'รอดำเนินการ':
-        flash('⚠️ ไม่สามารถแก้ไขได้เนื่องจากช่างรับงานไปแล้ว', 'warning')
+        flash('ไม่สามารถแก้ไขได้เนื่องจากช่างรับงานไปแล้ว', 'warning')
         return redirect(url_for('user.record_user'))
 
     if request.method == 'POST':
@@ -346,7 +376,6 @@ def edit_report(id):
         phone = request.form.get('phone')
         location = f"{building} ห้อง {room}"
         
-        # 🚀 ประมวลผล "เวลาที่สะดวกเข้าซ่อม" ใหม่ตอนแก้ไข
         time_type = request.form.get('time_type')
         if time_type == 'anytime':
             repair_time_str = "สะดวกทุกวัน และทุกช่วงเวลา"
@@ -374,7 +403,7 @@ def edit_report(id):
             
         conn.commit()
         conn.close()
-        flash('✅ แก้ไขข้อมูลแจ้งซ่อมเรียบร้อยแล้ว', 'success')
+        flash('แก้ไขข้อมูลแจ้งซ่อมเรียบร้อยแล้ว', 'success')
         return redirect(url_for('user.home'))
 
     conn.close()

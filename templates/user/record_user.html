@@ -1,89 +1,72 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ประวัติแจ้งซ่อม - KU FixIt</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #D8F2E9; }
-        .sidebar-item { transition: all 0.3s ease; border-radius: 12px; margin-bottom: 5px; }
-        .sidebar-item:hover { background-color: #f3f4f6; }
-        .sidebar-active { color: #006652; font-weight: 600; background-color: #f3f4f6; position: relative;}
-        .sidebar-active::before { content: ''; position: absolute; left: -16px; top: 10%; height: 80%; width: 5px; background-color: #006652; border-radius: 0 10px 10px 0; }
-        .table-container { background: white; border-radius: 20px; padding: 10px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .custom-row { transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
-        .custom-row:last-child { border-bottom: none; }
-        .custom-row:hover { background-color: #fafafa; }
-    </style>
-</head>
-<body class="min-h-screen flex">
+{% extends "layout.html" %}
+{% block content %}
 
-    <aside class="w-[280px] bg-white flex flex-col shadow-lg z-10 sticky top-0 h-screen">
-        <div class="p-8 border-b border-gray-100 flex flex-col items-center text-center">
-            <h1 class="text-6xl font-bold text-[#006666] leading-none tracking-tighter mb-1">KU</h1>
-            <div class="h-1 bg-gradient-to-r from-[#006666] to-[#a6ce39] w-16 mb-2"></div>
-            <div class="text-[#006666] text-[0.65rem] font-bold tracking-widest leading-tight mb-8 uppercase">Kasetsart University</div>
-            <h2 class="text-2xl font-bold text-[#006652]">ระบบแจ้งซ่อม</h2>
-            <p class="text-gray-400 text-sm">หอพักนักศึกษา</p>
+<style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
+    .table-container { background: white; border-radius: 25px; padding: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); }
+    .custom-row { transition: all 0.2s; border-bottom: 1px solid #f3f4f6; }
+    .custom-row:last-child { border-bottom: none; }
+    .custom-row:hover { background-color: #fafafa; }
+    
+    .status-badge { padding: 6px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; display: inline-block; width: 100%; text-align: center; }
+    .badge-pending { background-color: #ffedd5; color: #f97316; }
+    .badge-ongoing { background-color: #dbeafe; color: #3b82f6; }
+    .badge-completed { background-color: #dcfce7; color: #22c55e; }
+
+    .btn-detail { border: 1px solid #006652; color: #006652; background: white; border-radius: 50px; padding: 5px 15px; font-size: 0.8rem; font-weight: 600; transition: 0.3s; width: 100%; }
+    .btn-detail:hover { background-color: #006652; color: white; }
+    
+    .btn-edit-report { background-color: #fbbf24; color: #78350f; border: none; border-radius: 50px; padding: 5px 15px; font-size: 0.8rem; font-weight: bold; transition: 0.3s; width: 100%; text-decoration: none; display: inline-block; text-align: center; }
+    .btn-edit-report:hover { background-color: #f59e0b; color: #78350f; }
+
+    .modal-detail-row { display: flex; border-bottom: 1px solid #e9ecef; padding-bottom: 10px; margin-bottom: 10px; }
+    .modal-detail-label { width: 35%; font-weight: bold; color: #333; }
+    .modal-detail-value { width: 65%; color: #555; word-wrap: break-word; }
+</style>
+
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #006652;"><i class="bi bi-clipboard2-check me-2"></i>ประวัติแจ้งซ่อม</h2>
+            <p class="text-muted small">ตรวจสอบสถานะและประวัติการแจ้งซ่อมของคุณ</p>
         </div>
+        
+        <div class="d-flex align-items-center gap-3">
+            <select id="statusFilter" onchange="filterTable()" class="form-select rounded-pill shadow-sm border-0 fw-bold" style="background-color: #C1E8D9; color: #006652; cursor: pointer; min-width: 160px;">
+                <option value="all">ทั้งหมด (All)</option>
+                <option value="pending">รอดำเนินการ</option>
+                <option value="ongoing">กำลังซ่อม</option>
+                <option value="completed">เสร็จแล้ว</option>
+            </select>
 
-        <nav class="flex-1 px-6 py-6 space-y-2">
-            <a href="/home" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-house-door text-2xl mr-4 text-orange-300"></i><span>หน้าหลัก</span></a>
-            <a href="/report" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-calendar-check text-2xl mr-4 text-green-400"></i><span>แจ้งซ่อม</span></a>
-            <a href="/record_user" class="sidebar-item sidebar-active flex items-center px-4 py-3"><i class="bi bi-clipboard2-check text-2xl mr-4 text-blue-400"></i><span>ประวัติแจ้งซ่อม</span></a>
-            <a href="/profile" class="sidebar-item flex items-center px-4 py-3 text-gray-500"><i class="bi bi-person text-2xl mr-4 text-purple-400"></i><span>โปรไฟล์</span></a>
-        </nav>
-
-        <div class="p-6 border-t border-gray-100">
-            <a href="/logout" class="sidebar-item flex items-center px-4 py-3 text-gray-500 hover:text-red-500" onclick="return confirm('ยืนยันการออกจากระบบ?');"><i class="bi bi-door-open text-2xl mr-4 text-orange-800"></i><span>ออกจากระบบ</span></a>
-        </div>
-    </aside>
-
-    <main class="flex-1 p-10 flex flex-col">
-        <div class="flex justify-between items-end mb-8 relative">
-            <h2 class="text-3xl font-bold text-gray-800 flex items-center">
-                <span class="mr-3 text-3xl">📜</span> ประวัติแจ้งซ่อม
-            </h2>
-            
-            <div class="flex flex-col items-end">
-                {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
-                {% set profile_style = 'style="background-color: ' ~ bg_color ~ ';"' %}
-                
-                <a href="/profile" class="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl mb-3 shadow-md cursor-pointer hover:scale-105 transition overflow-hidden border-[3px] border-white" {{ profile_style | safe }}>
+            {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+            {% set profile_style = 'style="width: 60px; height: 60px; font-size: 2rem; border: 3px solid white; background-color: ' ~ bg_color ~ ';"' %}
+            <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+                <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale" {{ profile_style | safe }}>
                     {% if current_user_info and current_user_info.profile_picture %}
-                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-full h-full object-cover" alt="Profile">
+                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
                     {% elif current_user_info and current_user_info.first_name %}
                         {{ current_user_info.first_name[0] | upper }}
                     {% else %}
                         {{ session.get('username', 'U')[0] | upper }}
                     {% endif %}
-                </a>
-                
-                <div class="relative">
-                    <select id="statusFilter" onchange="filterTable()" class="appearance-none bg-[#C1E8D9] text-[#006652] px-6 py-2 pr-10 rounded-full text-sm font-medium shadow-sm outline-none cursor-pointer hover:bg-[#aee0cd] transition">
-                        <option value="all">ทั้งหมด (All)</option>
-                        <option value="pending">รอดำเนินการ</option>
-                        <option value="ongoing">กำลังซ่อม</option>
-                        <option value="completed">เสร็จแล้ว</option>
-                    </select>
-                    <i class="bi bi-chevron-down absolute right-4 top-1/2 transform -translate-y-1/2 text-xs text-[#006652] pointer-events-none"></i>
                 </div>
-            </div>
+            </a>
         </div>
+    </div>
 
-        <div class="table-container">
-            <table class="w-full text-left border-collapse" id="reportsTable">
+    <div class="table-container shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" id="reportsTable">
                 <thead>
-                    <tr class="text-gray-400 text-sm font-medium border-b border-gray-100">
-                        <th class="py-5 px-6 font-medium text-center w-[12%]">เลขที่</th>
-                        <th class="py-5 px-6 font-medium text-center w-[15%]">ประเภท</th>
-                        <th class="py-5 px-6 font-medium w-[25%]">ปัญหา</th>
-                        <th class="py-5 px-4 font-medium text-center w-[15%]">สถานที่</th>
-                        <th class="py-5 px-4 font-medium text-center w-[15%]">สถานะ</th>
-                        <th class="py-5 px-6 font-medium text-center w-[18%]">จัดการ</th>
+                    <tr class="text-muted small border-bottom">
+                        <th class="py-3 text-center" style="width: 12%;">เลขที่</th>
+                        <th class="py-3 text-center" style="width: 15%;">ประเภท</th>
+                        <th class="py-3" style="width: 25%;">ปัญหา</th>
+                        <th class="py-3 text-center" style="width: 15%;">สถานที่</th>
+                        <th class="py-3 text-center" style="width: 15%;">สถานะ</th>
+                        <th class="py-3 text-center" style="width: 18%;">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -92,85 +75,122 @@
                     {% if item.status == 'กำลังซ่อม' %}{% set row_status = 'ongoing' %}
                     {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}{% set row_status = 'completed' %}{% endif %}
 
-                    <tr class="custom-row text-sm text-gray-600 report-row" data-status="{{ row_status }}">
-                        <td class="py-5 px-6 text-center text-[#006652] font-medium">#REP-{{ "%03d" | format(item.id) }}</td>
-                        <td class="py-5 px-6 text-center">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-200 text-blue-500 bg-blue-50 text-[11px] font-medium">
-                                <i class="bi bi-tools mr-1"></i> {{ item.title[:12] if item.title else 'ไม่ระบุ' }}
+                    <tr class="custom-row report-row" data-status="{{ row_status }}">
+                        <td class="py-4 text-center fw-bold" style="color: #006652;">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="py-4 text-center">
+                            <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-normal">
+                                <i class="bi bi-tools me-1"></i> {{ item.title[:12] if item.title else 'ไม่ระบุ' }}
                             </span>
                         </td>
-                        <td class="py-5 px-6 text-gray-500">
-                            <div class="truncate max-w-[180px]" title="{{ item.detail }}">
+                        <td class="py-4 text-secondary">
+                            <div class="text-truncate" style="max-width: 180px;" title="{{ item.detail }}">
                                 {{ item.detail if item.detail else 'ไม่มีรายละเอียด' }}
                             </div>
                         </td>
-                        <td class="py-5 px-4 text-center text-gray-400 text-xs">{{ item.location if item.location else '-' }}</td>
-                        <td class="py-5 px-4 text-center">
-                            {% if row_status == 'pending' %}<span class="bg-orange-100 text-orange-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">รอดำเนินการ</span>
-                            {% elif row_status == 'ongoing' %}<span class="bg-blue-100 text-blue-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">กำลังซ่อม</span>
-                            {% else %}<span class="bg-green-100 text-green-500 px-3 py-1.5 rounded-full text-[10px] font-bold w-full inline-block">เสร็จแล้ว</span>{% endif %}
+                        <td class="py-4 text-center text-muted small">{{ item.location if item.location else '-' }}</td>
+                        <td class="py-4 text-center">
+                            {% if row_status == 'pending' %}<span class="status-badge badge-pending">รอดำเนินการ</span>
+                            {% elif row_status == 'ongoing' %}<span class="status-badge badge-ongoing">กำลังซ่อม</span>
+                            {% else %}<span class="status-badge badge-completed">เสร็จแล้ว</span>{% endif %}
                         </td>
-                        <td class="py-5 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button onclick="openModal('{{ item.id }}')" class="border border-[#006652] text-[#006652] px-3 py-1.5 rounded-full text-[11px] font-medium hover:bg-[#006652] hover:text-white transition flex-1">รายละเอียด</button>
-                                
-                                {# ✅ ปุ่มแก้ไข: จะโชว์เฉพาะเมื่องานยังรอดำเนินการ #}
+                        <td class="py-4 text-center">
+                            <div class="d-flex gap-2 justify-content-center">
+                                <button data-bs-toggle="modal" data-bs-target="#modal-{{ item.id }}" class="btn-detail shadow-sm">รายละเอียด</button>
                                 {% if row_status == 'pending' %}
-                                <a href="{{ url_for('user.edit_report', id=item.id) }}" class="bg-yellow-400 text-yellow-900 px-3 py-1.5 rounded-full text-[11px] font-bold hover:bg-yellow-500 transition no-underline flex-1">แก้ไข</a>
+                                <a href="{{ url_for('user.edit_report', id=item.id) }}" class="btn-edit-report shadow-sm">แก้ไข</a>
                                 {% endif %}
                             </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="py-12 text-center text-gray-400 text-lg">คุณยังไม่มีประวัติการแจ้งซ่อม</td>
+                        <td colspan="6" class="py-5 text-center text-muted fw-bold">คุณยังไม่มีประวัติการแจ้งซ่อม</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </main>
+    </div>
+</div>
 
-    {% for item in reports %}
-        {% set row_status = 'pending' %}
-        {% if item.status == 'กำลังซ่อม' %}{% set row_status = 'ongoing' %}
-        {% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}{% set row_status = 'completed' %}{% endif %}
+{% for item in reports %}
+{% set row_status = 'pending' %}
+{% if item.status == 'กำลังซ่อม' %}{% set row_status = 'ongoing' %}
+{% elif item.status == 'เสร็จแล้ว' or item.status == 'เสร็จสิ้น' %}{% set row_status = 'completed' %}{% endif %}
 
-        <div id="modal-{{ item.id }}" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity p-4">
-            <div class="bg-white rounded-[20px] w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative shadow-2xl">
-                <button onclick="closeModal('{{ item.id }}')" class="absolute top-5 right-5 text-gray-400 hover:text-red-500 transition"><i class="bi bi-x-circle-fill text-2xl"></i></button>
-                <h3 class="text-2xl font-bold text-[#006652] mb-6 flex items-center"><i class="bi bi-file-earmark-text mr-3 text-3xl text-orange-400"></i>รายละเอียดการแจ้งซ่อม #REP-{{ "%03d" | format(item.id) }}</h3>
-                <div class="bg-gray-50 p-6 rounded-xl space-y-4 text-gray-700 text-sm border border-gray-100">
-                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">หัวข้อปัญหา:</strong> <span class="w-2/3">{{ item.title if item.title else '-' }}</span></p>
-                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">สถานที่ / ห้อง:</strong> <span class="w-2/3">{{ item.location if item.location else '-' }}</span></p>
-                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">รายละเอียดเพิ่มเติม:</strong> <span class="w-2/3">{{ item.detail if item.detail else '-' }}</span></p>
-                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">วัน/เวลาที่สะดวก:</strong> <span class="w-2/3">{{ item.repair_time if item.repair_time else 'ไม่ระบุ' }}</span></p>
-                    <p class="flex border-b border-gray-200 pb-2"><strong class="w-1/3 text-gray-900">เบอร์ติดต่อกลับ:</strong> <span class="w-2/3">{{ item.phone if item.phone else 'ไม่ระบุ' }}</span></p>
-                    <p class="flex pb-2"><strong class="w-1/3 text-gray-900">สถานะปัจจุบัน:</strong> <span class="w-2/3 font-bold {% if row_status == 'pending' %}text-orange-500{% elif row_status == 'ongoing' %}text-blue-500{% else %}text-green-500{% endif %}">{{ item.status if item.status else 'รอดำเนินการ' }}</span></p>
+<div class="modal fade" id="modal-{{ item.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius: 25px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+            <div class="modal-header border-0 pb-0 mt-3 mx-3">
+                <h4 class="fw-bold mb-0" style="color: #006652;"><i class="bi bi-file-earmark-text text-warning me-2 fs-3"></i>รายละเอียด #REP-{{ "%03d" | format(item.id) }}</h4>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 mx-3">
+                <div class="bg-light p-4 rounded-4 mb-4 border border-light-subtle">
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label">หัวข้อปัญหา:</div>
+                        <div class="modal-detail-value fw-bold">{{ item.title if item.title else '-' }}</div>
+                    </div>
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label">สถานที่ / ห้อง:</div>
+                        <div class="modal-detail-value">{{ item.location if item.location else '-' }}</div>
+                    </div>
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label">รายละเอียดเพิ่มเติม:</div>
+                        <div class="modal-detail-value">{{ item.detail if item.detail else '-' }}</div>
+                    </div>
+                    
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label">เวลาที่แจ้งเรื่องจริง:</div>
+                        <div class="modal-detail-value text-muted">{{ item.created_at if item.created_at else 'ไม่ระบุ' }}</div>
+                    </div>
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label text-success">วัน/เวลาที่สะดวก:</div>
+                        <div class="modal-detail-value fw-bold" style="color: #2d6a4f;">
+                            {{ item.repair_time.replace(' | ', '<br>') | safe if item.repair_time else 'ไม่ระบุ' }}
+                        </div>
+                    </div>
+
+                    <div class="modal-detail-row">
+                        <div class="modal-detail-label">เบอร์ติดต่อกลับ:</div>
+                        <div class="modal-detail-value">{{ item.phone if item.phone else 'ไม่ระบุ' }}</div>
+                    </div>
+                    <div class="modal-detail-row border-0 mb-0 pb-0">
+                        <div class="modal-detail-label">สถานะปัจจุบัน:</div>
+                        <div class="modal-detail-value fw-bold fs-5 {% if row_status == 'pending' %}text-warning{% elif row_status == 'ongoing' %}text-primary{% else %}text-success{% endif %}">
+                            {{ item.status if item.status else 'รอดำเนินการ' }}
+                        </div>
+                    </div>
                 </div>
+                
                 {% if item.image_data %}
-                <div class="mt-6 text-center">
-                    <p class="font-bold text-gray-900 mb-3 text-left">📸 รูปภาพประกอบ:</p>
-                    <img src="data:image/jpeg;base64,{{ item.image_data }}" class="max-w-full h-auto max-h-64 mx-auto rounded-lg shadow-md border border-gray-200">
+                <div class="text-center mt-4">
+                    <p class="fw-bold text-start mb-2" style="color: #006652;">📸 รูปภาพประกอบปัญหา:</p>
+                    <img src="data:image/jpeg;base64,{{ item.image_data }}" class="img-fluid rounded-4 shadow-sm border" style="max-height: 300px; object-fit: contain;">
                 </div>
                 {% endif %}
             </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-5 fw-bold shadow-sm" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+            </div>
         </div>
-    {% endfor %}
+    </div>
+</div>
+{% endfor %}
 
-    <script>
-        function filterTable() {
-            const filterValue = document.getElementById('statusFilter').value;
-            document.querySelectorAll('.report-row').forEach(row => {
-                if (filterValue === 'all' || row.getAttribute('data-status') === filterValue) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        }
-        function openModal(id) { document.getElementById('modal-' + id).classList.replace('hidden', 'flex'); }
-        function closeModal(id) { document.getElementById('modal-' + id).classList.replace('flex', 'hidden'); }
-    </script>
-</body>
-</html>
+<script>
+    // สคริปต์สำหรับตัวกรองตาราง
+    function filterTable() {
+        const filterValue = document.getElementById('statusFilter').value;
+        const rows = document.querySelectorAll('.report-row');
+        
+        rows.forEach(row => {
+            if (filterValue === 'all' || row.getAttribute('data-status') === filterValue) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

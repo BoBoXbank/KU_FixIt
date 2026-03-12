@@ -49,7 +49,7 @@
             <p class="text-muted small mb-0">สถานะ: <span class="badge bg-success">{{ user.role }}</span> | ห้อง: <span class="fw-bold">{{ user.room_number if user.room_number else '-' }}</span></p>
         </div>
 
-        <form action="#" method="POST">
+        <form id="passwordForm" action="#" method="POST">
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="text-success fw-bold small mb-1">ชื่อ</label>
@@ -83,7 +83,10 @@
                 </div>
                 <div class="mb-2">
                     <label class="text-success fw-bold small mb-1">รหัสผ่านใหม่</label>
-                    <input type="password" name="new_password" class="form-control border-0 bg-light rounded-3 py-2" placeholder="อย่างน้อย 8 ตัวอักษร">
+                    <input type="password" id="newPasswordProfile" name="new_password" class="form-control border-0 bg-light rounded-3 py-2" 
+                           placeholder="อักษรภาษาอังกฤษ + ตัวเลข (8 ตัวขึ้นไป)" 
+                           minlength="8" pattern="^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$" 
+                           title="รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลขเท่านั้น">
                 </div>
                 <div class="mb-3">
                     <label class="text-success fw-bold small mb-1">ยืนยันรหัสผ่านใหม่</label>
@@ -106,7 +109,7 @@
             const fileSize = file.size;
             
             if (fileType !== 'image/jpeg' && fileType !== 'image/png') {
-                alert('กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
+                alert('❌ กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
                 input.value = '';
                 return;
             }
@@ -115,7 +118,7 @@
             const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
             
             if (fileSize > MAX_SIZE_BYTES) {
-                alert(`ภาพมีขนาดใหญ่เกินไป (สูงสุด ${MAX_SIZE_MB}MB) กรุณาเลือกภาพใหม่ครับ`);
+                alert(`❌ ภาพมีขนาดใหญ่เกินไป (สูงสุด ${MAX_SIZE_MB}MB) กรุณาเลือกภาพใหม่ครับ`);
                 input.value = '';
                 return;
             }
@@ -123,5 +126,18 @@
             document.getElementById('profilePicForm').submit();
         }
     }
+
+    // 🚀 JS ดักตรวจสอบรหัสผ่านตอนกดเปลี่ยนรหัสในหน้า Profile
+    document.getElementById('passwordForm').addEventListener('submit', function(e) {
+        const newPassword = document.getElementById('newPasswordProfile').value;
+        if (newPassword.length > 0) {
+            const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
+            if (!passwordRegex.test(newPassword)) {
+                e.preventDefault();
+                alert('รหัสผ่านใหม่ไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน\n- ห้ามใช้อักขระพิเศษ (เช่น @, #, !)');
+                document.getElementById('newPasswordProfile').focus();
+            }
+        }
+    });
 </script>
 {% endblock %}
