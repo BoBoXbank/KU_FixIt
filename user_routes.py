@@ -6,9 +6,25 @@ from PIL import Image
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime # 🚀 นำเข้าเพื่อใช้วันที่ปัจจุบัน
+import datetime
 
 user_bp = Blueprint('user', __name__)
+
+# ==========================================
+# 🚀 ระบบด่านตรวจ: บล็อค IP ที่ถูกแบนก่อนเข้าเว็บทุกหน้า
+# ==========================================
+@user_bp.before_app_request
+def check_banned_ip():
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM banned_ips WHERE ip_address = %s", (client_ip,))
+            if cursor.fetchone():
+                return "<h1>🚫 Access Denied</h1><p>เครื่องของคุณถูกระงับการใช้งานอย่างถาวร (IP Banned)</p>", 403
+        finally:
+            conn.close()
 
 # ==========================================
 # 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพก่อนเซฟลง Database
@@ -153,7 +169,6 @@ def register():
             conn.close()
     return render_template('user/register.html')
 
-# ---------------- LOGIN (ระบบป้องกัน Brute Force ผิด 10 ครั้ง ล็อค 2 นาที) ----------------
 @user_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -171,17 +186,25 @@ def login():
             user = cursor.fetchone()
             
             if user:
-                # 🚀 1. ตรวจสอบว่าบัญชีติดล็อคอยู่หรือไม่
-                if user['lockout_until'] and user['lockout_until'] > datetime.datetime.now():
-                    time_left = (user['lockout_until'] - datetime.datetime.now()).seconds // 60 + 1
+                lockout_until = user.get('lockout_until')
+                if lockout_until and lockout_until > datetime.datetime.now():
+                    time_left = (lockout_until - datetime.datetime.now()).seconds // 60 + 1
                     flash(f'🔒 บัญชีถูกล็อคชั่วคราว กรุณารออีก {time_left} นาที', 'danger')
                     return redirect(url_for('user.login'))
 
-                # 🚀 2. ตรวจสอบรหัสผ่าน
                 if check_password_hash(user['password_hash'], password):
-                    # ถ้ารหัสถูก -> ล้างค่าการนับผิด และล้างเวลาล็อค
-                    cursor.execute("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = %s", (user['id'],))
-                    conn.commit()
+                    # 🚀 ดึง IP เข้าสู่ระบบ และเซฟลงตาราง user_ips
+                    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+                    try:
+                        cursor.execute("""
+                            INSERT INTO user_ips (username, ip_address) 
+                            VALUES (%s, %s) 
+                            ON DUPLICATE KEY UPDATE last_login = CURRENT_TIMESTAMP
+                        """, (user['username'], client_ip))
+                        cursor.execute("UPDATE users SET failed_attempts = 0, lockout_until = NULL WHERE id = %s", (user['id'],))
+                        conn.commit()
+                    except Exception as e:
+                        print("Error saving login IP:", e)
 
                     session['user_id'] = user['id']
                     session['role'] = user['role']
@@ -191,19 +214,19 @@ def login():
                     elif user['role'].startswith('technician_'): return redirect(url_for('technician.dashboardtech'))
                     return redirect(url_for('user.home'))
                 else:
-                    # ถ้ารหัสผิด -> นับจำนวนครั้งที่ผิดเพิ่ม
-                    failed_attempts = (user['failed_attempts'] or 0) + 1
-                    
-                    # 🚀 แก้ไขให้ผิดครบ 10 ครั้ง ล็อค 2 นาที
-                    if failed_attempts >= 10:
-                        lockout_time = datetime.datetime.now() + datetime.timedelta(minutes=2)
-                        cursor.execute("UPDATE users SET failed_attempts = %s, lockout_until = %s WHERE id = %s", (failed_attempts, lockout_time, user['id']))
-                        conn.commit()
-                        flash('คุณใส่รหัสผิดครบ 10 ครั้ง บัญชีถูกล็อค 2 นาทีเพื่อความปลอดภัย', 'danger')
-                    else:
-                        cursor.execute("UPDATE users SET failed_attempts = %s WHERE id = %s", (failed_attempts, user['id']))
-                        conn.commit()
-                        flash(f'ชื่อผู้ใช้หรือรหัสผ่านผิด (เหลือโอกาสอีก {10 - failed_attempts} ครั้ง)', 'danger')
+                    failed_attempts = (user.get('failed_attempts') or 0) + 1
+                    try:
+                        if failed_attempts >= 10:
+                            lockout_time = datetime.datetime.now() + datetime.timedelta(minutes=2)
+                            cursor.execute("UPDATE users SET failed_attempts = %s, lockout_until = %s WHERE id = %s", (failed_attempts, lockout_time, user['id']))
+                            conn.commit()
+                            flash('คุณใส่รหัสผิดครบ 10 ครั้ง บัญชีถูกล็อค 2 นาทีเพื่อความปลอดภัย', 'danger')
+                        else:
+                            cursor.execute("UPDATE users SET failed_attempts = %s WHERE id = %s", (failed_attempts, user['id']))
+                            conn.commit()
+                            flash(f'ชื่อผู้ใช้หรือรหัสผ่านผิด (เหลือโอกาสอีก {10 - failed_attempts} ครั้ง)', 'danger')
+                    except Exception as e:
+                         flash('ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
             else:
                 flash('ชื่อผู้ใช้หรือรหัสผ่านผิด', 'danger')
                 
@@ -246,7 +269,10 @@ def reset_password():
                 user = cursor.fetchone()
                 if user and check_password_hash(user['security_answer_hash'], answer):
                     new_hash = generate_password_hash(new_pass)
-                    cursor.execute("UPDATE users SET password_hash = %s, failed_attempts = 0, lockout_until = NULL WHERE id = %s", (new_hash, session['reset_id']))
+                    try:
+                        cursor.execute("UPDATE users SET password_hash = %s, failed_attempts = 0, lockout_until = NULL WHERE id = %s", (new_hash, session['reset_id']))
+                    except Exception:
+                        cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (new_hash, session['reset_id']))
                     conn.commit()
                     session.pop('reset_id', None)
                     flash('เปลี่ยนรหัสผ่านสำเร็จ! ล็อกอินได้เลย', 'success')
@@ -270,6 +296,9 @@ def report():
         location = f"{building} ห้อง {room}"
         current_username = session.get('username')
 
+        # 🚀 ดึง IP ผู้ใช้เพื่อบันทึกไว้
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+
         time_type = request.form.get('time_type')
         if time_type == 'anytime':
             repair_time_str = "สะดวกทุกวัน และทุกช่วงเวลา"
@@ -279,7 +308,6 @@ def report():
             note = request.form.get('time_note', '').strip()
             days_str = ", ".join(days) if days else "ไม่ได้ระบุวัน"
             times_str = ", ".join(times) if times else "ไม่ได้ระบุช่วงเวลา"
-            
             repair_time_str = f"วัน: {days_str} | เวลา: {times_str}"
             if note:
                 repair_time_str += f" | หมายเหตุ: {note}"
@@ -295,13 +323,23 @@ def report():
         if conn:
             try:
                 cursor = conn.cursor()
-                sql = """
-                    INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data, status, created_at) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'รอซ่อม', %s)
-                """
-                cursor.execute(sql, (
-                    title, detail, location, building, repair_time_str, phone, current_username, image_base64, created_at
-                ))
+                try:
+                    sql = """
+                        INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data, status, created_at, ip_address) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'รอซ่อม', %s, %s)
+                    """
+                    cursor.execute(sql, (
+                        title, detail, location, building, repair_time_str, phone, current_username, image_base64, created_at, client_ip
+                    ))
+                except Exception:
+                    # กรณีฐานข้อมูลยังไม่ได้เพิ่มคอลัมน์ ip_address
+                    sql = """
+                        INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data, status, created_at) 
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'รอซ่อม', %s)
+                    """
+                    cursor.execute(sql, (
+                        title, detail, location, building, repair_time_str, phone, current_username, image_base64, created_at
+                    ))
                 conn.commit()
                 flash('ส่งเรื่องแจ้งซ่อมเรียบร้อย', 'success')
                 return redirect(url_for('user.home'))

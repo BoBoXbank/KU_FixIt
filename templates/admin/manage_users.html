@@ -4,7 +4,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h2 class="fw-bold mb-1" style="color: #006652;">จัดการผู้ใช้งาน</h2>
-            <p class="text-muted small">เลื่อนสถานะช่างและผู้ดูแลระบบ</p>
+            <p class="text-muted small">เลื่อนสถานะช่าง, ผู้ดูแลระบบ และตรวจสอบ IP</p>
         </div>
         
         {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
@@ -72,12 +72,15 @@
                                     <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_plumb') }}">ช่างประปา</a></li>
                                     <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_wood') }}">ช่างไม้</a></li>
                                     <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_wifi') }}">ช่าง WiFi</a></li>
-                                    
                                     <li><a class="dropdown-item py-2" href="{{ url_for('admin.change_role', id=u.id, role='technician_elec') }}">ช่างไฟ</a></li>
-                                    
                                     <li><a class="dropdown-item py-2 text-danger fw-bold" href="{{ url_for('admin.change_role', id=u.id, role='admin') }}">ตั้งเป็น Admin</a></li>
                                 </ul>
                             </div>
+                            
+                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 ms-1" data-bs-toggle="modal" data-bs-target="#ipModal-{{ u.id }}" title="ดูประวัติ IP">
+                                <i class="bi bi-wifi"></i> ประวัติ IP
+                            </button>
+
                             <a href="{{ url_for('admin.delete_user', id=u.id) }}" class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-1" onclick="return confirm('ยืนยันลบผู้ใช้รายนี้?');">ลบ</a>
                         </td>
                     </tr>
@@ -91,6 +94,63 @@
         </div>
     </div>
 </div>
+
+{% for u in users %}
+<div class="modal fade" id="ipModal-{{ u.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg" style="border-radius: 20px; border: none;">
+            <div class="modal-header border-0 pb-0 mt-3 mx-3">
+                <h5 class="fw-bold text-info"><i class="bi bi-geo-alt-fill me-2"></i>ประวัติการเข้าใช้งาน (IP)</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="px-4 text-muted small mb-2">ของบัญชี: <strong>{{ u.username }}</strong></div>
+            
+            <div class="modal-body p-4 mx-2">
+                {% set user_ips = ip_map.get(u.username, []) %}
+                {% if user_ips %}
+                    <div class="list-group">
+                    {% for ip_data in user_ips %}
+                        {% set is_banned = ip_data.ip in banned_ips_list %}
+                        
+                        <div class="list-group-item d-flex justify-content-between align-items-center border border-light-subtle bg-light mb-2 p-3" style="border-radius: 15px;">
+                            <div>
+                                <strong class="{% if is_banned %}text-danger{% else %}text-dark{% endif %}">
+                                    <i class="bi bi-pc-display me-2"></i>{{ ip_data.ip }}
+                                </strong>
+                                {% if is_banned %}
+                                    <span class="badge bg-danger ms-2" style="font-size: 0.65rem;">[ถูกระงับ]</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">ใช้งานล่าสุด: {{ ip_data.last_login }}</small>
+                            </div>
+                            
+                            {% if is_banned %}
+                                <form action="{{ url_for('admin.unban_ip', ip=ip_data.ip) }}" method="POST" class="m-0" onsubmit="return confirm('ยืนยันการปลดแบน IP: {{ ip_data.ip }} ใช่หรือไม่?');">
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-bold shadow-sm"><i class="bi bi-unlock-fill me-1"></i>ปลดแบน</button>
+                                </form>
+                            {% else %}
+                                <form action="{{ url_for('admin.ban_ip', ip=ip_data.ip) }}" method="POST" class="m-0" onsubmit="return confirm('⚠️ คำเตือน!\nยืนยันการแบน IP: {{ ip_data.ip }} อย่างถาวรใช่หรือไม่?\n\n(เครื่องนี้จะเข้าเว็บไม่ได้อีกเลย)');">
+                                    <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold shadow-sm"><i class="bi bi-slash-circle me-1"></i>แบน IP นี้</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-shield-check text-success fs-1"></i>
+                        <p class="text-muted mt-3 mb-0">ยังไม่มีประวัติการล็อกอินใหม่ (ตั้งแต่เริ่มเก็บข้อมูล)</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-secondary rounded-pill px-5 fw-bold" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 <style>
     .hover-scale { transition: transform 0.2s; }
     .hover-scale:hover { transform: scale(1.08); }
