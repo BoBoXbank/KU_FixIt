@@ -114,7 +114,12 @@ def register():
         room_number = request.form.get('room_number', '').strip()
         question = request.form.get('question')
         answer = request.form.get('answer')
-
+        # --- เพิ่มการตรวจสอบโดเมนอีเมลตรงนี้ ---
+        allowed_domains = ("@ku.th")
+        if not email.lower().endswith(allowed_domains):
+            flash("❌ อีเมลต้องลงท้ายด้วย @ku.th เท่านั้น", "danger")
+            return redirect(url_for('user.register'))
+        # ----------------------------------
         recaptcha_response = request.form.get('g-recaptcha-response')
         secret_key = os.getenv('RECAPTCHA_SECRET_KEY')
         if secret_key and recaptcha_response:

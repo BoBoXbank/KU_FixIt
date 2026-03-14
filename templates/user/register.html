@@ -78,7 +78,11 @@
 
             <input type="text" class="form-control" name="first_name" placeholder="ชื่อ*" required>
             <input type="text" class="form-control" name="last_name" placeholder="นามสกุล*" required>
-            <input type="email" class="form-control" name="email" placeholder="email*" required>
+            <input type="email" class="form-control" name="email" 
+                placeholder="email (@ku.th)*" 
+                required 
+                pattern="^.+@(ku\.th)$"
+                title="กรุณาใช้อีเมลที่ลงท้ายด้วย @ku.th เท่านั้น">
             <input type="text" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์*" required>
             <input type="text" class="form-control" name="building" placeholder="อาคาร/ตึก*" required>
             <input type="text" class="form-control" name="room_number" placeholder="หมายเลขห้อง (ถ้าเป็นช่างให้ตอบ 0000)*" required>
