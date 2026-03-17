@@ -2,16 +2,80 @@ import base64
 import os
 import requests 
 import io        
+import random
+import time
 from PIL import Image 
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_mail import Mail, Message
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
-import datetime
+from datetime import datetime, timedelta
 
 user_bp = Blueprint('user', __name__)
 
+# ประกาศออบเจกต์ mail (จะถูก init ใน app.py)
+mail = Mail()
+
 # ==========================================
-# 🚀 ระบบด่านตรวจ: บล็อค IP ที่ถูกแบนก่อนเข้าเว็บทุกหน้า
+# 🚀 ระบบ OTP EMAIL
+# ==========================================
+@user_bp.route('/send_otp', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"success": False, "message": "กรุณากรอกอีเมลก่อน"}), 400
+
+    if not email.lower().endswith('@ku.th'):
+        return jsonify({"success": False, "message": "ต้องใช้อีเมล @ku.th เท่านั้น"}), 400
+
+    # สร้าง OTP 4 หลัก และเก็บลง session พร้อมเวลาหมดอายุ (2 นาที)
+    otp = f"{random.randint(0, 9999):04d}"
+    session['otp'] = otp
+    session['otp_expire'] = time.time() + 120 
+    session['otp_email'] = email # ป้องกันคนแอบเปลี่ยนอีเมลทีหลัง
+
+    try:
+        msg = Message(
+            subject="รหัสยืนยันการสมัคร KU FixIt (OTP)",
+            recipients=[email]
+        )
+        msg.body = f"KU FixIt Email Verification\n\nYour OTP Code: {otp}\n\nThis code will expire in 2 minutes."
+        mail.send(msg)
+        return jsonify({"success": True, "message": "ส่ง OTP สำเร็จ! กรุณาตรวจสอบในอีเมลของคุณ"})
+    except Exception as e:
+        print("OTP MAIL ERROR:", e)
+        return jsonify({"success": False, "message": "เกิดข้อผิดพลาดในการส่งอีเมล โปรดตรวจสอบการตั้งค่า Mail"}), 500
+
+@user_bp.route('/verify_otp', methods=['POST'])
+def verify_otp():
+    data = request.get_json()
+    user_otp = data.get("otp")
+    user_email = data.get("email")
+
+    saved_otp = session.get('otp')
+    expire_time = session.get('otp_expire', 0)
+    saved_email = session.get('otp_email')
+
+    if not saved_otp or not user_otp:
+        return jsonify({"success": False, "message": "ข้อมูลไม่ครบถ้วน กรุณากดส่ง OTP ใหม่"})
+
+    if user_email != saved_email:
+        return jsonify({"success": False, "message": "อีเมลไม่ตรงกับที่ส่ง OTP ไป"})
+
+    if time.time() > expire_time:
+        session.pop('otp', None) # ล้าง OTP ทิ้ง
+        return jsonify({"success": False, "message": "รหัส OTP หมดอายุแล้ว กรุณากดขอใหม่"})
+
+    if user_otp == saved_otp:
+        session.pop('otp', None) # ยืนยันสำเร็จ ล้าง OTP ทิ้งเลย
+        return jsonify({"success": True, "message": "ยืนยันอีเมลสำเร็จ!"})
+    else:
+        return jsonify({"success": False, "message": "รหัส OTP ไม่ถูกต้อง"})
+
+# ==========================================
+# 🚀 ระบบด่านตรวจ: บล็อค IP ที่ถูกแบน
 # ==========================================
 @user_bp.before_app_request
 def check_banned_ip():
@@ -27,7 +91,7 @@ def check_banned_ip():
             conn.close()
 
 # ==========================================
-# 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพก่อนเซฟลง Database
+# 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพ
 # ==========================================
 def process_and_compress_image(file):
     if not file or file.filename == '':
@@ -44,7 +108,6 @@ def process_and_compress_image(file):
     except Exception as e:
         print(f"Error compressing image: {e}")
         return None
-# ==========================================
 
 @user_bp.app_context_processor
 def inject_user_info():
@@ -114,12 +177,12 @@ def register():
         room_number = request.form.get('room_number', '').strip()
         question = request.form.get('question')
         answer = request.form.get('answer')
-        # --- เพิ่มการตรวจสอบโดเมนอีเมลตรงนี้ ---
+
         allowed_domains = ("@ku.th")
         if not email.lower().endswith(allowed_domains):
             flash("❌ อีเมลต้องลงท้ายด้วย @ku.th เท่านั้น", "danger")
             return redirect(url_for('user.register'))
-        # ----------------------------------
+
         recaptcha_response = request.form.get('g-recaptcha-response')
         secret_key = os.getenv('RECAPTCHA_SECRET_KEY')
         if secret_key and recaptcha_response:
@@ -192,13 +255,12 @@ def login():
             
             if user:
                 lockout_until = user.get('lockout_until')
-                if lockout_until and lockout_until > datetime.datetime.now():
-                    time_left = (lockout_until - datetime.datetime.now()).seconds // 60 + 1
+                if lockout_until and lockout_until > datetime.now():
+                    time_left = (lockout_until - datetime.now()).seconds // 60 + 1
                     flash(f'🔒 บัญชีถูกล็อคชั่วคราว กรุณารออีก {time_left} นาที', 'danger')
                     return redirect(url_for('user.login'))
 
                 if check_password_hash(user['password_hash'], password):
-                    # 🚀 ดึง IP เข้าสู่ระบบ และเซฟลงตาราง user_ips
                     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
                     try:
                         cursor.execute("""
@@ -222,7 +284,7 @@ def login():
                     failed_attempts = (user.get('failed_attempts') or 0) + 1
                     try:
                         if failed_attempts >= 10:
-                            lockout_time = datetime.datetime.now() + datetime.timedelta(minutes=2)
+                            lockout_time = datetime.now() + timedelta(minutes=2)
                             cursor.execute("UPDATE users SET failed_attempts = %s, lockout_until = %s WHERE id = %s", (failed_attempts, lockout_time, user['id']))
                             conn.commit()
                             flash('คุณใส่รหัสผิดครบ 10 ครั้ง บัญชีถูกล็อค 2 นาทีเพื่อความปลอดภัย', 'danger')
@@ -301,7 +363,6 @@ def report():
         location = f"{building} ห้อง {room}"
         current_username = session.get('username')
 
-        # 🚀 ดึง IP ผู้ใช้เพื่อบันทึกไว้
         client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
         time_type = request.form.get('time_type')
@@ -317,7 +378,8 @@ def report():
             if note:
                 repair_time_str += f" | หมายเหตุ: {note}"
 
-        created_at = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        thai_now = datetime.now() + timedelta(hours=7)
+        created_at = thai_now.strftime('%Y-%m-%d %H:%M:%S')
 
         image = request.files.get('image')
         image_base64 = None
@@ -337,7 +399,6 @@ def report():
                         title, detail, location, building, repair_time_str, phone, current_username, image_base64, created_at, client_ip
                     ))
                 except Exception:
-                    # กรณีฐานข้อมูลยังไม่ได้เพิ่มคอลัมน์ ip_address
                     sql = """
                         INSERT INTO reports (title, detail, location, building, repair_time, phone, username, image_data, status, created_at) 
                         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'รอซ่อม', %s)
@@ -451,71 +512,3 @@ def edit_report(id):
 
     conn.close()
     return render_template('user/edit_report.html', item=report)
-
-# =====================================================
-# OTP EMAIL SYSTEM 
-# =====================================================
-
-from flask import request, jsonify, current_app
-from flask_mail import Mail, Message
-import random
-import time
-
-mail = Mail()
-
-# เก็บ OTP ชั่วคราว
-otp_storage = {}
-otp_expire_time = {}
-
-@user_bp.record_once
-def setup_mail(state):
-    app = state.app
-    mail.init_app(app)
-
-@user_bp.route('/send_otp', methods=['POST'])
-def send_otp():
-
-    data = request.get_json()
-    email = data.get("email")
-
-    if not email:
-        return jsonify({"status": "error", "message": "Email required"}), 400
-
-    # สร้าง OTP 4 หลัก
-    otp = random.randint(1000, 9999)
-
-    # เก็บ OTP
-    otp_storage[email] = str(otp)
-
-    # ตั้งเวลา OTP หมดอายุ 2 นาที
-    otp_expire_time[email] = time.time() + 120
-
-    try:
-
-        msg = Message(
-            subject="KU FixIt OTP Verification",
-            sender=current_app.config['MAIL_USERNAME'],
-            recipients=[email]
-        )
-
-        msg.body = f"""
-KU FixIt Email Verification
-
-Your OTP Code: {otp}
-
-This code will expire in 2 minutes.
-
-If you did not request this code please ignore this email.
-"""
-
-        mail.send(msg)
-
-        return jsonify({"status": "success"})
-
-    except Exception as e:
-
-        print("OTP MAIL ERROR:", e)
-
-        return jsonify({"status": "error", "message": "Failed to send email"})
-    
-    
