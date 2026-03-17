@@ -451,3 +451,71 @@ def edit_report(id):
 
     conn.close()
     return render_template('user/edit_report.html', item=report)
+
+# =====================================================
+# OTP EMAIL SYSTEM 
+# =====================================================
+
+from flask import request, jsonify, current_app
+from flask_mail import Mail, Message
+import random
+import time
+
+mail = Mail()
+
+# เก็บ OTP ชั่วคราว
+otp_storage = {}
+otp_expire_time = {}
+
+@user_bp.record_once
+def setup_mail(state):
+    app = state.app
+    mail.init_app(app)
+
+@user_bp.route('/send_otp', methods=['POST'])
+def send_otp():
+
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"status": "error", "message": "Email required"}), 400
+
+    # สร้าง OTP 4 หลัก
+    otp = random.randint(1000, 9999)
+
+    # เก็บ OTP
+    otp_storage[email] = str(otp)
+
+    # ตั้งเวลา OTP หมดอายุ 2 นาที
+    otp_expire_time[email] = time.time() + 120
+
+    try:
+
+        msg = Message(
+            subject="KU FixIt OTP Verification",
+            sender=current_app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+
+        msg.body = f"""
+KU FixIt Email Verification
+
+Your OTP Code: {otp}
+
+This code will expire in 2 minutes.
+
+If you did not request this code please ignore this email.
+"""
+
+        mail.send(msg)
+
+        return jsonify({"status": "success"})
+
+    except Exception as e:
+
+        print("OTP MAIL ERROR:", e)
+
+        return jsonify({"status": "error", "message": "Failed to send email"})
+    
+    

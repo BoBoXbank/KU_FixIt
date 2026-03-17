@@ -10,7 +10,7 @@ DB_HOST = os.getenv("DB_HOST")
 DB_PORT = int(os.getenv("DB_PORT", 4000)) 
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-
+charset = 'utf8mb4',
 DB_NAME = os.getenv("DB_NAME")
 DB_CA = os.getenv("DB_CA")
 
@@ -22,6 +22,7 @@ def get_db_connection():
             user=DB_USER,
             password=DB_PASSWORD,
             database=DB_NAME,
+            charset= 'utf8mb4',
             cursorclass=DictCursor,
             ssl={"ca": DB_CA},
             autocommit=True

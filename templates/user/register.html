@@ -6,121 +6,254 @@
     <title>สมัครสมาชิก - KU FixIt</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <style>
-        body {
-            background-color: #D8F2E9; 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 0;
-        }
-        .register-card {
-            background: white;
-            border-radius: 30px;
-            padding: 40px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-        .form-control {
-            border-radius: 10px;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-            margin-bottom: 15px;
-            color: #555;
-        }
-        .form-control:focus {
-            border-color: #0da360;
-            box-shadow: 0 0 0 0.2rem rgba(13, 163, 96, 0.25);
-        }
-        .btn-success {
-            background-color: #0da360; 
-            border: none;
-            border-radius: 12px;
-            padding: 12px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            width: 100%;
-            margin-top: 10px;
-            transition: all 0.3s;
-        }
-        .btn-success:hover {
-            background-color: #0b8a51;
-            transform: translateY(-2px);
-        }
-    </style>
+
+<style>
+body {
+    background-color: #D8F2E9; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.register-card {
+    background: white;
+    border-radius: 30px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.form-control {
+    border-radius: 10px;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.form-control:focus {
+    border-color: #0da360;
+    box-shadow: 0 0 0 0.2rem rgba(13, 163, 96, 0.25);
+}
+
+.btn-success {
+    background-color: #0da360; 
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    width: 100%;
+    margin-top: 10px;
+    transition: all 0.3s;
+}
+
+.btn-success:hover {
+    background-color: #0b8a51;
+    transform: translateY(-2px);
+}
+</style>
 </head>
+
 <body>
 
-    <div class="register-card">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold text-dark">สมัครสมาชิก</h2>
-            <small class="text-muted">Create an account to enjoy</small>
-        </div>
+<div class="register-card">
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} rounded-3 text-center">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+<div class="text-center mb-4">
+<h2 class="fw-bold text-dark">สมัครสมาชิก</h2>
+<small class="text-muted">Create an account to enjoy</small>
+</div>
 
-        <form method="POST" id="registerForm">
-            <input type="text" class="form-control" name="username" placeholder="username*" required>
-            
-            <input type="password" id="regPassword" class="form-control" name="password" 
-                   placeholder="Password (อักษร + ตัวเลข 8 ตัวขึ้นไป)*" 
-                   required minlength="8" pattern="^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$" 
-                   title="รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลขเท่านั้น">
+<form method="POST" id="registerForm">
 
-            <input type="text" class="form-control" name="first_name" placeholder="ชื่อ*" required>
-            <input type="text" class="form-control" name="last_name" placeholder="นามสกุล*" required>
-            <input type="email" class="form-control" name="email" 
-                placeholder="email (@ku.th)*" 
-                required 
-                pattern="^.+@(ku\.th)$"
-                title="กรุณาใช้อีเมลที่ลงท้ายด้วย @ku.th เท่านั้น">
-            <input type="text" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์*" required>
-            <input type="text" class="form-control" name="building" placeholder="อาคาร/ตึก*" required>
-            <input type="text" class="form-control" name="room_number" placeholder="หมายเลขห้อง (ถ้าเป็นช่างให้ตอบ 0000)*" required>
-            <input type="text" class="form-control" name="question" placeholder="คำถามความปลอดภัย (เช่น ชื่อหมาตัวแรก)*" required>
-            <input type="text" class="form-control" name="answer" placeholder="คำตอบสำหรับกู้รหัสผ่าน*" required>
+<input type="text" class="form-control" name="username" placeholder="username*" required>
 
-            <div class="d-flex justify-content-center mb-3 mt-2">
-                <div class="g-recaptcha" data-sitekey="6LebUngsAAAAAPMg-oO9-SN_SqAU9zWdLK84Itx5"></div>
-            </div>
+<input type="password" id="regPassword" class="form-control" name="password"
+placeholder="Password (อักษร + ตัวเลข 8 ตัวขึ้นไป)*"
+required minlength="8"
+pattern="^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$"
+title="รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลขเท่านั้น">
 
-            <button type="submit" class="btn btn-success">Create Account</button>
-            
-            <div class="text-center mt-4">
-                <small class="text-muted">Already Have An Account? <a href="/login" class="text-dark fw-bold text-decoration-none">Sign In</a></small>
-            </div>
-        </form>
-    </div>
+<input type="text" class="form-control" name="first_name" placeholder="ชื่อ*" required>
+<input type="text" class="form-control" name="last_name" placeholder="นามสกุล*" required>
 
-    <script>
-        document.getElementById("registerForm").addEventListener("submit", function(event) {
-            // 1. เช็ค reCAPTCHA
-            var recaptchaResponse = grecaptcha.getResponse();
-            if (recaptchaResponse.length === 0) {
-                event.preventDefault();
-                alert("กรุณาติ๊กที่ช่อง 'ฉันไม่ใช่โปรแกรมอัตโนมัติ' (reCAPTCHA) ก่อนสมัครสมาชิกครับ");
-                return;
-            }
+<input type="email" class="form-control" name="email"
+placeholder="email (@ku.th)*"
+required
+pattern="^.+@(ku\.th)$"
+title="กรุณาใช้อีเมลที่ลงท้ายด้วย @ku.th เท่านั้น">
 
-            // 2. เช็ครหัสผ่าน
-            const password = document.getElementById('regPassword').value;
-            const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
-            if (!passwordRegex.test(password)) {
-                event.preventDefault();
-                alert('รหัสผ่านไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน\n- ห้ามใช้อักขระพิเศษ (เช่น @, #, !)');
-                document.getElementById('regPassword').focus();
-            }
-        });
-    </script>
+<!-- OTP ADDED -->
+<div class="d-flex mb-2">
+<input type="text" class="form-control me-2" id="otpInput" placeholder="กรอกรหัส OTP 4 หลัก">
+<button type="button" class="btn btn-secondary" id="sendOtpBtn" onclick="sendOTP()">Send OTP</button>
+<button type="button" class="btn btn-warning ms-2" id="resendOtpBtn" onclick="sendOTP()" style="display:none;">Resend OTP</button>
+</div>
+
+<!-- เพิ่มปุ่ม Verify OTP -->
+<div class="d-flex mb-2">
+<button type="button" class="btn btn-primary w-100" onclick="verifyOTP()">Verify OTP</button>
+</div>
+
+<small id="otpTimer" class="text-muted"></small>
+<!-- OTP ADDED END -->
+
+<input type="text" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์*" required>
+<input type="text" class="form-control" name="building" placeholder="อาคาร/ตึก*" required>
+<input type="text" class="form-control" name="room_number" placeholder="หมายเลขห้อง (ถ้าเป็นช่างให้ตอบ 0000)*" required>
+<input type="text" class="form-control" name="question" placeholder="คำถามความปลอดภัย (เช่น ชื่อหมาตัวแรก)*" required>
+<input type="text" class="form-control" name="answer" placeholder="คำตอบสำหรับกู้รหัสผ่าน*" required>
+
+<div class="d-flex justify-content-center mb-3 mt-2">
+<div class="g-recaptcha" data-sitekey="6LebUngsAAAAAPMg-oO9-SN_SqAU9zWdLK84Itx5"></div>
+</div>
+
+<button type="submit" class="btn btn-success">Create Account</button>
+
+<div class="text-center mt-4">
+<small class="text-muted">
+Already Have An Account?
+<a href="/login" class="text-dark fw-bold text-decoration-none">Sign In</a>
+</small>
+</div>
+
+</form>
+</div>
+
+<script>
+
+document.getElementById("registerForm").addEventListener("submit", function(event) {
+
+var recaptchaResponse = grecaptcha.getResponse();
+
+if (recaptchaResponse.length === 0) {
+event.preventDefault();
+alert("กรุณาติ๊กที่ช่อง 'ฉันไม่ใช่โปรแกรมอัตโนมัติ' (reCAPTCHA) ก่อนสมัครสมาชิกครับ");
+return;
+}
+
+const password = document.getElementById('regPassword').value;
+
+const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
+
+if (!passwordRegex.test(password)) {
+
+event.preventDefault();
+
+alert('รหัสผ่านไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน\n- ห้ามใช้อักขระพิเศษ (เช่น @, #, !)');
+
+document.getElementById('regPassword').focus();
+
+}
+
+if(!otpVerified){
+event.preventDefault();
+alert("กรุณายืนยัน OTP ก่อนสมัครสมาชิก");
+}
+
+});
+
+</script>
+
+<!-- OTP SCRIPT -->
+<script>
+
+let otpVerified = false;
+let otpExpireTime = null;
+let timerInterval = null;
+
+function sendOTP(){
+
+    const email = document.querySelector("input[name='email']").value;
+
+    if(!email){
+        alert("กรุณากรอกอีเมลก่อน");
+        return;
+    }
+
+    fetch("/send_otp",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({email:email})
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message); // Show message from server
+        if(data.success){
+            otpExpireTime = Date.now() + (2*60*1000);
+            document.getElementById("sendOtpBtn").style.display="none";
+            document.getElementById("resendOtpBtn").style.display="inline-block";
+            startTimer();
+        }
+    })
+    .catch(error => {
+        console.error('Error sending OTP:', error);
+        alert("เกิดข้อผิดพลาดในการส่ง OTP");
+    });
+}
+
+function verifyOTP(){
+
+    const otp = document.getElementById("otpInput").value;
+
+    if(!otp){
+        alert("กรุณากรอก OTP");
+        return;
+    }
+
+    fetch("/verify_otp",{
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body:JSON.stringify({otp:otp})
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        alert(data.message); // Show the specific message from the server
+        if(data.success){
+            otpVerified = true;
+        }else{
+            otpVerified = false;
+        }
+    });
+}
+
+function startTimer(){
+
+clearInterval(timerInterval);
+
+timerInterval = setInterval(function(){
+
+const remaining = otpExpireTime - Date.now();
+
+if(remaining <=0){
+
+clearInterval(timerInterval);
+
+document.getElementById("otpTimer").innerText="OTP หมดอายุ กรุณากด Resend OTP";
+
+otpVerified=false;
+
+return;
+
+}
+
+const seconds = Math.floor(remaining/1000);
+
+document.getElementById("otpTimer").innerText="OTP จะหมดอายุใน "+seconds+" วินาที";
+
+},1000);
+
+}
+
+</script>
 
 </body>
 </html>
