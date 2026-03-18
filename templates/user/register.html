@@ -8,6 +8,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 <style>
+/* การตกแต่งหน้าจอและ Card สมัครสมาชิก */
 body {
     background-color: #D8F2E9; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -101,9 +102,36 @@ body {
         <div class="text-center mb-3">
             <small id="otpTimer" class="text-muted"></small>
         </div>
-        <input type="text" class="form-control" name="phone" placeholder="เบอร์โทรศัพท์*" required>
-        <input type="text" class="form-control" name="building" placeholder="อาคาร/ตึก*" required>
-        <input type="text" class="form-control" name="room_number" placeholder="หมายเลขห้อง (ถ้าเป็นช่างให้ตอบ 0000)*" required>
+
+        <input type="text" 
+               class="form-control" 
+               name="phone" 
+               id="phoneInput"
+               placeholder="เบอร์โทรศัพท์ (ตัวเลข 9-10 หลัก)*" 
+               required 
+               maxlength="10"
+               inputmode="numeric"
+               oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+
+        <select class="form-control" name="building" required>
+        <option value="" disabled selected>เลือกอาคาร/ตึก (1-8)*</option>
+        <option value="1">อาคาร 1</option>
+        <option value="2">อาคาร 2</option>
+        <option value="3">อาคาร 3</option>
+        <option value="4">อาคาร 4</option>
+        <option value="5">อาคาร 5</option>
+        <option value="6">อาคาร 6</option>
+        <option value="7">อาคาร 7</option>
+        <option value="8">อาคาร 8</option>
+        </select>
+
+        <input type="text" 
+         class="form-control" 
+         name="room_number" 
+         placeholder="หมายเลขห้อง (ตัวเลขเท่านั้น / ช่างให้ตอบ 0000)*" 
+         required 
+         inputmode="numeric"
+         oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         <input type="text" class="form-control" name="question" placeholder="คำถามความปลอดภัย (เช่น ชื่อหมาตัวแรก)*" required>
         <input type="text" class="form-control" name="answer" placeholder="คำตอบสำหรับกู้รหัสผ่าน*" required>
 
@@ -123,14 +151,16 @@ body {
 </div>
 
 <script>
+    // ตรวจสอบความถูกต้องของข้อมูลก่อนส่งฟอร์ม (Form Validation)
     document.getElementById("registerForm").addEventListener("submit", function(event) {
+        // เช็ค reCAPTCHA
         var recaptchaResponse = grecaptcha.getResponse();
         if (recaptchaResponse.length === 0) {
             event.preventDefault();
             alert("กรุณาติ๊กที่ช่อง 'ฉันไม่ใช่โปรแกรมอัตโนมัติ' (reCAPTCHA) ก่อนสมัครสมาชิกครับ");
             return;
         }
-
+        // เช็ครูปแบบรหัสผ่าน
         const password = document.getElementById('regPassword').value;
         const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
         if (!passwordRegex.test(password)) {
@@ -139,7 +169,15 @@ body {
             document.getElementById('regPassword').focus();
             return;
         }
-
+        // เช็คความยาวเบอร์โทรศัพท์
+        const phone = document.getElementById('phoneInput').value;
+        if (phone.length < 9) {
+            event.preventDefault();
+            alert('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง (9-10 หลัก)');
+            document.getElementById('phoneInput').focus();
+            return;
+        }
+        // เช็คว่ายืนยัน OTP สำเร็จหรือยัง
         if(!otpVerified){
             event.preventDefault();
             alert("กรุณายืนยัน OTP ทางอีเมลก่อนสมัครสมาชิกครับ");
@@ -148,6 +186,7 @@ body {
 </script>
 
 <script>
+    /* ระบบจัดการ OTP */
     let otpVerified = false;
     let otpExpireTime = null;
     let timerInterval = null;
@@ -194,10 +233,10 @@ body {
             document.getElementById("sendOtpBtn").disabled = false;
         });
     }
-
+// ฟังก์ชันยืนยันรหัส OTP
     function verifyOTP(){
         const otp = document.getElementById("otpInput").value;
-        const email = document.getElementById("emailInput").value; // ดึงอีเมลไปเช็คด้วย
+        const email = document.getElementById("emailInput").value;
 
         if(!otp){
             alert("กรุณากรอกรหัส OTP");
@@ -207,7 +246,7 @@ body {
         fetch("/verify_otp",{
             method:"POST",
             headers:{ "Content-Type":"application/json" },
-            body:JSON.stringify({otp: otp, email: email}) // ส่งคู่ไปให้ฝั่งเซิร์ฟเวอร์
+            body:JSON.stringify({otp: otp, email: email})
         })
         .then(res=>res.json())
         .then(data=>{
@@ -216,7 +255,6 @@ body {
                 otpVerified = true;
                 clearInterval(timerInterval);
                 
-                // ล็อคปุ่มและเปลี่ยนข้อความให้สวยงาม
                 const timerLabel = document.getElementById("otpTimer");
                 timerLabel.innerText = "ยืนยันอีเมลสำเร็จแล้ว ✅";
                 timerLabel.className = "text-success fw-bold";
@@ -232,7 +270,7 @@ body {
             alert("เกิดข้อผิดพลาดในการตรวจสอบ OTP");
         });
     }
-
+// ฟังก์ชันนับเวลาถอยหลัง 120 วินาที
     function startTimer(){
         clearInterval(timerInterval);
         timerInterval = setInterval(function(){
