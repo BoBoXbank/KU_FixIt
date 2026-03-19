@@ -91,7 +91,7 @@ def check_banned_ip():
             conn.close()
 
 # ==========================================
-# 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพ
+# 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพ + อัปโหลดขึ้น ImgBB
 # ==========================================
 def process_and_compress_image(file):
     if not file or file.filename == '':
@@ -104,6 +104,22 @@ def process_and_compress_image(file):
         img_byte_arr = io.BytesIO()
         img.save(img_byte_arr, format='JPEG', optimize=True, quality=85)
         base64_encoded = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
+        
+        # 🚀 อัปโหลดขึ้น ImgBB เพื่อลดภาระ Database
+        api_key = os.getenv('IMGBB_API_KEY')
+        if api_key:
+            response = requests.post(
+                "https://api.imgbb.com/1/upload",
+                data={
+                    "key": api_key,
+                    "image": base64_encoded
+                }
+            )
+            if response.status_code == 200:
+                # คืนค่า URL กลับไปเซฟใน Database (ความยาวแค่ประมาณ 30 ตัวอักษร)
+                return response.json()['data']['url']
+                
+        # ถ้าไม่มี API Key หรือเว็บ ImgBB ล่ม ให้กลับมาใช้ Base64 กันเหนียว
         return base64_encoded
     except Exception as e:
         print(f"Error compressing image: {e}")
