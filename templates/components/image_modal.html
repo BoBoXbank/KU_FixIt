@@ -104,13 +104,11 @@
                 document.getElementById('m-phone').innerText = btn.getAttribute('data-phone') || '-';
                 document.getElementById('m-status').innerText = btn.getAttribute('data-status') || 'รอซ่อม';
                 
-                // 🚀 ดึงค่าเวลาแจ้งจริง กับ เวลาที่สะดวก มาแสดงแยกกัน
                 var createdAt = btn.getAttribute('data-created') || 'ไม่ระบุเวลา';
                 document.getElementById('m-created').innerText = createdAt;
                 document.getElementById('t-start').innerText = createdAt; 
                 
                 var repairTime = btn.getAttribute('data-repair-time') || 'ไม่ระบุ';
-                // ถ้ามีเครื่องหมาย | (ไปป์) ให้ปัดบรรทัดใหม่เพื่อความสวยงาม
                 document.getElementById('m-repair-time').innerHTML = repairTime.replace(/ \| /g, '<br>');
 
                 var imgData = btn.getAttribute('data-image'); 
@@ -119,7 +117,11 @@
 
                 if (imgData && imgData !== 'None' && imgData.trim() !== "") {
                     var finalSrc = "";
-                    if (imgData.length > 100 || imgData.startsWith('data:image')) {
+                    // 🚀 เช็คว่าถ้าเป็นลิงก์ URL ที่มาจาก ImgBB ให้โชว์ลิงก์ได้เลย
+                    if (imgData.startsWith('http://') || imgData.startsWith('https://')) {
+                        finalSrc = imgData;
+                    } 
+                    else if (imgData.length > 100 || imgData.startsWith('data:image')) {
                         finalSrc = imgData.startsWith('data:image') ? imgData : "data:image/jpeg;base64," + imgData;
                     } 
                     else {

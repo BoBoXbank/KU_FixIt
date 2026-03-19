@@ -12,7 +12,11 @@
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
             <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale" {{ profile_style | safe }}>
                 {% if current_user_info and current_user_info.profile_picture %}
-                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                    {% if current_user_info.profile_picture is string and current_user_info.profile_picture.startswith('http') %}
+                        <img src="{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                    {% else %}
+                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                    {% endif %}
                 {% elif current_user_info and current_user_info.first_name %}
                     {{ current_user_info.first_name[0] | upper }}
                 {% else %}
