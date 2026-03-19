@@ -13,12 +13,8 @@ from datetime import datetime, timedelta
 
 user_bp = Blueprint('user', __name__)
 
-# ประกาศออบเจกต์ mail (จะถูก init ใน app.py)
 mail = Mail()
 
-# ==========================================
-# 🚀 ระบบ OTP EMAIL
-# ==========================================
 @user_bp.route('/send_otp', methods=['POST'])
 def send_otp():
     data = request.get_json()
@@ -30,11 +26,10 @@ def send_otp():
     if not email.lower().endswith('@ku.th'):
         return jsonify({"success": False, "message": "ต้องใช้อีเมล @ku.th เท่านั้น"}), 400
 
-    # สร้าง OTP 4 หลัก และเก็บลง session พร้อมเวลาหมดอายุ (2 นาที)
     otp = f"{random.randint(0, 9999):04d}"
     session['otp'] = otp
     session['otp_expire'] = time.time() + 120 
-    session['otp_email'] = email # ป้องกันคนแอบเปลี่ยนอีเมลทีหลัง
+    session['otp_email'] = email 
 
     try:
         msg = Message(
@@ -65,18 +60,15 @@ def verify_otp():
         return jsonify({"success": False, "message": "อีเมลไม่ตรงกับที่ส่ง OTP ไป"})
 
     if time.time() > expire_time:
-        session.pop('otp', None) # ล้าง OTP ทิ้ง
+        session.pop('otp', None) 
         return jsonify({"success": False, "message": "รหัส OTP หมดอายุแล้ว กรุณากดขอใหม่"})
 
     if user_otp == saved_otp:
-        session.pop('otp', None) # ยืนยันสำเร็จ ล้าง OTP ทิ้งเลย
+        session.pop('otp', None) 
         return jsonify({"success": True, "message": "ยืนยันอีเมลสำเร็จ!"})
     else:
         return jsonify({"success": False, "message": "รหัส OTP ไม่ถูกต้อง"})
 
-# ==========================================
-# 🚀 ระบบด่านตรวจ: บล็อค IP ที่ถูกแบน
-# ==========================================
 @user_bp.before_app_request
 def check_banned_ip():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
@@ -87,12 +79,11 @@ def check_banned_ip():
             cursor.execute("SELECT * FROM banned_ips WHERE ip_address = %s", (client_ip,))
             if cursor.fetchone():
                 return "<h1>🚫 Access Denied</h1><p>เครื่องของคุณถูกระงับการใช้งานอย่างถาวร (IP Banned)</p>", 403
+        except Exception:
+            pass
         finally:
             conn.close()
 
-# ==========================================
-# 🚀 ฟังก์ชันเสริม: บีบอัดรูปภาพ + อัปโหลดขึ้น ImgBB
-# ==========================================
 def process_and_compress_image(file):
     if not file or file.filename == '':
         return None
@@ -105,7 +96,6 @@ def process_and_compress_image(file):
         img.save(img_byte_arr, format='JPEG', optimize=True, quality=85)
         base64_encoded = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
         
-        # 🚀 อัปโหลดขึ้น ImgBB เพื่อลดภาระ Database
         api_key = os.getenv('IMGBB_API_KEY')
         if api_key:
             response = requests.post(
@@ -116,33 +106,22 @@ def process_and_compress_image(file):
                 }
             )
             if response.status_code == 200:
-                # คืนค่า URL กลับไปเซฟใน Database (ความยาวแค่ประมาณ 30 ตัวอักษร)
                 return response.json()['data']['url']
                 
-        # ถ้าไม่มี API Key หรือเว็บ ImgBB ล่ม ให้กลับมาใช้ Base64 กันเหนียว
         return base64_encoded
     except Exception as e:
         print(f"Error compressing image: {e}")
         return None
 
+# 🚀 โค้ดส่วนนี้แก้ใหม่! อ่านข้อมูลจาก Session โดยไม่ต้องเปิด Database ซ้ำซ้อน!
 @user_bp.app_context_processor
 def inject_user_info():
     user_info = None
     if 'user_id' in session:
-        conn = get_db_connection()
-        if conn:
-            try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT first_name, profile_picture FROM users WHERE id = %s", (session['user_id'],))
-                row = cursor.fetchone()
-                if row:
-                    user_info = dict(row)
-                    pic = user_info.get('profile_picture')
-                    if pic:
-                        if isinstance(pic, bytes):
-                            user_info['profile_picture'] = pic.decode('utf-8')
-            finally:
-                conn.close()
+        user_info = {
+            'first_name': session.get('first_name', ''),
+            'profile_picture': session.get('profile_picture', '')
+        }
     return dict(current_user_info=user_info)
 
 @user_bp.route('/logout')
@@ -289,9 +268,16 @@ def login():
                     except Exception as e:
                         print("Error saving login IP:", e)
 
+                    # 🚀 เก็บข้อมูลโปรไฟล์ลง Session เลย จะได้ไม่ต้องโหลด Database ซ้ำซ้อน
                     session['user_id'] = user['id']
                     session['role'] = user['role']
                     session['username'] = user['username']
+                    session['first_name'] = user.get('first_name', '')
+                    
+                    pic = user.get('profile_picture')
+                    if pic and isinstance(pic, bytes):
+                        pic = pic.decode('utf-8')
+                    session['profile_picture'] = pic
                     
                     if user['role'] == 'admin': return redirect(url_for('admin.dashboard'))
                     elif user['role'].startswith('technician_'): return redirect(url_for('technician.dashboardtech'))
@@ -443,6 +429,8 @@ def profile():
                     cursor = conn.cursor()
                     cursor.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (image_base64, session['user_id']))
                     conn.commit()
+                    # 🚀 อัปเดต Session ให้รูปโปรไฟล์เปลี่ยนทันที ไม่ต้องรอโหลดหน้าใหม่
+                    session['profile_picture'] = image_base64
                     flash('เปลี่ยนรูปโปรไฟล์สำเร็จ!', 'success')
                     return redirect(url_for('user.profile'))
                 finally:

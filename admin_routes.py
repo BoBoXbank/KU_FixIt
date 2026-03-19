@@ -7,26 +7,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 def is_admin():
     return session.get('role') == 'admin'
 
-def get_current_user_data():
-    user_id = session.get('user_id')
-    if not user_id: return None
-    
-    conn = get_db_connection()
-    user_data = None
-    if conn:
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, username, first_name, last_name, profile_picture FROM users WHERE id = %s", (user_id,))
-            row = cursor.fetchone()
-            if row:
-                user_data = dict(row)
-                pic = user_data.get('profile_picture')
-                if pic:
-                    if isinstance(pic, bytes):
-                        user_data['profile_picture'] = pic.decode('utf-8')
-        finally:
-            conn.close()
-    return user_data
+# 🚀 ลบฟังก์ชัน get_current_user_data() ทิ้งไปเลยครับ เพราะระบบอ่านจาก Session แล้ว!
 
 @admin_bp.route('/')
 def dashboard():
@@ -35,7 +16,6 @@ def dashboard():
         flash('⛔ ไม่มีสิทธิ์เข้าถึงส่วนผู้ดูแลระบบ', 'danger')
         return redirect(url_for('user.home'))
 
-    current_user_info = get_current_user_data()
     conn = get_db_connection()
     reports = []
     stats = {'total': 0, 'pending': 0, 'ongoing': 0, 'finished': 0}
@@ -53,12 +33,12 @@ def dashboard():
         finally:
             conn.close()
 
-    return render_template('admin/dashboard.html', reports=reports, stats=stats, current_user_info=current_user_info)
+    # 🚀 เอา current_user_info ออกไปได้เลย ประหยัดเวลาได้เยอะ
+    return render_template('admin/dashboard.html', reports=reports, stats=stats)
 
 @admin_bp.route('/record')
 def record():
     if not is_admin(): return redirect(url_for('user.home'))
-    current_user_info = get_current_user_data()
     conn = get_db_connection()
     reports = []
     if conn:
@@ -68,13 +48,12 @@ def record():
             reports = cursor.fetchall()
         finally:
             conn.close()
-    return render_template('admin/record.html', reports=reports, current_user_info=current_user_info)
+    return render_template('admin/record.html', reports=reports)
 
 @admin_bp.route('/users')
 def manage_users():
     if not is_admin(): return redirect(url_for('user.home'))
 
-    current_user_info = get_current_user_data()
     s_user = request.args.get('user', '').strip()
     s_name = request.args.get('first_name', '').strip()
     s_lname = request.args.get('last_name', '').strip()
@@ -82,7 +61,7 @@ def manage_users():
     conn = get_db_connection()
     users = []
     ip_map = {} 
-    banned_ips_list = [] # 🚀 ตัวแปรเก็บรายชื่อ IP ที่ถูกแบนอยู่
+    banned_ips_list = [] 
     
     if conn:
         try:
@@ -103,7 +82,6 @@ def manage_users():
             cursor.execute(query, tuple(params))
             users = cursor.fetchall()
             
-            # ดึงข้อมูล IP ประวัติการใช้งานทั้งหมด
             try:
                 cursor.execute("SELECT username, ip_address, last_login FROM user_ips")
                 all_ips = cursor.fetchall()
@@ -115,7 +93,6 @@ def manage_users():
             except Exception:
                 pass 
 
-            # 🚀 ดึงรายชื่อ IP ที่ติดแบนอยู่ เพื่อส่งไปบอกหน้าบ้าน
             try:
                 cursor.execute("SELECT ip_address FROM banned_ips")
                 banned_ips_list = [row['ip_address'] for row in cursor.fetchall()]
@@ -125,9 +102,8 @@ def manage_users():
         finally:
             conn.close()
         
-    return render_template('admin/manage_users.html', users=users, ip_map=ip_map, banned_ips_list=banned_ips_list, current_user_info=current_user_info)
+    return render_template('admin/manage_users.html', users=users, ip_map=ip_map, banned_ips_list=banned_ips_list)
 
-# 🚀 ฟังก์ชันแบน IP
 @admin_bp.route('/ban_ip/<ip>', methods=['POST'])
 def ban_ip(ip):
     if not is_admin(): return redirect(url_for('user.home'))
@@ -149,7 +125,6 @@ def ban_ip(ip):
             conn.close()
     return redirect(request.referrer or url_for('admin.manage_users'))
 
-# 🚀 ฟังก์ชันปลดแบน IP (Unban)
 @admin_bp.route('/unban_ip/<ip>', methods=['POST'])
 def unban_ip(ip):
     if not is_admin(): return redirect(url_for('user.home'))
