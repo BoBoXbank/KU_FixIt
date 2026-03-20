@@ -110,3 +110,31 @@ def record_tech():
         conn.close()
         
     return render_template('technician/record_tech.html', reports=reports)
+@technician_bp.route('/bulk_update', methods=['POST'])
+def bulk_update():
+    # ดึงรายการ ID ที่ถูกเลือกมาจาก Checkbox
+    report_ids = request.form.getlist('report_ids')
+    # ดึงสถานะใหม่ที่เลือกจาก Dropdown
+    new_status = request.form.get('bulk_status')
+    
+    if report_ids and new_status:
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                # สร้างเครื่องหมาย %s ตามจำนวน ID เพื่อใช้ในคำสั่ง SQL IN (...)
+                format_strings = ','.join(['%s'] * len(report_ids))
+                query = f"UPDATE reports SET status = %s WHERE id IN ({format_strings})"
+                
+                # ส่งค่า status และ tuple ของ IDs เข้าไปประมวลผล
+                cursor.execute(query, [new_status] + report_ids)
+                conn.commit()
+                flash(f'✅ อัปเดต {len(report_ids)} รายการเป็น "{new_status}" เรียบร้อยแล้ว', 'success')
+            except Exception as e:
+                flash(f'❌ เกิดข้อผิดพลาด: {str(e)}', 'danger')
+            finally:
+                conn.close()
+    else:
+        flash('⚠️ กรุณาเลือกรายการและสถานะที่ต้องการเปลี่ยน', 'warning')
+        
+    return redirect(request.referrer or url_for('technician.dashboardtech'))

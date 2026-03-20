@@ -1,27 +1,98 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
-    <div class="d-flex align-items-center mb-4">
-        <span class="fs-2 me-2">📜</span>
-        <h2 class="fw-bold mb-0">ประวัติแจ้งซ่อม (Admin)</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-clock-history text-success fs-2"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold mb-0 text-dark">ประวัติแจ้งซ่อม (Admin)</h2>
+                <p class="text-muted small mb-0">จัดการ กรองข้อมูล และอัปเดตสถานะแบบกลุ่ม</p>
+            </div>
+        </div>
+
+        {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+        <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale overflow-hidden" 
+                 style="width: 60px; height: 60px; font-size: 1.5rem; border: 3px solid white; background-color: {{ bg_color }};">
+                 
+                 {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                {% else %}
+                    {{ session.get('username', 'A')[0] | upper }}
+                {% endif %}
+            </div>
+        </a>
     </div>
 
-    <div class="card border-0 shadow-sm p-4" style="border-radius: 30px;">
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 20px;">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill" placeholder="ค้นหาเลขที่, ผู้แจ้ง, ปัญหา...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="statusFilter" class="form-select rounded-pill shadow-sm">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="รอซ่อม">รอซ่อม</option>
+                    <option value="กำลังซ่อม">กำลังซ่อม</option>
+                    <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="button" onclick="window.location.reload()" class="btn btn-outline-secondary rounded-pill w-100">ล้างค่า</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkToolbar" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 20px; display: none;">
+        <div class="card-body d-flex align-items-center justify-content-between py-3 px-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check2-all text-primary fs-4 me-3"></i>
+                <span id="selectedCount" class="fw-bold text-dark me-4">เลือกแล้ว 0 รายการ</span>
+            </div>
+            <div class="d-flex gap-2">
+                <form id="bulkActionForm" action="{{ url_for('admin.bulk_update') }}" method="POST" class="d-flex gap-2">
+                    <div id="bulkUpdateIds"></div>
+                    <select name="bulk_status" class="form-select form-select-sm rounded-pill border-primary px-3" style="width: 160px;" required>
+                        <option value="" selected disabled>เปลี่ยนสถานะเป็น...</option>
+                        <option value="รอซ่อม">รอซ่อม</option>
+                        <option value="กำลังซ่อม">กำลังซ่อม</option>
+                        <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">อัปเดตที่เลือก</button>
+                </form>
+                <form action="{{ url_for('admin.delete_multiple') }}" method="POST">
+                    <div id="bulkDeleteIds"></div>
+                    <button type="submit" class="btn btn-sm btn-danger rounded-pill px-4 shadow-sm" onclick="return confirm('ลบรายการที่เลือก?')">
+                        <i class="bi bi-trash-fill"></i> ลบที่เลือก
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-0" style="border-radius: 30px; overflow: hidden;">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+            <table class="table table-hover align-middle mb-0" id="reportTable">
                 <thead style="background-color: #F0F9F6; color: #8BA99B;">
                     <tr>
-                        <th class="ps-4">เลขที่</th>
-                        <th>ผู้แจ้ง (User)</th>
-                        <th>อาคาร/ห้อง</th>
-                        <th>ประเภท</th>
-                        <th class="text-center">สถานะ</th>
-                        <th class="text-center">จัดการ</th>
+                        <th class="ps-4" width="40"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                        <th class="py-3 border-0">เลขที่</th>
+                        <th class="border-0">ผู้แจ้ง</th>
+                        <th class="border-0">สถานที่</th>
+                        <th class="border-0">ประเภท</th>
+                        <th class="text-center border-0">สถานะ</th>
+                        <th class="text-center border-0">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in reports %}
                     <tr class="record-row" style="cursor: pointer;" 
+                        data-status="{{ item.status }}"
                         data-building="{{ item.building }}"
                         data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
                         data-title="{{ item.title }}"
@@ -29,28 +100,28 @@
                         data-image="{{ item.image_data }}"
                         data-created="{{ item.created_at }}"
                         data-repair-time="{{ item.repair_time }}"
-                        data-phone="{{ item.phone }}"
-                        data-status="{{ item.status }}">
+                        data-phone="{{ item.phone }}">
                         
-                        <td class="ps-4">#REP-{{ "%03d" | format(item.id) }}</td>
-                        <td class="fw-bold">{{ item.username }}</td>
+                        <td class="ps-4"><input type="checkbox" name="report_ids" value="{{ item.id }}" class="form-check-input row-checkbox"></td>
+                        <td class="text-muted small">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="fw-bold text-dark">{{ item.username }}</td>
                         <td>{{ item.location }}</td>
-                        <td>{{ item.title }}</td>
-                        
-                        <td style="min-width: 200px;">
-                            <form action="{{ url_for('admin.update_status', id=item.id) }}" method="POST" class="d-flex gap-2 m-0">
-                                <select name="status" class="form-select form-select-sm rounded-pill border-success text-center shadow-sm">
+                        <td><span class="badge bg-light text-dark border">{{ item.title }}</span></td>
+                        <td style="min-width: 180px;">
+                            <form action="{{ url_for('admin.update_status', id=item.id) }}" method="POST" class="d-flex gap-2 m-0 justify-content-center">
+                                <select name="status" class="form-select form-select-sm rounded-pill border-success px-2" style="width: 110px;">
                                     <option value="รอซ่อม" {% if item.status=='รอซ่อม' %}selected{% endif %}>รอซ่อม</option>
                                     <option value="กำลังซ่อม" {% if item.status=='กำลังซ่อม' %}selected{% endif %}>กำลังซ่อม</option>
                                     <option value="เสร็จสิ้น" {% if item.status=='เสร็จสิ้น' %}selected{% endif %}>เสร็จสิ้น</option>
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">บันทึก</button>
+                                <button type="submit" class="btn btn-sm btn-primary rounded-pill btn-save-custom">
+                                    <i class="bi bi-check-lg"></i> <span class="save-text">บันทึก</span>
+                                </button>
                             </form>
                         </td>
-
                         <td class="text-center">
                             <a href="{{ url_for('admin.delete_report', id=item.id) }}" class="btn btn-sm btn-outline-danger rounded-circle" onclick="return confirm('ยืนยันการลบ?');">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash3-fill"></i>
                             </a>
                         </td>
                     </tr>
@@ -61,39 +132,72 @@
     </div>
 </div>
 
-{% include "components/image_modal.html" %} 
+{% include "components/image_modal.html" %}
 
 <style>
-    .table-hover tbody tr:hover {
-        background-color: #f1f9f7 !important;
-    }
-    .form-select {
-        font-size: 0.9rem !important;
-    }
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
+    .btn-save-custom { display: inline-flex; align-items: center; gap: 0; transition: all 0.3s; }
+    .save-text { display: inline-block; max-width: 0; overflow: hidden; opacity: 0; transition: 0.3s; white-space: nowrap; }
+    .btn-save-custom:hover .save-text { max-width: 60px; margin-left: 5px; opacity: 1; }
+    .table-hover tbody tr:hover { background-color: #f1f9f7 !important; }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const rows = document.querySelectorAll('.record-row');
-        
-        rows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                const isInteractiveElement = e.target.closest('form') || 
-                                             e.target.closest('select') || 
-                                             e.target.closest('button') || 
-                                             e.target.closest('a');
-                if (isInteractiveElement) {
-                    return;
-                }
-                
-                const modalElement = document.getElementById('reportDetailModal');
-                let modal = bootstrap.Modal.getInstance(modalElement);
-                if (!modal) {
-                    modal = new bootstrap.Modal(modalElement);
-                }
-                modal.show(this);
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const bulkToolbar = document.getElementById('bulkToolbar');
+    const selectedCountTxt = document.getElementById('selectedCount');
+    const updateIdsDiv = document.getElementById('bulkUpdateIds');
+    const deleteIdsDiv = document.getElementById('bulkDeleteIds');
+
+    function updateBulkActions() {
+        const checked = document.querySelectorAll('.row-checkbox:checked');
+        bulkToolbar.style.display = checked.length > 0 ? 'block' : 'none';
+        selectedCountTxt.innerText = `เลือกแล้ว ${checked.length} รายการ`;
+        updateIdsDiv.innerHTML = ''; deleteIdsDiv.innerHTML = '';
+        checked.forEach(cb => {
+            updateIdsDiv.innerHTML += `<input type="hidden" name="report_ids" value="${cb.value}">`;
+            deleteIdsDiv.innerHTML += `<input type="hidden" name="report_ids" value="${cb.value}">`;
+        });
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => {
+            if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
+        });
+        updateBulkActions();
+    });
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBulkActions));
+
+    // Filter Logic
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+
+    function applyFilters() {
+        const term = searchInput.value.toLowerCase();
+        const status = statusFilter.value;
+        document.querySelectorAll('.record-row').forEach(row => {
+            const matchesSearch = row.innerText.toLowerCase().includes(term);
+            const matchesStatus = status === "" || row.getAttribute('data-status') === status;
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+
+    // Modal Logic
+    document.querySelectorAll('.record-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('form') || e.target.closest('a') || e.target.type === 'checkbox') return;
+            const modalElement = document.getElementById('reportDetailModal');
+            let modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            modal.show(this);
         });
     });
+});
 </script>
 {% endblock %}

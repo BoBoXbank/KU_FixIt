@@ -4,51 +4,98 @@
     
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
-            <span class="fs-2 me-2">📜</span>
-            <h2 class="fw-bold mb-0 text-dark">ประวัติงานซ่อม (แผนก{{ session.get('role').replace('technician_', '').upper() }})</h2>
+            <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                <i class="bi bi-journal-check text-success fs-2"></i>
+            </div>
+            <div>
+                <h2 class="fw-bold mb-0 text-dark">ประวัติงานซ่อม</h2>
+                <p class="text-muted small mb-0">แผนก {{ session.get('role').replace('technician_', '').upper() }}</p>
+            </div>
         </div>
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
-            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white" 
-                 style="width: 60px; height: 60px; background-color: #16A34A; border: 3px solid white;">
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale overflow-hidden" 
+                 style="width: 60px; height: 60px; font-size: 1.5rem; border: 3px solid white; background-color: {{ bg_color }};">
                 {% if current_user_info and current_user_info.profile_picture %}
-                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                    {% if current_user_info.profile_picture is string and current_user_info.profile_picture.startswith('http') %}
+                        <img src="{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                    {% else %}
+                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                    {% endif %}
+                {% elif current_user_info and current_user_info.first_name %}
+                    {{ current_user_info.first_name[0] | upper }}
                 {% else %}
-                    {{ session.get('username', 'T')[0] | upper }}
+                    {{ session.get('username', 'A')[0] | upper }}
                 {% endif %}
             </div>
         </a>
     </div>
 
-    <div class="card border-0 shadow-sm p-0" style="border-radius: 20px; overflow: hidden;">
-        
-        <div class="p-4 bg-white border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0 text-dark">รายการแจ้งซ่อมทั้งหมด</h5>
-            <select id="statusFilter" class="form-select form-select-sm w-auto rounded-pill border-secondary px-3 py-2" onchange="filterTable()">
-                <option value="all">ทุกสถานะ</option>
-                <option value="รอซ่อม">รอรับงาน</option>
-                <option value="กำลังซ่อม">กำลังซ่อม</option>
-                <option value="เสร็จสิ้น">เสร็จสิ้นแล้ว</option>
-            </select>
+    <div class="card border-0 shadow-sm p-4 mb-4" style="border-radius: 20px;">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control border-start-0 rounded-end-pill" placeholder="ค้นหาเลขที่, ผู้แจ้ง, ปัญหา...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select id="statusFilter" class="form-select rounded-pill shadow-sm" onchange="applyFilters()">
+                    <option value="all">ทุกสถานะ</option>
+                    <option value="รอซ่อม">รอรับงาน</option>
+                    <option value="กำลังซ่อม">กำลังซ่อม</option>
+                    <option value="เสร็จสิ้น">เสร็จสิ้นแล้ว</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="button" onclick="window.location.reload()" class="btn btn-outline-secondary rounded-pill w-100">ล้างค่า</button>
+            </div>
         </div>
+    </div>
 
+    <div id="bulkToolbar" class="card border-0 shadow-sm mb-4 bg-white" style="border-radius: 20px; display: none;">
+        <div class="card-body d-flex align-items-center justify-content-between py-3 px-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check2-all text-primary fs-4 me-3"></i>
+                <span id="selectedCount" class="fw-bold text-dark me-4">เลือกแล้ว 0 รายการ</span>
+            </div>
+            <div class="d-flex gap-2">
+                <form action="{{ url_for('technician.bulk_update') }}" method="POST" class="d-flex gap-2">
+                    <div id="bulkUpdateIds"></div>
+                    <select name="bulk_status" class="form-select form-select-sm rounded-pill border-primary px-3" style="width: 160px;" required>
+                        <option value="" selected disabled>เปลี่ยนสถานะเป็น...</option>
+                        <option value="รอซ่อม">คืนคิวงาน (รอซ่อม)</option>
+                        <option value="กำลังซ่อม">รับงาน (กำลังซ่อม)</option>
+                        <option value="เสร็จสิ้น">ปิดงาน (เสร็จสิ้น)</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">อัปเดตที่เลือก</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm p-0" style="border-radius: 25px; overflow: hidden;">
         <div class="table-responsive bg-white">
             <table class="table table-hover align-middle mb-0" id="recordTable">
                 <thead style="background-color: #F0F9F6; color: #8BA99B;">
                     <tr>
-                        <th class="ps-4 py-3 border-0">เลขที่</th>
+                        <th class="ps-4" width="40"><input type="checkbox" id="selectAll" class="form-check-input"></th>
+                        <th class="py-3 border-0">เลขที่</th>
                         <th class="py-3 border-0">ผู้แจ้ง</th>
-                        <th class="py-3 border-0">ประเภท</th>
+                        <th class="py-3 border-0">ปัญหา</th>
                         <th class="py-3 border-0 text-center">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in reports %}
-                        <tr class="job-row" data-status="{{ item.status }}">
-                            <td class="ps-4 py-4 text-muted">#REP-{{ "%03d" | format(item.id) }}</td>
-                            <td class="py-4 fw-medium text-dark">{{ item.username }}</td>
-                            <td class="py-4 text-success">{{ item.title }}</td>
+                        <tr class="job-row" data-status="{{ item.status }}" style="cursor: pointer;">
+                            <td class="ps-4" onclick="event.stopPropagation();">
+                                <input type="checkbox" name="report_ids" value="{{ item.id }}" class="form-check-input row-checkbox">
+                            </td>
+                            <td class="text-muted small">#REP-{{ "%03d" | format(item.id) }}</td>
+                            <td class="fw-medium text-dark">{{ item.username }}</td>
+                            <td><span class="badge bg-light text-success border">{{ item.title }}</span></td>
                             
-                            <td class="py-4 text-center">
+                            <td class="text-center" onclick="event.stopPropagation();">
                                 <div class="d-flex justify-content-center gap-2">
                                     <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" 
                                             data-bs-toggle="modal" data-bs-target="#reportDetailModal"
@@ -72,32 +119,32 @@
                                     {% elif item.status == 'กำลังซ่อม' %}
                                         <div class="dropdown d-inline-block">
                                             <button class="btn btn-sm btn-primary dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
-                                                อัปเดตงาน
+                                                อัปเดต
                                             </button>
                                             <ul class="dropdown-menu shadow-sm border-0" style="border-radius: 12px;">
                                                 <li>
                                                     <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0 p-0">
                                                         <input type="hidden" name="status" value="เสร็จสิ้น">
-                                                        <button type="submit" class="dropdown-item py-2 text-success fw-bold">✅ ซ่อมเสร็จสิ้น</button>
+                                                        <button type="submit" class="dropdown-item py-2 text-success fw-bold">✅ เสร็จสิ้น</button>
                                                     </form>
                                                 </li>
                                                 <li>
                                                     <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0 p-0">
                                                         <input type="hidden" name="status" value="รอซ่อม">
-                                                        <button type="submit" class="dropdown-item py-2 text-warning fw-bold">🔄 คืนคิวงาน</button>
+                                                        <button type="submit" class="dropdown-item py-2 text-warning fw-bold">🔄 คืนงาน</button>
                                                     </form>
                                                 </li>
                                             </ul>
                                         </div>
                                     {% else %}
-                                        <span class="badge bg-light text-success border px-3 py-2 rounded-pill">เสร็จสิ้น</span>
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">เสร็จสิ้น</span>
                                     {% endif %}
                                 </div>
                             </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">ไม่พบข้อมูลงานซ่อม</td>
+                            <td colspan="5" class="text-center py-5 text-muted">🎉 ไม่พบข้อมูลงานซ่อม</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -108,18 +155,72 @@
 
 {% include 'components/image_modal.html' %}
 
+<style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
+    .table-hover tbody tr:hover { background-color: #f1f9f7 !important; }
+    .form-control, .form-select { font-size: 0.9rem !important; }
+</style>
+
 <script>
-    function filterTable() {
-        const selectedStatus = document.getElementById('statusFilter').value;
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    const bulkToolbar = document.getElementById('bulkToolbar');
+    const selectedCountTxt = document.getElementById('selectedCount');
+    const updateIdsDiv = document.getElementById('bulkUpdateIds');
+
+    // --- 1. ระบบ Filter & Search ---
+    function applyFilters() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedStatus = statusFilter.value;
         const rows = document.querySelectorAll('.job-row');
+
         rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
             const rowStatus = row.getAttribute('data-status');
-            if (selectedStatus === 'all' || rowStatus === selectedStatus) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesStatus = (selectedStatus === 'all' || rowStatus === selectedStatus);
+
+            row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
         });
     }
+
+    searchInput.addEventListener('input', applyFilters);
+    statusFilter.addEventListener('change', applyFilters);
+
+    // --- 2. ระบบ Bulk Action (เลือกหลายรายการ) ---
+    function updateBulkActions() {
+        const checked = document.querySelectorAll('.row-checkbox:checked');
+        bulkToolbar.style.display = checked.length > 0 ? 'block' : 'none';
+        selectedCountTxt.innerText = `เลือกแล้ว ${checked.length} รายการ`;
+        
+        updateIdsDiv.innerHTML = '';
+        checked.forEach(cb => {
+            updateIdsDiv.innerHTML += `<input type="hidden" name="report_ids" value="${cb.value}">`;
+        });
+    }
+
+    selectAll.addEventListener('change', function() {
+        checkboxes.forEach(cb => {
+            if (cb.closest('tr').style.display !== 'none') cb.checked = this.checked;
+        });
+        updateBulkActions();
+    });
+
+    checkboxes.forEach(cb => cb.addEventListener('change', updateBulkActions));
+
+    // --- 3. ระบบ Modal ---
+    document.querySelectorAll('.job-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('form') || e.target.closest('.dropdown') || e.target.type === 'checkbox') return;
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reportDetailModal'));
+            modal.show(this);
+        });
+    });
+});
 </script>
 {% endblock %}

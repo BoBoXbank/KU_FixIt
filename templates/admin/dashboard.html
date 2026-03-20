@@ -29,38 +29,42 @@
     <div class="row g-4 mb-5">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">📒</div>
-                <div class="h2 fw-bold mb-0">{{ reports|length }}</div>
-                <small class="text-muted">แจ้งซ่อมทั้งหมด</small>
+                <div class="text-secondary fs-1 mb-2"><i class="bi bi-journal-text"></i></div>
+                <div class="h2 fw-bold mb-0 text-dark">{{ reports|length }}</div>
+                <small class="text-muted fw-bold">แจ้งซ่อมทั้งหมด</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">⏰</div>
+                <div class="text-warning fs-1 mb-2"><i class="bi bi-clock-history"></i></div>
                 <div class="h2 fw-bold mb-0 text-warning">{{ reports|selectattr('status', 'equalto', 'รอซ่อม')|list|length }}</div>
-                <small class="text-muted">รอดำเนินการ</small>
+                <small class="text-muted fw-bold">รอดำเนินการ</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">🏠</div>
+                <div class="text-primary fs-1 mb-2"><i class="bi bi-tools"></i></div>
                 <div class="h2 fw-bold mb-0 text-primary">{{ reports|selectattr('status', 'equalto', 'กำลังซ่อม')|list|length }}</div>
-                <small class="text-muted">กำลังดำเนินการ</small>
+                <small class="text-muted fw-bold">กำลังดำเนินการ</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">⭐</div>
+                <div class="text-success fs-1 mb-2"><i class="bi bi-check2-circle"></i></div>
                 <div class="h2 fw-bold mb-0 text-success">{{ reports|selectattr('status', 'equalto', 'เสร็จสิ้น')|list|length }}</div>
-                <small class="text-muted">เสร็จแล้ว</small>
+                <small class="text-muted fw-bold">เสร็จแล้ว</small>
             </div>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm p-4" style="border-radius: 25px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="fw-bold mb-0" style="color: #2C5F4D;">ใบแจ้งซ่อมล่าสุด</h5>
-            <a href="{{ url_for('admin.record') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">ดูทั้งหมด</a>
+            <h5 class="fw-bold mb-0" style="color: #2C5F4D;">
+                <i class="bi bi-list-task me-2"></i>ใบแจ้งซ่อมล่าสุด
+            </h5>
+            <a href="{{ url_for('admin.record') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                <i class="bi bi-arrow-right-short"></i> ดูทั้งหมด
+            </a>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -93,11 +97,17 @@
                         <td>{{ item.title }}</td>
                         <td class="text-center">
                             {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
-                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">รอดำเนินการ</span>
+                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-hourglass-split me-1"></i> รอดำเนินการ
+                                </span>
                             {% elif item.status == 'กำลังซ่อม' %}
-                                <span class="badge" style="background-color: #DBEAFE; color: #2563EB; border-radius: 8px; padding: 8px 15px;">กำลังซ่อม</span>
+                                <span class="badge" style="background-color: #DBEAFE; color: #2563EB; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-gear-fill me-1"></i> กำลังซ่อม
+                                </span>
                             {% else %}
-                                <span class="badge" style="background-color: #DCFCE7; color: #16A34A; border-radius: 8px; padding: 8px 15px;">เสร็จสิ้น</span>
+                                <span class="badge" style="background-color: #DCFCE7; color: #16A34A; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-check-lg me-1"></i> เสร็จสิ้น
+                                </span>
                             {% endif %}
                         </td>
                     </tr>
@@ -116,6 +126,10 @@
     .hover-scale:hover { transform: scale(1.08); }
     .table-hover tbody tr:hover {
         background-color: #f8fbfb !important;
+    }
+    /* ปรับแต่งไอคอนให้มีเงาจางๆ ดูมีมิติ */
+    .bi {
+        filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.05));
     }
 </style>
 {% endblock %}

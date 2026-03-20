@@ -3,97 +3,117 @@
 <div class="container-fluid p-0">
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
-            <h2 class="fw-bold mb-1" style="color: #006652;">แดชบอร์ดช่างซ่อม</h2>
-            <p class="text-muted small">รายการแจ้งซ่อมที่รอการดำเนินการในแผนกของคุณ</p>
+            <h2 class="fw-bold mb-1" style="color: #006652;">แดชบอร์ดผู้ดูแลระบบ</h2>
+            <p class="text-muted small">ภาพรวมระบบแจ้งซ่อมหอพัก</p>
         </div>
+        
+        {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
-            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white border-hover" 
-                 style="width: 60px; height: 60px; background-color: #16A34A; border: 3px solid white;">
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale overflow-hidden" 
+                 style="width: 60px; height: 60px; font-size: 1.5rem; border: 3px solid white; background-color: {{ bg_color }};">
                 {% if current_user_info and current_user_info.profile_picture %}
-                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
+                    {% if current_user_info.profile_picture is string and current_user_info.profile_picture.startswith('http') %}
+                        <img src="{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                    {% else %}
+                        <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                    {% endif %}
+                {% elif current_user_info and current_user_info.first_name %}
+                    {{ current_user_info.first_name[0] | upper }}
                 {% else %}
-                    {{ session.get('username', 'T')[0] | upper }}
+                    {{ session.get('username', 'A')[0] | upper }}
                 {% endif %}
             </div>
         </a>
     </div>
 
     <div class="row g-4 mb-5">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">📥</div>
-                <div class="h2 fw-bold mb-0 text-warning">{{ stats.pending }}</div>
-                <small class="text-muted">งานรอดำเนินการ</small>
+                <div class="text-secondary fs-1 mb-2"><i class="bi bi-journal-text"></i></div>
+                <div class="h2 fw-bold mb-0 text-dark">{{ reports|length }}</div>
+                <small class="text-muted fw-bold">แจ้งซ่อมทั้งหมด</small>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">🔧</div>
-                <div class="h2 fw-bold mb-0 text-primary">{{ stats.ongoing }}</div>
-                <small class="text-muted">กำลังซ่อม</small>
+                <div class="text-warning fs-1 mb-2"><i class="bi bi-clock-history"></i></div>
+                <div class="h2 fw-bold mb-0 text-warning">{{ reports|selectattr('status', 'equalto', 'รอซ่อม')|list|length }}</div>
+                <small class="text-muted fw-bold">รอดำเนินการ</small>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
-                <div class="fs-1 mb-2">✅</div>
-                <div class="h2 fw-bold mb-0 text-success">{{ stats.finished }}</div>
-                <small class="text-muted">ซ่อมเสร็จแล้ว</small>
+                <div class="text-primary fs-1 mb-2"><i class="bi bi-tools"></i></div>
+                <div class="h2 fw-bold mb-0 text-primary">{{ reports|selectattr('status', 'equalto', 'กำลังซ่อม')|list|length }}</div>
+                <small class="text-muted fw-bold">กำลังดำเนินการ</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-4 text-center" style="border-radius: 20px;">
+                <div class="text-success fs-1 mb-2"><i class="bi bi-check2-circle"></i></div>
+                <div class="h2 fw-bold mb-0 text-success">{{ reports|selectattr('status', 'equalto', 'เสร็จสิ้น')|list|length }}</div>
+                <small class="text-muted fw-bold">เสร็จแล้ว</small>
             </div>
         </div>
     </div>
 
     <div class="card border-0 shadow-sm p-4" style="border-radius: 25px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0" style="color: #2C5F4D;">
+                <i class="bi bi-list-stars me-2"></i>ใบแจ้งซ่อมล่าสุด
+            </h5>
+            <a href="{{ url_for('admin.record') }}" class="btn btn-sm btn-outline-success rounded-pill px-3">
+                <i class="bi bi-arrow-right-short"></i> ดูทั้งหมด
+            </a>
+        </div>
         <div class="table-responsive">
-            <table class="table align-middle table-hover">
+            <table class="table table-hover align-middle">
                 <thead style="background-color: #F0F9F6; color: #7A9B8D;">
                     <tr>
-                        <th class="py-3 border-0 ps-3">เลขที่</th>
+                        <th class="py-3 border-0 rounded-start ps-3">เลขที่</th>
+                        <th class="py-3 border-0">ผู้แจ้ง</th>
                         <th class="py-3 border-0">สถานที่</th>
                         <th class="py-3 border-0">ปัญหา</th>
-                        <th class="py-3 border-0 text-center">จัดการ</th>
+                        <th class="py-3 border-0 rounded-end text-center">สถานะ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in reports %}
-                    <tr>
+                    {% for item in reports[:5] %}
+                    <tr style="cursor: pointer;" 
+                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                        data-building="{{ item.building }}"
+                        data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
+                        data-title="{{ item.title }}"
+                        data-detail="{{ item.detail }}"
+                        data-image="{{ item.image_data }}"
+                        data-created="{{ item.created_at }}"
+                        data-repair-time="{{ item.repair_time }}"
+                        data-phone="{{ item.phone }}"
+                        data-status="{{ item.status }}">
+                        
                         <td class="text-muted small ps-3">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <td class="fw-bold text-dark">{{ item.username if item.username else 'นิสิต' }}</td>
                         <td class="text-muted">{{ item.location }}</td>
-                        <td class="fw-bold text-dark">{{ item.title }}</td>
+                        <td>{{ item.title }}</td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-sm" 
-                                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
-                                        data-building="{{ item.building }}"
-                                        data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
-                                        data-title="{{ item.title }}"
-                                        data-detail="{{ item.detail }}"
-                                        data-image="{{ item.image_data }}"
-                                        data-created="{{ item.created_at }}"
-                                        data-repair-time="{{ item.repair_time }}"
-                                        data-phone="{{ item.phone }}"
-                                        data-status="{{ item.status }}">
-                                    🔍 รายละเอียด
-                                </button>
-
-                                {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
-                                    <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0">
-                                        <input type="hidden" name="status" value="กำลังซ่อม">
-                                        <button type="submit" class="btn btn-sm btn-warning fw-bold px-3 rounded-pill shadow-sm">📥 รับงาน</button>
-                                    </form>
-                                {% elif item.status == 'กำลังซ่อม' %}
-                                    <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0">
-                                        <input type="hidden" name="status" value="เสร็จสิ้น">
-                                        <button type="submit" class="btn btn-sm btn-success fw-bold px-3 rounded-pill shadow-sm">✅ ซ่อมเสร็จแล้ว</button>
-                                    </form>
-                                {% else %}
-                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 mt-1">ปิดงานแล้ว</span>
-                                {% endif %}
-                            </div>
+                            {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
+                                <span class="badge" style="background-color: #FEF9C3; color: #CA8A04; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-hourglass-split me-1"></i> รอดำเนินการ
+                                </span>
+                            {% elif item.status == 'กำลังซ่อม' %}
+                                <span class="badge" style="background-color: #DBEAFE; color: #2563EB; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-gear-fill me-1"></i> กำลังซ่อม
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background-color: #DCFCE7; color: #16A34A; border-radius: 8px; padding: 8px 15px;">
+                                    <i class="bi bi-check-lg me-1"></i> เสร็จสิ้น
+                                </span>
+                            {% endif %}
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">🎉 ไม่มีงานค้างในขณะนี้</td>
+                        <td colspan="5" class="text-center py-5 text-muted">ยังไม่มีรายการแจ้งซ่อม</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -102,15 +122,16 @@
     </div>
 </div>
 
+{% include 'components/image_modal.html' %}
+
 <style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.08); }
     .table-hover tbody tr:hover {
-        background-color: #f8fbfb;
+        background-color: #f8fbfb !important;
     }
-    .border-hover:hover {
-        transform: scale(1.05);
-        transition: all 0.2s;
+    .overflow-hidden {
+        overflow: hidden !important;
     }
 </style>
-
-{% include 'components/image_modal.html' %}
 {% endblock %}

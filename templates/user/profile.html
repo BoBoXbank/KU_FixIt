@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
     <div class="d-flex align-items-center mb-4">
-        <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin.dashboard') }}{% else %}{{ url_for('user.home') }}{% endif %}" 
+        <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin.dashboard') }}{% elif session.get('role').startswith('technician_') %}{{ url_for('technician.dashboardtech') }}{% else %}{{ url_for('user.home') }}{% endif %}" 
            class="text-decoration-none text-secondary me-3">
             <i class="bi bi-arrow-left-circle fs-2" style="color: #006652;"></i>
         </a>
@@ -29,10 +29,14 @@
                      {{ circle_style | safe }}>
                     
                     {% if user.profile_picture %}
-                        <img src="data:image/jpeg;base64,{{ user.profile_picture }}" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
-                    {% elif user.first_name %}
-                        {{ user.first_name[0] | upper }}
+                        {# 🚀 แก้ไข: เช็คว่าเป็น URL หรือ Base64 เพื่อให้รูปแสดงผลถูกต้อง #}
+                        {% if user.profile_picture is string and user.profile_picture.startswith('http') %}
+                            <img src="{{ user.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                        {% else %}
+                            <img src="data:image/jpeg;base64,{{ user.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
+                        {% endif %}
                     {% else %}
+                        {# 🚀 แก้ไข: แสดงตัวอักษรแรกของ Username #}
                         {{ user.username[0] | upper }}
                     {% endif %}
                 </div>
@@ -45,7 +49,8 @@
                 </form>
             </div>
             
-            <h3 class="fw-bold mt-3">{{ user.first_name if user.first_name else user.username }} {{ user.last_name if user.last_name else '' }}</h3>
+            {# 🚀 แก้ไข: แสดง Username ตรงๆ แทนชื่อจริง-นามสกุล #}
+            <h3 class="fw-bold mt-3">{{ user.username }}</h3>
             <p class="text-muted small mb-0">สถานะ: <span class="badge bg-success">{{ user.role }}</span> | ห้อง: <span class="fw-bold">{{ user.room_number if user.room_number else '-' }}</span></p>
         </div>
 
@@ -53,11 +58,11 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="text-success fw-bold small mb-1">ชื่อ</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.first_name }}" readonly>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.first_name if user.first_name else '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
                     <label class="text-success fw-bold small mb-1">นามสกุล</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.last_name }}" readonly>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.last_name if user.last_name else '-' }}" readonly>
                 </div>
                 <div class="col-12">
                     <label class="text-success fw-bold small mb-1">อีเมล</label>
@@ -127,14 +132,13 @@
         }
     }
 
-    // 🚀 JS ดักตรวจสอบรหัสผ่านตอนกดเปลี่ยนรหัสในหน้า Profile
     document.getElementById('passwordForm').addEventListener('submit', function(e) {
         const newPassword = document.getElementById('newPasswordProfile').value;
         if (newPassword.length > 0) {
             const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
             if (!passwordRegex.test(newPassword)) {
                 e.preventDefault();
-                alert('รหัสผ่านใหม่ไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน\n- ห้ามใช้อักขระพิเศษ (เช่น @, #, !)');
+                alert('รหัสผ่านใหม่ไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน');
                 document.getElementById('newPasswordProfile').focus();
             }
         }

@@ -6,17 +6,16 @@
             <h2 class="fw-bold mb-1" style="color: #006652;">แจ้งซ่อม</h2>
             <p class="text-muted small">กรอกรายละเอียดเพื่อแจ้งปัญหา</p>
         </div>
-        
+
         {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
-        {% set profile_style = 'style="width: 60px; height: 60px; font-size: 2rem; border: 3px solid white; background-color: ' ~ bg_color ~ ';"' %}
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
-            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale" {{ profile_style | safe }}>
-                {% if current_user_info and current_user_info.profile_picture %}
-                    <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
-                {% elif current_user_info and current_user_info.first_name %}
-                    {{ current_user_info.first_name[0] | upper }}
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white hover-scale overflow-hidden" 
+                 style="width: 60px; height: 60px; font-size: 1.5rem; border: 3px solid white; background-color: {{ bg_color }};">
+                 
+                 {% if current_user_info and current_user_info.profile_picture %}
+                    <img src="{{ current_user_info.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
                 {% else %}
-                    {{ session.get('username', 'U')[0] | upper }}
+                    {{ session.get('username', 'A')[0] | upper }}
                 {% endif %}
             </div>
         </a>

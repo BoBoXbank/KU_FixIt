@@ -152,7 +152,7 @@ def update_status(id):
             conn.commit()
         finally:
             conn.close()
-    return redirect(url_for('admin.dashboard'))
+    return redirect(request.referrer or url_for('admin.manage_users'))
 
 @admin_bp.route('/delete/<int:id>')
 def delete_report(id):
@@ -165,7 +165,7 @@ def delete_report(id):
             conn.commit()
         finally:
             conn.close()
-    return redirect(url_for('admin.dashboard'))
+    return redirect(request.referrer or url_for('admin.manage_users'))
 
 @admin_bp.route('/users/change_role/<int:id>')
 def change_role(id):
@@ -210,3 +210,42 @@ def delete_user(id):
 def logout():
     session.clear()
     return redirect(url_for('user.home'))
+
+
+@admin_bp.route('/bulk_update', methods=['POST'])
+def bulk_update():
+    if not is_admin(): return redirect(url_for('user.home'))
+    
+    report_ids = request.form.getlist('report_ids')
+    new_status = request.form.get('bulk_status')
+    
+    if report_ids and new_status:
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                format_strings = ','.join(['%s'] * len(report_ids))
+                query = f"UPDATE reports SET status = %s WHERE id IN ({format_strings})"
+                cursor.execute(query, [new_status] + report_ids)
+                conn.commit()
+                flash(f'✅ อัปเดต {len(report_ids)} รายการเรียบร้อย', 'success')
+            finally:
+                conn.close()
+    return redirect(request.referrer or url_for('admin.record'))
+
+@admin_bp.route('/delete_multiple', methods=['POST'])
+def delete_multiple():
+    if not is_admin(): return redirect(url_for('user.home'))
+    report_ids = request.form.getlist('report_ids')
+    if report_ids:
+        conn = get_db_connection()
+        if conn:
+            try:
+                cursor = conn.cursor()
+                format_strings = ','.join(['%s'] * len(report_ids))
+                cursor.execute(f"DELETE FROM reports WHERE id IN ({format_strings})", tuple(report_ids))
+                conn.commit()
+                flash(f'🗑️ ลบ {len(report_ids)} รายการเรียบร้อยแล้ว', 'success')
+            finally:
+                conn.close()
+    return redirect(request.referrer or url_for('admin.record'))
