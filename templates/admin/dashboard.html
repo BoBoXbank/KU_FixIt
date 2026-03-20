@@ -82,7 +82,8 @@
                         data-title="{{ item.title }}"
                         data-detail="{{ item.detail }}"
                         data-image="{{ item.image_data }}"
-                        data-date="{{ item.repair_time }}"
+                        data-created="{{ item.created_at }}"
+                        data-repair-time="{{ item.repair_time }}"
                         data-phone="{{ item.phone }}"
                         data-status="{{ item.status }}">
                         
@@ -101,9 +102,6 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center py-5 text-muted">ยังไม่มีรายการแจ้งซ่อม</td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
