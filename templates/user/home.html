@@ -94,14 +94,14 @@
                 </thead>
                 <tbody>
                     {% for item in reports %}
-                    <tr style="cursor: pointer;" 
-                        data-bs-toggle="modal" data-bs-target="#reportDetailModal"
+                    <tr class="record-row" style="cursor: pointer;" 
                         data-building="{{ item.building }}"
                         data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
                         data-title="{{ item.title }}"
                         data-detail="{{ item.detail }}"
                         data-image="{{ item.image_data }}"
-                        data-date="{{ item.repair_time }}"
+                        data-created="{{ item.created_at }}"
+                        data-repair-time="{{ item.repair_time }}"
                         data-phone="{{ item.phone }}"
                         data-status="{{ item.status }}">
                         
@@ -127,15 +127,13 @@
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100">
                 <div class="d-flex align-items-center justify-content-center gap-3 mb-3 text-start">
-                    <div class="text-success fs-1">
-                        <i class="bi bi-headset"></i>
-                    </div>
+                    <div class="text-success fs-1"><i class="bi bi-headset"></i></div>
                     <div>
                         <h6 class="fw-bold mb-0">ติดต่อสอบถามเพิ่มเติม:</h6>
                         <small class="text-muted">For further inquiries:</small>
                     </div>
                 </div>
-                <a href="tel:0657162623" class="bg-light rounded-4 py-3 px-4 d-flex align-items-center justify-content-center shadow-sm border border-white text-decoration-none text-dark">
+                <a href="tel:0657162623" class="bg-light rounded-4 py-3 px-4 d-flex align-items-center justify-content-center shadow-sm border border-white text-decoration-none text-dark hover-phone">
                     <i class="bi bi-telephone-fill text-dark me-2"></i>
                     <span class="fw-bold fs-5">065-7162623</span>
                 </a>
@@ -145,17 +143,14 @@
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100">
                 <div class="d-flex align-items-center justify-content-center gap-3 mb-3 text-start">
-                    <div class="text-success fs-1">
-                        <i class="bi bi-chat-dots-fill"></i>
-                    </div>
+                    <div class="text-success fs-1"><i class="bi bi-chat-dots-fill"></i></div>
                     <div>
                         <h6 class="fw-bold mb-0">ติดต่อแอดมิน (แชท):</h6>
                         <small class="text-muted">Live chat support 24/7</small>
                     </div>
                 </div>
                 <a href="#" class="btn btn-success rounded-4 py-3 px-4 w-100 shadow-sm fw-bold fs-5 d-flex align-items-center justify-content-center">
-                    <i class="bi bi-chat-fill me-2"></i>
-                    เริ่มการสนทนา
+                    <i class="bi bi-chat-fill me-2"></i>เริ่มการสนทนา
                 </a>
             </div>
         </div>
@@ -165,15 +160,28 @@
 {% include 'components/image_modal.html' %}
 
 <style>
-    /* เอฟเฟกต์เมื่อเอาเมาส์ชี้ที่แถวตาราง */
-    .table-hover tbody tr:hover {
-        background-color: #f1f9f7 !important;
-    }
-    /* เอฟเฟกต์ Hover สำหรับแถบเบอร์โทร */
-    a.bg-light:hover {
+    .table-hover tbody tr:hover { background-color: #f1f9f7 !important; }
+    .hover-phone:hover {
         background-color: #e9ecef !important;
         transform: translateY(-2px);
         transition: all 0.2s ease;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.record-row');
+        rows.forEach(row => {
+            row.addEventListener('click', function() {
+                const modalElement = document.getElementById('reportDetailModal');
+                let modal = bootstrap.Modal.getInstance(modalElement);
+                if (!modal) {
+                    modal = new bootstrap.Modal(modalElement);
+                }
+                // ส่ง 'this' (แถวที่คลิก) ไปยังฟังก์ชัน show ของ Modal เพื่อให้ JS ใน Modal ดึง data attributes ไปใช้
+                modal.show(this);
+            });
+        });
+    });
+</script>
 {% endblock %}
