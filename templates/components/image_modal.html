@@ -1,81 +1,94 @@
 <div class="modal fade" id="reportDetailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0" style="border-radius: 30px; background-color: #f8fbfb; box-shadow: none !important; border: 1px solid #ddd !important;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 30px; background-color: #f8fbfb; border: 1px solid #ddd !important;">
             <div class="modal-header border-0 bg-transparent px-4 pt-4 pb-0">
-                <h5 class="fw-bold mb-0" style="color: #006652;"><i class="bi bi-info-circle me-2"></i>รายละเอียดปัญหา</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="box-shadow: none !important;"></button>
+                <h5 class="fw-bold mb-0" style="color: #006652;">
+                    <i class="bi bi-info-circle-fill me-2"></i>รายละเอียดการแจ้งซ่อม
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            
             <div class="modal-body p-4">
                 <div class="row g-4">
                     <div class="col-md-7">
-                        <div class="bg-white p-4 rounded-4 h-100" style="box-shadow: none !important; border: 1px solid #eee;">
+                        <div class="bg-white p-4 rounded-4 h-100 border border-light-subtle shadow-sm">
                             <div class="row mb-3">
                                 <div class="col-6">
-                                    <label class="text-success small fw-bold">อาคาร</label>
-                                    <div id="m-building" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                    <label class="text-success small fw-bold"><i class="bi bi-building me-1"></i>อาคาร</label>
+                                    <div id="m-building" class="p-2 bg-light rounded-3 mt-1 small fw-medium"></div>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-success small fw-bold">ห้อง</label>
-                                    <div id="m-room" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                    <label class="text-success small fw-bold"><i class="bi bi-door-open me-1"></i>ห้อง</label>
+                                    <div id="m-room" class="p-2 bg-light rounded-3 mt-1 small fw-medium"></div>
                                 </div>
                             </div>
+                            
                             <div class="mb-3">
-                                <label class="text-success small fw-bold">ประเภทปัญหา</label>
-                                <div id="m-title" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                <label class="text-success small fw-bold"><i class="bi bi-tag me-1"></i>ประเภทปัญหา</label>
+                                <div id="m-title" class="p-2 bg-light rounded-3 mt-1 small fw-bold text-dark"></div>
                             </div>
+                            
                             <div class="mb-3">
-                                <label class="text-success small fw-bold">รายละเอียดปัญหา</label>
-                                <div id="m-detail" class="p-2 bg-light rounded-3 mt-1 small" style="min-height: 80px;"></div>
+                                <label class="text-success small fw-bold"><i class="bi bi-chat-left-text me-1"></i>รายละเอียดเพิ่มเติม</label>
+                                <div id="m-detail" class="p-2 bg-light rounded-3 mt-1 small text-secondary" style="min-height: 80px; white-space: pre-wrap;"></div>
                             </div>
+                            
                             <div class="mb-3">
-                                <label class="text-success small fw-bold">รูปภาพประกอบ</label>
-                                <div class="p-2 border border-dashed rounded-4 text-center mt-1" style="min-height: 120px; display: flex; align-items: center; justify-content: center; background: #fafafa;">
-                                    <img id="m-image" src="" class="img-fluid rounded-3" style="max-height: 200px; width: auto; display: none; margin: 0 auto; object-fit: contain;">
-                                    <small id="m-no-image" class="text-muted">ไม่มีรูปภาพแนบมา</small>
+                                <label class="text-success small fw-bold"><i class="bi bi-image me-1"></i>รูปภาพประกอบ</label>
+                                <div class="p-2 border border-dashed rounded-4 text-center mt-1 d-flex align-items-center justify-content-center" 
+                                     style="min-height: 200px; background-color: #fcfcfc; border-color: #dee2e6 !important;">
+                                    
+                                    <img id="m-image" src="" class="img-fluid rounded-3 shadow-sm" 
+                                         style="max-height: 250px; width: auto; display: none; object-fit: contain;">
+                                    
+                                    <div id="m-no-image" class="text-muted small py-4">
+                                        <i class="bi bi-image-fill fs-1 d-block mb-2 opacity-25"></i>
+                                        ไม่มีรูปภาพแนบมา
+                                    </div>
                                 </div>
                             </div>
                             
                             <div class="row mb-3">
                                 <div class="col-6">
-                                    <label class="text-success small fw-bold">วันที่แจ้งเรื่อง (เวลาจริง)</label>
+                                    <label class="text-success small fw-bold">วันที่แจ้งเรื่อง</label>
                                     <div id="m-created" class="p-2 bg-light rounded-3 mt-1 small text-muted"></div>
                                 </div>
                                 <div class="col-6">
                                     <label class="text-success small fw-bold">เบอร์โทรติดต่อ</label>
-                                    <div id="m-phone" class="p-2 bg-light rounded-3 mt-1 small"></div>
+                                    <div id="m-phone" class="p-2 bg-light rounded-3 mt-1 small fw-bold"></div>
                                 </div>
                             </div>
 
-                            <div class="mb-2">
-                                <label class="text-success small fw-bold">เวลาที่สะดวกให้เข้าซ่อม</label>
-                                <div id="m-repair-time" class="p-3 bg-warning-subtle text-dark border border-warning rounded-3 mt-1 small fw-bold shadow-sm" style="line-height: 1.6;"></div>
+                            <div class="mb-0">
+                                <label class="text-success small fw-bold"><i class="bi bi-calendar-check me-1"></i>เวลาที่สะดวกให้เข้าซ่อม</label>
+                                <div id="m-repair-time" class="p-3 bg-warning-subtle text-dark border border-warning-subtle rounded-3 mt-1 small fw-bold" style="line-height: 1.6;"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-md-5">
-                        <div class="bg-white p-4 rounded-4 h-100" style="box-shadow: none !important; border: 1px solid #eee;">
-                            <h5 class="fw-bold mb-4" style="color: #006652;">ไทม์ไลน์</h5>
+                        <div class="bg-white p-4 rounded-4 h-100 border border-light-subtle shadow-sm">
+                            <h5 class="fw-bold mb-4" style="color: #006652;">สถานะปัจจุบัน</h5>
                             <div class="ps-4 border-start border-2 border-success border-opacity-25 ms-2">
                                 <div class="mb-5 position-relative">
-                                    <i class="bi bi-file-text position-absolute start-0 translate-middle bg-white text-success fs-5" style="left: -17px !important;"></i>
+                                    <i class="bi bi-check-circle-fill position-absolute start-0 translate-middle bg-white text-success fs-5" style="left: -17px !important;"></i>
                                     <div class="ms-3">
-                                        <p class="mb-0 fw-bold small">แจ้งซ่อมสำเร็จ</p>
+                                        <p class="mb-0 fw-bold small">ส่งเรื่องแจ้งซ่อม</p>
                                         <small id="t-start" class="text-muted d-block mt-1"></small>
                                     </div>
                                 </div>
                                 <div class="mb-5 position-relative">
-                                    <i class="bi bi-eye position-absolute start-0 translate-middle bg-white text-info fs-5" style="left: -17px !important;"></i>
+                                    <i class="bi bi-tools position-absolute start-0 translate-middle bg-white text-primary fs-5" style="left: -17px !important;"></i>
                                     <div class="ms-3">
-                                        <p class="mb-0 fw-bold small">รับเรื่องแล้ว</p>
-                                        <small class="text-muted d-block mt-1">เจ้าหน้าที่กำลังตรวจสอบ</small>
+                                        <p class="mb-0 fw-bold small">กำลังดำเนินการ</p>
+                                        <small class="text-muted d-block mt-1">เจ้าหน้าที่ได้รับเรื่องแล้ว</small>
                                     </div>
                                 </div>
                                 <div class="position-relative">
-                                    <i class="bi bi-check-circle position-absolute start-0 translate-middle bg-white text-secondary fs-5" style="left: -17px !important;"></i>
+                                    <i class="bi bi-flag-fill position-absolute start-0 translate-middle bg-white text-secondary fs-5" style="left: -17px !important;"></i>
                                     <div class="ms-3">
-                                        <p class="mb-0 fw-bold small">สถานะการซ่อม</p>
-                                        <span id="m-status" class="badge rounded-pill bg-success-subtle text-success mt-1 px-3 py-2"></span>
+                                        <p class="mb-0 fw-bold small">สถานะล่าสุด</p>
+                                        <span id="m-status" class="badge rounded-pill bg-success mt-1 px-3 py-2 fw-bold shadow-sm"></span>
                                     </div>
                                 </div>
                             </div>
@@ -83,8 +96,11 @@
                     </div>
                 </div>
             </div>
+            
             <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-danger rounded-pill px-5 border-0" data-bs-dismiss="modal" style="background-color: #e74c3c; box-shadow: none !important;">ปิด</button>
+                <button type="button" class="btn btn-dark rounded-pill px-5 border-0 shadow-sm" data-bs-dismiss="modal" style="background-color: #34495e;">
+                    ปิดหน้าต่าง
+                </button>
             </div>
         </div>
     </div>
@@ -97,12 +113,21 @@
             modalEl.addEventListener('show.bs.modal', function (event) {
                 var btn = event.relatedTarget;
                 
+                // 1. เติมข้อมูล Text
                 document.getElementById('m-building').innerText = btn.getAttribute('data-building') || '-';
                 document.getElementById('m-room').innerText = btn.getAttribute('data-room') || '-';
                 document.getElementById('m-title').innerText = btn.getAttribute('data-title') || '-';
                 document.getElementById('m-detail').innerText = btn.getAttribute('data-detail') || '-';
                 document.getElementById('m-phone').innerText = btn.getAttribute('data-phone') || '-';
-                document.getElementById('m-status').innerText = btn.getAttribute('data-status') || 'รอซ่อม';
+                
+                const status = btn.getAttribute('data-status') || 'รอซ่อม';
+                document.getElementById('m-status').innerText = status;
+                
+                // ปรับสี Badge ตามสถานะ
+                const statusBadge = document.getElementById('m-status');
+                if(status === 'เสร็จสิ้น') { statusBadge.className = "badge rounded-pill bg-success mt-1 px-3 py-2 shadow-sm"; }
+                else if(status === 'กำลังซ่อม') { statusBadge.className = "badge rounded-pill bg-primary mt-1 px-3 py-2 shadow-sm"; }
+                else { statusBadge.className = "badge rounded-pill bg-warning text-dark mt-1 px-3 py-2 shadow-sm"; }
                 
                 var createdAt = btn.getAttribute('data-created') || 'ไม่ระบุเวลา';
                 document.getElementById('m-created').innerText = createdAt;
@@ -111,28 +136,41 @@
                 var repairTime = btn.getAttribute('data-repair-time') || 'ไม่ระบุ';
                 document.getElementById('m-repair-time').innerHTML = repairTime.replace(/ \| /g, '<br>');
 
+                // 2. Logic การแสดงรูปภาพ (Fix Broken/Dark Image)
                 var imgData = btn.getAttribute('data-image'); 
                 var imgTag = document.getElementById('m-image');
                 var noImg = document.getElementById('m-no-image');
 
-                if (imgData && imgData !== 'None' && imgData.trim() !== "") {
-                    var finalSrc = "";
-                    // 🚀 เช็คว่าถ้าเป็นลิงก์ URL ที่มาจาก ImgBB ให้โชว์ลิงก์ได้เลย
-                    if (imgData.startsWith('http://') || imgData.startsWith('https://')) {
+                if (imgData && imgData !== 'None' && imgData !== 'null' && imgData.trim() !== "") {
+                    let finalSrc = "";
+                    
+                    if (imgData.startsWith('http')) {
+                        // กรณีเป็น URL ลิงก์ตรง
                         finalSrc = imgData;
                     } 
-                    else if (imgData.length > 100 || imgData.startsWith('data:image')) {
-                        finalSrc = imgData.startsWith('data:image') ? imgData : "data:image/jpeg;base64," + imgData;
+                    else if (imgData.startsWith('data:image')) {
+                        // กรณีมี Prefix มาอยู่แล้ว
+                        finalSrc = imgData;
                     } 
                     else {
-                        finalSrc = imgData.includes('/') ? imgData : "/static/picture/" + imgData;
+                        // กรณีเป็น Base64 เพียวๆ (ยาวๆ)
+                        finalSrc = "data:image/jpeg;base64," + imgData;
                     }
+
                     imgTag.src = finalSrc;
                     imgTag.style.display = 'block';
                     noImg.style.display = 'none';
+
+                    // ดักจับเคสที่ Path หรือ Base64 เสีย
+                    imgTag.onerror = function() {
+                        this.style.display = 'none';
+                        noImg.style.display = 'block';
+                        noImg.innerHTML = '<i class="bi bi-exclamation-triangle text-danger fs-2 d-block"></i> รูปภาพเสียหาย';
+                    };
                 } else {
                     imgTag.style.display = 'none';
                     noImg.style.display = 'block';
+                    noImg.innerHTML = '<i class="bi bi-image-fill fs-2 d-block mb-2 opacity-25"></i> ไม่มีรูปภาพประกอบ';
                 }
             });
         }
