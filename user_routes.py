@@ -6,14 +6,53 @@ import random
 import time
 from PIL import Image 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
-from flask_mail import Mail, Message
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from threading import Thread
 
 user_bp = Blueprint('user', __name__)
 
-mail = Mail()
+# ========================================================
+# 🚀 ฟังก์ชันสำหรับโยนงานยิง API SendGrid ไปทำหลังบ้าน
+# ========================================================
+def send_sendgrid_email(sendgrid_api_key, email, otp):
+    try:
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {sendgrid_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; padding: 25px; border: 1px solid #e0e0e0; border-radius: 12px; max-width: 450px; margin: auto; background-color: #f9fdfa; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            <h2 style="color: #006633; text-align: center; margin-bottom: 5px;">KU FixIt</h2>
+            <p style="text-align: center; color: #555; margin-top: 0;">ระบบแจ้งซ่อมสำหรับชาวเกษตร</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 15px; color: #333; text-align: center;">รหัส OTP สำหรับยืนยันการสมัครสมาชิกของคุณคือ:</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <span style="color: #0da360; letter-spacing: 8px; font-size: 32px; font-weight: bold; background: #e6f5ec; padding: 15px 25px; border-radius: 10px; display: inline-block;">{otp}</span>
+            </div>
+            <p style="color: #999; font-size: 12px; text-align: center; margin-top: 20px;">*รหัสนี้จะหมดอายุภายใน 2 นาที หากไม่ได้ดำเนินการใดๆ</p>
+        </div>
+        """
+
+        payload = {
+            "personalizations": [{"to": [{"email": email}]}],
+            "from": {"email": "kufixit@gmail.com", "name": "KU FixIt System"},
+            "subject": "รหัสยืนยันการสมัครสมาชิก KU FixIt (OTP)",
+            "content": [{"type": "text/html", "value": html_content}]
+        }
+
+        response = requests.post(url, json=payload, headers=headers)
+
+        if response.status_code in [200, 202]:
+            print("✅ SendGrid Email sent successfully in background!")
+        else:
+            print("❌ SendGrid Error:", response.status_code, response.text)
+
+    except Exception as e:
+        print("❌ Background API Error:", e)
 
 @user_bp.route('/send_otp', methods=['POST'])
 def send_otp():
@@ -31,17 +70,17 @@ def send_otp():
     session['otp_expire'] = time.time() + 120 
     session['otp_email'] = email 
 
+    sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
+    
+    if not sendgrid_api_key:
+        return jsonify({"success": False, "message": "ยังไม่ได้ตั้งค่า SENDGRID_API_KEY ในระบบ"}), 500
+
     try:
-        msg = Message(
-            subject="รหัสยืนยันการสมัคร KU FixIt (OTP)",
-            recipients=[email]
-        )
-        msg.body = f"KU FixIt Email Verification\n\nYour OTP Code: {otp}\n\nThis code will expire in 2 minutes."
-        mail.send(msg)
-        return jsonify({"success": True, "message": "ส่ง OTP สำเร็จ! กรุณาตรวจสอบในอีเมลของคุณ"})
+        Thread(target=send_sendgrid_email, args=(sendgrid_api_key, email, otp)).start()
+        return jsonify({"success": True, "message": "ระบบกำลังจัดส่ง OTP กรุณารอสักครู่แล้วเช็คในอีเมลของคุณครับ!"})
     except Exception as e:
-        print("OTP MAIL ERROR:", e)
-        return jsonify({"success": False, "message": "เกิดข้อผิดพลาดในการส่งอีเมล โปรดตรวจสอบการตั้งค่า Mail"}), 500
+        print("OTP PREP ERROR:", e)
+        return jsonify({"success": False, "message": "เกิดข้อผิดพลาดในการเตรียมส่งอีเมล"}), 500
 
 @user_bp.route('/verify_otp', methods=['POST'])
 def verify_otp():
@@ -113,7 +152,6 @@ def process_and_compress_image(file):
         print(f"Error compressing image: {e}")
         return None
 
-# 🚀 โค้ดส่วนนี้แก้ใหม่! อ่านข้อมูลจาก Session โดยไม่ต้องเปิด Database ซ้ำซ้อน!
 @user_bp.app_context_processor
 def inject_user_info():
     user_info = None
@@ -268,7 +306,6 @@ def login():
                     except Exception as e:
                         print("Error saving login IP:", e)
 
-                    # 🚀 เก็บข้อมูลโปรไฟล์ลง Session เลย จะได้ไม่ต้องโหลด Database ซ้ำซ้อน
                     session['user_id'] = user['id']
                     session['role'] = user['role']
                     session['username'] = user['username']
@@ -429,7 +466,6 @@ def profile():
                     cursor = conn.cursor()
                     cursor.execute("UPDATE users SET profile_picture = %s WHERE id = %s", (image_base64, session['user_id']))
                     conn.commit()
-                    # 🚀 อัปเดต Session ให้รูปโปรไฟล์เปลี่ยนทันที ไม่ต้องรอโหลดหน้าใหม่
                     session['profile_picture'] = image_base64
                     flash('เปลี่ยนรูปโปรไฟล์สำเร็จ!', 'success')
                     return redirect(url_for('user.profile'))
