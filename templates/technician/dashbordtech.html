@@ -7,7 +7,7 @@
             <p class="text-muted small">รายการแจ้งซ่อมที่รอการดำเนินการในแผนกของคุณ</p>
         </div>
         <a href="{{ url_for('user.profile') }}" class="text-decoration-none">
-            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white" 
+            <div class="shadow-sm rounded-circle d-flex align-items-center justify-content-center text-white border-hover" 
                  style="width: 60px; height: 60px; background-color: #16A34A; border: 3px solid white;">
                 {% if current_user_info and current_user_info.profile_picture %}
                     <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" class="w-100 h-100 rounded-circle" style="object-fit: cover;">
@@ -44,7 +44,7 @@
 
     <div class="card border-0 shadow-sm p-4" style="border-radius: 25px;">
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table align-middle table-hover">
                 <thead style="background-color: #F0F9F6; color: #7A9B8D;">
                     <tr>
                         <th class="py-3 border-0 ps-3">เลขที่</th>
@@ -61,14 +61,15 @@
                         <td class="fw-bold text-dark">{{ item.title }}</td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-2">
-                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" 
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-sm" 
                                         data-bs-toggle="modal" data-bs-target="#reportDetailModal"
                                         data-building="{{ item.building }}"
                                         data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
                                         data-title="{{ item.title }}"
                                         data-detail="{{ item.detail }}"
                                         data-image="{{ item.image_data }}"
-                                        data-date="{{ item.repair_time }}"
+                                        data-created="{{ item.created_at }}"
+                                        data-repair-time="{{ item.repair_time }}"
                                         data-phone="{{ item.phone }}"
                                         data-status="{{ item.status }}">
                                     🔍 รายละเอียด
@@ -77,15 +78,15 @@
                                 {% if item.status == 'รอซ่อม' or item.status == 'รอดำเนินการ' %}
                                     <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0">
                                         <input type="hidden" name="status" value="กำลังซ่อม">
-                                        <button type="submit" class="btn btn-sm btn-warning fw-bold px-3 rounded-pill">📥 รับงาน</button>
+                                        <button type="submit" class="btn btn-sm btn-warning fw-bold px-3 rounded-pill shadow-sm">📥 รับงาน</button>
                                     </form>
                                 {% elif item.status == 'กำลังซ่อม' %}
                                     <form action="{{ url_for('technician.update_status', id=item.id) }}" method="POST" class="m-0">
                                         <input type="hidden" name="status" value="เสร็จสิ้น">
-                                        <button type="submit" class="btn btn-sm btn-success fw-bold px-3 rounded-pill">✅ ซ่อมเสร็จแล้ว</button>
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold px-3 rounded-pill shadow-sm">✅ ซ่อมเสร็จแล้ว</button>
                                     </form>
                                 {% else %}
-                                    <span class="text-success small fw-bold mt-1">ปิดงานแล้ว</span>
+                                    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2 mt-1">ปิดงานแล้ว</span>
                                 {% endif %}
                             </div>
                         </td>
@@ -100,6 +101,16 @@
         </div>
     </div>
 </div>
+
+<style>
+    .table-hover tbody tr:hover {
+        background-color: #f8fbfb;
+    }
+    .border-hover:hover {
+        transform: scale(1.05);
+        transition: all 0.2s;
+    }
+</style>
 
 {% include 'components/image_modal.html' %}
 {% endblock %}
