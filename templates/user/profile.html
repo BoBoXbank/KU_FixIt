@@ -4,28 +4,18 @@
     <div class="d-flex align-items-center mb-4">
         <a href="{% if session.get('role') == 'admin' %}{{ url_for('admin.dashboard') }}{% elif session.get('role').startswith('technician_') %}{{ url_for('technician.dashboardtech') }}{% else %}{{ url_for('user.home') }}{% endif %}" 
            class="text-decoration-none text-secondary me-3">
-            <i class="bi bi-arrow-left-circle fs-2" style="color: #006652;"></i>
+            <i class="bi bi-arrow-left-circle-fill fs-1" style="color: #006652; opacity: 0.8;"></i>
         </a>
         <h2 class="fw-bold mb-0 text-dark">โปรไฟล์ของฉัน</h2>
     </div>
 
-    <div class="card border-0 shadow-lg mx-auto position-relative" style="max-width: 650px; border-radius: 35px; padding: 40px;">
+    <div class="card border-0 shadow-lg mx-auto" style="max-width: 650px; border-radius: 35px; padding: 40px; background: #ffffff;">
         
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} rounded-3 text-center fw-bold">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="text-center mb-5 relative">
-            <div class="position-relative d-inline-block">
+        <div class="text-center mb-5">
+            <div class="position-relative d-inline-block mb-3">
                 {% set bg_color = 'transparent' if user.profile_picture else '#16A34A' %}
-                {% set circle_style = 'style="width: 120px; height: 120px; font-size: 3rem; border: 4px solid white; background-color: ' ~ bg_color ~ ';"' %}
-                
                 <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm overflow-hidden" 
-                     {{ circle_style | safe }}>
+                     style="width: 130px; height: 130px; font-size: 3.5rem; border: 5px solid white; background-color: {{ bg_color }};">
                     {% if user.profile_picture %}
                         {% if user.profile_picture is string and user.profile_picture.startswith('http') %}
                             <img src="{{ user.profile_picture }}" class="w-100 h-100" style="object-fit: cover;">
@@ -37,149 +27,126 @@
                     {% endif %}
                 </div>
                 
-                <form id="profilePicForm" action="{{ url_for('user.profile') }}" method="POST" enctype="multipart/form-data" class="position-absolute" style="bottom: 0; right: 0;">
-                    <label for="profile_picture" class="btn btn-warning rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 40px; height: 40px; border: 3px solid white; cursor: pointer;" title="เปลี่ยนรูปโปรไฟล์ (เฉพาะ JPG, PNG)">
-                        <i class="bi bi-pencil-fill text-white"></i>
+                <form id="profilePicForm" action="{{ url_for('user.profile') }}" method="POST" enctype="multipart/form-data" class="position-absolute" style="bottom: 5px; right: 5px;">
+                    <label for="profile_picture_input" class="btn btn-warning rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 42px; height: 42px; border: 3px solid white; cursor: pointer;">
+                        <i class="bi bi-camera-fill text-white"></i>
                     </label>
-                    <input type="file" id="profile_picture" name="profile_picture" class="d-none" accept=".jpg, .jpeg, .png" onchange="checkAndSubmitProfilePic(this)">
+                    <input type="file" id="profile_picture_input" name="profile_picture" class="d-none" accept=".jpg, .jpeg, .png" onchange="document.getElementById('profilePicForm').submit()">
                 </form>
             </div>
             
-            <h3 class="fw-bold mt-3">{{ user.username }}</h3>
-            <p class="text-muted small mb-0">สถานะ: <span class="badge bg-success">{{ user.role }}</span> | ห้อง: <span class="fw-bold">{{ user.room_number if user.room_number else '-' }}</span></p>
+            <h1 class="fw-bold" style="color: #006652; font-size: 2.5rem;">{{ user.username }}</h1>
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <span class="badge rounded-pill px-4 py-2" style="background-color: #C1E8D9; color: #006652; font-weight: 500;">
+                    <i class="bi bi-journal-bookmark-fill me-1"></i> {{ user.role }}
+                </span>
+                <span class="badge rounded-pill px-4 py-2" style="background-color: #E5E7EB; color: #4B5563; font-weight: 500;">
+                    <i class="bi bi-door-open-fill me-1"></i> ห้อง {{ user.room_number if user.room_number else '-' }}
+                </span>
+            </div>
         </div>
 
-        <form id="passwordForm" action="#" method="POST">
+        <div class="text-start">
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">ชื่อ</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.first_name if user.first_name else '-' }}" readonly>
+                    <label class="fw-bold mb-2" style="color: #006652;">ชื่อ</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-3 px-4" value="{{ user.first_name if user.first_name else '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">นามสกุล</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.last_name if user.last_name else '-' }}" readonly>
+                    <label class="fw-bold mb-2" style="color: #006652;">นามสกุล</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-3 px-4" value="{{ user.last_name if user.last_name else '-' }}" readonly>
                 </div>
                 <div class="col-12">
-                    <label class="text-success fw-bold small mb-1">อีเมล</label>
-                    <input type="email" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.email }}" readonly>
+                    <label class="fw-bold mb-2" style="color: #006652;">อีเมล</label>
+                    <input type="email" class="form-control border-0 bg-light rounded-3 py-3 px-4" value="{{ user.email }}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">เบอร์โทร</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.phone if user.phone else '-' }}" readonly>
+                    <label class="fw-bold mb-2" style="color: #006652;">เบอร์โทรศัพท์</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-3 px-4" value="{{ user.phone if user.phone else '-' }}" readonly>
                 </div>
                 <div class="col-md-6">
-                    <label class="text-success fw-bold small mb-1">อาคาร</label>
-                    <input type="text" class="form-control border-0 bg-light rounded-3 py-2 text-secondary" value="{{ user.building if user.building else '-' }}" readonly>
+                    <label class="fw-bold mb-2" style="color: #006652;">อาคารพักอาศัย</label>
+                    <input type="text" class="form-control border-0 bg-light rounded-3 py-3 px-4" value="{{ user.building if user.building else '-' }}" readonly>
                 </div>
             </div>
 
-            <hr class="text-muted opacity-25">
+            <hr class="my-5 opacity-25">
             
-            <div class="mb-4 text-start">
-                <p class="fw-bold mb-3"><i class="bi bi-shield-lock-fill text-warning me-2"></i>เปลี่ยนรหัสผ่าน</p>
+            <form id="passwordForm" action="{{ url_for('user.change_password') }}" method="POST">
+                <h5 class="fw-bold mb-4" style="color: #006652;"><i class="bi bi-shield-lock-fill text-warning me-2"></i>เปลี่ยนรหัสผ่าน</h5>
                 
-                <div class="mb-2">
-                    <label class="text-success fw-bold small mb-1">รหัสผ่านปัจจุบัน</label>
-                    <div class="input-group">
-                        <input type="password" id="old_password" name="old_password" class="form-control border-0 bg-light rounded-start-3 py-2" placeholder="********">
-                        <button class="btn bg-light border-0 rounded-end-3 text-secondary" type="button" onclick="togglePasswordVisibility('old_password', 'eye_old')">
+                <div class="mb-3">
+                    <label class="text-muted small fw-bold mb-1 ms-1">รหัสผ่านปัจจุบัน</label>
+                    <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-light border-0 text-success"><i class="bi bi-key-fill"></i></span>
+                        <input type="password" id="old_password" name="old_password" class="form-control border-0 bg-light py-2 px-3" placeholder="กรอกรหัสผ่านเดิม" required>
+                        <button class="btn bg-light border-0 text-secondary" type="button" onclick="togglePasswordVisibility('old_password', 'eye_old')">
                             <i id="eye_old" class="bi bi-eye-slash"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="mb-2">
-                    <label class="text-success fw-bold small mb-1">รหัสผ่านใหม่</label>
-                    <div class="input-group">
-                        <input type="password" id="newPasswordProfile" name="new_password" class="form-control border-0 bg-light rounded-start-3 py-2" 
-                               placeholder="อักษรภาษาอังกฤษ + ตัวเลข (8 ตัวขึ้นไป)" 
-                               minlength="8" pattern="^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$" 
-                               title="รหัสผ่านต้องยาวอย่างน้อย 8 ตัว และมีทั้งตัวอักษรและตัวเลขเท่านั้น">
-                        <button class="btn bg-light border-0 rounded-end-3 text-secondary" type="button" onclick="togglePasswordVisibility('newPasswordProfile', 'eye_new')">
+                <div class="mb-3">
+                    <label class="text-muted small fw-bold mb-1 ms-1">รหัสผ่านใหม่</label>
+                    <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-light border-0 text-success"><i class="bi bi-lock-fill"></i></span>
+                        <input type="password" id="newPasswordProfile" name="new_password" class="form-control border-0 bg-light py-2 px-3" placeholder="อังกฤษ + ตัวเลข (8 ตัวขึ้นไป)" required>
+                        <button class="btn bg-light border-0 text-secondary" type="button" onclick="togglePasswordVisibility('newPasswordProfile', 'eye_new')">
                             <i id="eye_new" class="bi bi-eye-slash"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="text-success fw-bold small mb-1">ยืนยันรหัสผ่านใหม่</label>
-                    <div class="input-group">
-                        <input type="password" id="confirm_password" name="confirm_password" class="form-control border-0 bg-light rounded-start-3 py-2" placeholder="ยืนยันรหัสผ่านใหม่">
-                        <button class="btn bg-light border-0 rounded-end-3 text-secondary" type="button" onclick="togglePasswordVisibility('confirm_password', 'eye_confirm')">
+                <div class="mb-4">
+                    <label class="text-muted small fw-bold mb-1 ms-1">ยืนยันรหัสผ่านใหม่</label>
+                    <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                        <span class="input-group-text bg-light border-0 text-success"><i class="bi bi-check-circle-fill"></i></span>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control border-0 bg-light py-2 px-3" placeholder="กรอกรหัสผ่านใหม่อีกครั้ง" required>
+                        <button class="btn bg-light border-0 text-secondary" type="button" onclick="togglePasswordVisibility('confirm_password', 'eye_confirm')">
                             <i id="eye_confirm" class="bi bi-eye-slash"></i>
                         </button>
                     </div>
                 </div>
-            </div>
 
-            <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold" style="background-color: #3AA482; box-shadow: 0 4px 15px rgba(58, 164, 130, 0.3);">
-                บันทึกการเปลี่ยนรหัสผ่าน
-            </button>
-        </form>
+                <button type="submit" class="btn btn-success w-100 rounded-pill py-3 fw-bold shadow hover-scale mt-2" 
+                        style="background: linear-gradient(45deg, #006652, #3AA482); border: none; transition: 0.3s;">
+                    บันทึกการเปลี่ยนรหัสผ่าน
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 
+<style>
+    .hover-scale:hover { transform: translateY(-3px); filter: brightness(1.05); box-shadow: 0 10px 20px rgba(0, 102, 82, 0.2) !important; }
+    .input-group-text { border-radius: 0 !important; }
+    .form-control:focus { background-color: #f0fdf4 !important; box-shadow: none; }
+    .form-control[readonly] { cursor: default; }
+</style>
+
 <script>
-    // ฟังก์ชันสลับการมองเห็นรหัสผ่าน
     function togglePasswordVisibility(inputId, eyeId) {
-        const passwordInput = document.getElementById(inputId);
-        const eyeIcon = document.getElementById(eyeId);
-        
-        if (passwordInput.type === "password") {
-            passwordInput.type = "text";
-            eyeIcon.classList.remove("bi-eye-slash");
-            eyeIcon.classList.add("bi-eye");
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(eyeId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.replace("bi-eye-slash", "bi-eye");
         } else {
-            passwordInput.type = "password";
-            eyeIcon.classList.remove("bi-eye");
-            eyeIcon.classList.add("bi-eye-slash");
-        }
-    }
-
-    function checkAndSubmitProfilePic(input) {
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            const fileType = file.type;
-            const fileSize = file.size;
-            
-            if (fileType !== 'image/jpeg' && fileType !== 'image/png') {
-                alert('❌ กรุณาอัปโหลดเฉพาะไฟล์ .JPG หรือ .PNG เท่านั้นครับ');
-                input.value = '';
-                return;
-            }
-
-            const MAX_SIZE_MB = 10;
-            const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-            
-            if (fileSize > MAX_SIZE_BYTES) {
-                alert(`❌ ภาพมีขนาดใหญ่เกินไป (สูงสุด ${MAX_SIZE_MB}MB) กรุณาเลือกภาพใหม่ครับ`);
-                input.value = '';
-                return;
-            }
-            
-            document.getElementById('profilePicForm').submit();
+            input.type = "password";
+            icon.classList.replace("bi-eye", "bi-eye-slash");
         }
     }
 
     document.getElementById('passwordForm').addEventListener('submit', function(e) {
-        const newPassword = document.getElementById('newPasswordProfile').value;
-        const confirmPassword = document.getElementById('confirm_password').value;
-
-        if (newPassword.length > 0) {
-            const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)[a-zA-Z0-9]{8,}$/;
-            if (!passwordRegex.test(newPassword)) {
-                e.preventDefault();
-                alert('รหัสผ่านใหม่ไม่ถูกต้อง!\n\nรหัสผ่านต้องมีคุณสมบัติดังนี้:\n- ความยาวอย่างน้อย 8 ตัวอักษร\n- ประกอบด้วย "ตัวอักษรภาษาอังกฤษ" และ "ตัวเลข" ผสมกัน');
-                document.getElementById('newPasswordProfile').focus();
-                return;
-            }
-
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('❌ รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน!');
-                document.getElementById('confirm_password').focus();
-                return;
-            }
+        const newPass = document.getElementById('newPasswordProfile').value;
+        const confirmPass = document.getElementById('confirm_password').value;
+        const regex = /^(?=.*[a-zA-Z])(?=.*\d).{8,}$/;
+        if (!regex.test(newPass)) {
+            e.preventDefault();
+            alert('❌ รหัสผ่านต้องยาว 8 ตัวขึ้นไป และมีทั้งอังกฤษและตัวเลขครับ');
+        } else if (newPass !== confirmPass) {
+            e.preventDefault();
+            alert('❌ รหัสผ่านใหม่และยืนยันไม่ตรงกันครับ');
         }
     });
 </script>

@@ -389,6 +389,57 @@ def reset_password():
                 conn.close()
     return render_template('user/reset_password.html', question=session.get('question'))
 
+@user_bp.route('/change_password', methods=['POST'])
+def change_password():
+    if 'user_id' not in session:
+        return redirect(url_for('user.login'))
+
+    current_pw = request.form.get('old_password')
+    new_pw = request.form.get('new_password')
+    confirm_pw = request.form.get('confirm_password')
+    user_id = session.get('user_id')
+
+    if not current_pw or not new_pw or not confirm_pw:
+        flash('❌ กรุณากรอกข้อมูลให้ครบทุกช่อง', 'danger')
+        return redirect(url_for('user.profile'))
+
+    if new_pw != confirm_pw:
+        flash('❌ รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน', 'danger')
+        return redirect(url_for('user.profile'))
+
+    conn = get_db_connection()
+    # 🛠️ แก้ไขจุดที่ 1: ใช้ cursor ปกติ (ลบ dictionary=True ออก)
+    cursor = conn.cursor() 
+    
+    try:
+        # ดึง password_hash มาตรวจสอบ
+        cursor.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,))
+        user = cursor.fetchone()
+
+        # 🛠️ แก้ไขจุดที่ 2: ตรวจสอบข้อมูลแบบยืดหยุ่น (รองรับทั้ง Dict และ Tuple)
+        db_password_hash = None
+        if user:
+            if isinstance(user, dict):
+                db_password_hash = user.get('password_hash')
+            else:
+                db_password_hash = user[0] # ถ้าเป็น Tuple/List จะดึงตัวแรก
+
+        if db_password_hash and check_password_hash(db_password_hash, current_pw):
+            new_hashed_pw = generate_password_hash(new_pw)
+            cursor.execute("UPDATE users SET password_hash = %s WHERE id = %s", (new_hashed_pw, user_id))
+            conn.commit()
+            flash('✅ เปลี่ยนรหัสผ่านเรียบร้อยแล้ว!', 'success')
+        else:
+            flash('❌ รหัสผ่านปัจจุบันไม่ถูกต้อง', 'danger')
+
+    except Exception as e:
+        conn.rollback()
+        flash(f'❌ เกิดข้อผิดพลาด: {str(e)}', 'danger')
+    finally:
+        conn.close()
+
+    return redirect(url_for('user.profile'))
+
 @user_bp.route('/report', methods=['GET', 'POST'])
 def report():
     if 'user_id' not in session: return redirect(url_for('user.login'))

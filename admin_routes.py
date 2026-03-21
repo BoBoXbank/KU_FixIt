@@ -249,3 +249,4 @@ def delete_multiple():
             finally:
                 conn.close()
     return redirect(request.referrer or url_for('admin.record'))
+
