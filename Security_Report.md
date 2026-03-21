@@ -1,43 +1,38 @@
-# Security Scan Test Report
+# Security Assessment Report (Summary)
 **Project Name:** KU_FixIt (Flask Web Application)
-**Date:** 21 March 2026
-**Scanner Tool:** OWASP ZAP (Zed Attack Proxy)
+**Assessment Date:** 21 March 2026
+**Status:** 🟠 Under Remediation
 
 ---
 
 ## 1. Executive Summary
-จากการสแกนความปลอดภัยเบื้องต้น พบช่องโหว่และข้อควรระวังทั้งหมด 13 รายการ โดยแบ่งเป็นระดับความเสี่ยงปานกลาง (Medium) และความเสี่ยงต่ำ/ข้อมูลทั่วไป (Low/Informational) ซึ่งจำเป็นต้องได้รับการปรับปรุงเพื่อความปลอดภัยของข้อมูลผู้ใช้งาน
+รายงานฉบับนี้สรุปผลการตรวจสอบความปลอดภัยเชิงรุก (Proactive Security Scanning) เพื่อประเมินความพร้อมของระบบก่อนการใช้งานจริง ผลการตรวจสอบระบุว่าระบบมีการป้องกันพื้นฐานในระดับหนึ่ง แต่ยังมีส่วนที่ต้องปรับปรุงเพื่อให้สอดคล้องกับมาตรฐานความปลอดภัยสากล (Best Practices)
 
 ---
 
-## 2. Vulnerability Details
+## 2. Key Findings & Analysis
+เพื่อให้เกิดความปลอดภัยสูงสุด รายงานฉบับนี้จะสรุปประเด็นสำคัญในภาพรวม โดยไม่ระบุพิกัดหรือรายละเอียดเชิงลึกของช่องโหว่ ดังนี้:
 
-### 🟠 Medium Risk (ความเสี่ยงปานกลาง)
+### 🛡️ Session & Access Control
+พบความจำเป็นในการเพิ่มความเข้มงวดของการจัดการเซสชัน (Session Management) และพารามิเตอร์ของคุกกี้ เพื่อป้องกันความเสี่ยงจากการสวมรอยหรือการเข้าถึงข้อมูลโดยไม่ได้รับอนุญาต
 
-| Vulnerability | Description | Recommended Fix |
-| :--- | :--- | :--- |
-| **Absence of Anti-CSRF Tokens** | ขาดการใช้ Token ป้องกันการปลอมแปลงคำขอจากฝั่ง Client | ใช้งาน `Flask-WTF` และเพิ่ม `{{ form.csrf_token }}` ในทุกฟอร์ม HTML |
-| **Missing Security Headers** | ขาด Header สำคัญ เช่น CSP, Anti-clickjacking | ตั้งค่า `Talisman` ใน Flask หรือกำหนด Header ใน Nginx |
-| **Cookie without SameSite Attribute** | คุกกี้ไม่ได้ตั้งค่าขอบเขตการส่งข้อมูล | ตั้งค่า `SESSION_COOKIE_SAMESITE = 'Lax'` ในไฟล์ Config ของ Flask |
-| **Insecure JS Source Inclusion** | มีการดึงไฟล์ JavaScript จากโดเมนภายนอกที่อาจไม่ปลอดภัย | ตรวจสอบแหล่งที่มาของ JS หรือใช้ Subresource Integrity (SRI) |
+### 🔒 Data Transport Security
+ระบบควรเพิ่มกลไกบังคับการรับ-ส่งข้อมูลผ่านช่องทางที่เข้ารหัส (Secure Channel) ให้ครอบคลุมทุกส่วนของแอปพลิเคชัน เพื่อป้องกันการดักจับข้อมูลระหว่างทาง
 
-### 🔵 Low / Informational (ความเสี่ยงต่ำและข้อมูลทั่วไป)
+### 🌐 Browser-Side Protections
+มีการเสนอแนะให้เพิ่มนโยบายความปลอดภัย (Security Policies) ในระดับ Response Header เพื่อป้องกันการโจมตีจากฝั่ง Client-side และการฝังโค้ดอันตราย
 
-| Vulnerability | Description | Recommended Fix |
-| :--- | :--- | :--- |
-| **Server Leaks Version Info** | เซิร์ฟเวอร์เปิดเผยข้อมูลเวอร์ชันผ่าน HTTP Header | ตั้งค่าปิดการแสดงผล `Server` header ในระดับ Web Server |
-| **Sensitive Info in URL** | มีการส่งข้อมูลสำคัญผ่านทาง URL Query String | เปลี่ยนการส่งข้อมูลจากวิธี `GET` เป็น `POST` และส่งผ่าน Request Body |
-| **X-Content-Type-Options** | ขาด Header ป้องกันการเดาประเภทไฟล์ (MIME sniffing) | เพิ่ม Header `X-Content-Type-Options: nosniff` |
+### ⚠️ Information Disclosure
+พบการแสดงผลข้อมูลทางเทคนิคบางส่วนที่อาจนำไปสู่การวิเคราะห์ระบบได้โดยไม่จำเป็น ซึ่งทีมพัฒนากำลังดำเนินการจำกัดการแสดงผลดังกล่าว
 
 ---
 
-## 3. Screenshots & Evidence
-![Security Scan Results](./image_3fb9eb.png)
-*รูปภาพแสดงรายการ Alert ที่ตรวจพบจากเครื่องมือสแกน*
+## 3. Remediation Plan (Next Steps)
+ขณะนี้ทีมพัฒนาได้รับทราบประเด็นทั้งหมดและกำลังดำเนินการตามแผนปรับปรุงดังนี้:
+
+1.  **System Hardening:** ปรับแต่งการตั้งค่า Server Configuration ให้มีความรัดกุมสูงขึ้นตามมาตรฐานความปลอดภัย
+2.  **Integrity Validation:** เพิ่มกลไกตรวจสอบความถูกต้องของข้อมูลและแหล่งที่มาของทรัพยากรภายนอก
+3.  **Security Re-test:** จะมีการทำการตรวจสอบซ้ำ (Re-scanning) หลังจากแก้ไขเสร็จสิ้นเพื่อยืนยันความปลอดภัยสูงสุดก่อนเปิดใช้งานจริง
 
 ---
-
-## 4. Conclusion & Next Steps
-1. **Immediate Action:** เร่งแก้ไขเรื่อง Anti-CSRF และ Security Headers เนื่องจากเป็นพื้นฐานสำคัญของ Web Security
-2. **Configuration:** ปรับปรุงการตั้งค่า Flask Application ให้รองรับการทำงานแบบ Secure Session
-3. **Re-test:** หลังจากแก้ไขแล้ว จะดำเนินการสแกนซ้ำอีกครั้งเพื่อยืนยันว่าช่องโหว่ถูกปิดเรียบร้อยแล้ว
+*หมายเหตุ: รายงานฉบับเต็มที่มีรายละเอียดทางเทคนิคจะถูกเก็บเป็นความลับภายในทีมพัฒนาเพื่อความปลอดภัยของระบบ*
