@@ -9,7 +9,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-from threading import Thread
 
 user_bp = Blueprint('user', __name__)
 
@@ -45,14 +44,15 @@ def send_sendgrid_email(sendgrid_api_key, email, otp):
         }
 
         response = requests.post(url, json=payload, headers=headers)
-
-        if response.status_code in [200, 202]:
-            print("✅ SendGrid Email sent successfully in background!")
-        else:
-            print("❌ SendGrid Error:", response.status_code, response.text)
+        return response
 
     except Exception as e:
         print("❌ Background API Error:", e)
+        class MockResponse:
+            def __init__(self):
+                self.status_code = 500
+                self.text = str(e)
+        return MockResponse()
 
 @user_bp.route('/send_otp', methods=['POST'])
 def send_otp():
@@ -75,12 +75,15 @@ def send_otp():
     if not sendgrid_api_key:
         return jsonify({"success": False, "message": "ยังไม่ได้ตั้งค่า SENDGRID_API_KEY ในระบบ"}), 500
 
-    try:
-        Thread(target=send_sendgrid_email, args=(sendgrid_api_key, email, otp)).start()
-        return jsonify({"success": True, "message": "ระบบกำลังจัดส่ง OTP กรุณารอสักครู่แล้วเช็คในอีเมลของคุณครับ!"})
-    except Exception as e:
-        print("OTP PREP ERROR:", e)
-        return jsonify({"success": False, "message": "เกิดข้อผิดพลาดในการเตรียมส่งอีเมล"}), 500
+    response = send_sendgrid_email(sendgrid_api_key, email, otp)
+
+    if response.status_code in [200, 202]:
+        return jsonify({"success": True, "message": "จัดส่ง OTP ไปยังอีเมลเรียบร้อย!\n⚠️คำเตือน: โปรดตรวจสอบในจดหมายขยะ (Spam) หากไม่พบ"})
+    else:
+        return jsonify({
+            "success": False, 
+            "message": f"จัดส่ง OTP ไม่สำเร็จ (Error: {response.status_code}) โปรดลองอีกครั้ง"
+        }), 500, 500
 
 @user_bp.route('/verify_otp', methods=['POST'])
 def verify_otp():
