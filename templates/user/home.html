@@ -1,34 +1,52 @@
 {% extends "layout.html" %}
 {% block content %}
+<!-- ===================================================== -->
+<!-- ===============  ส่วน Dashboard หลัก =============== -->
+<!-- ===================================================== -->
 <div class="container-fluid py-4" style="background-color: #D8F2E9; min-height: 100vh;">
+      <!-- ===================================================== -->
+    <!-- ===============  Header + Profile ================= -->
+    <!-- ===================================================== -->
     <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- ข้อความต้อนรับ -->
         <div>
             <h2 class="fw-bold mb-0">สวัสดี, {{ session.get('username') }}</h2>
             <p class="text-muted">ยินดีต้อนรับเข้าสู่ระบบแจ้งซ่อม</p>
         </div>
-        
+        <!-- รูปโปรไฟล์ -->
         <div>
+            <!-- กำหนดสีพื้นหลัง (ถ้ามีรูป = โปร่งใส / ไม่มีรูป = เขียว) -->
             {% set bg_color = 'transparent' if (current_user_info and current_user_info.profile_picture) else '#16A34A' %}
+            <!-- style วงกลม -->
             {% set profile_style = 'style="width: 70px; height: 70px; font-size: 2.5rem; border: 4px solid white; background-color: ' ~ bg_color ~ ';"' %}
-            
+            <!-- ลิงก์ไปหน้า profile -->
             <a href="{{ url_for('user.profile') }}" class="rounded-circle d-flex align-items-center justify-content-center text-white text-decoration-none shadow-sm overflow-hidden" {{ profile_style | safe }}>
+                <!-- ถ้ามีรูป -->
                 {% if current_user_info and current_user_info.profile_picture %}
                     {# เช็คว่าเป็น URL หรือ Base64 #}
+                    <!-- เช็คว่าเป็น URL -->
                     {% if current_user_info.profile_picture is string and current_user_info.profile_picture.startswith('http') %}
                         <img src="{{ current_user_info.profile_picture }}" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
                     {% else %}
+                        <!-- เป็น Base64 -->
                         <img src="data:image/jpeg;base64,{{ current_user_info.profile_picture }}" alt="Profile" class="w-100 h-100" style="object-fit: cover;">
                     {% endif %}
+                <!-- ไม่มีรูป แต่มีชื่อ -->    
                 {% elif current_user_info and current_user_info.first_name %}
-                    {{ current_user_info.first_name[0] | upper }}
+                    {{ current_user_info.first_name[0] | upper }} 
+
+                <!-- ไม่มีอะไรเลย -->
                 {% else %}
                     <i class="bi bi-person-fill"></i>
                 {% endif %}
             </a>
         </div>
     </div>
-
+    <!-- ===================================================== -->
+    <!-- ================== สรุปสถิติ ======================== -->
+    <!-- ===================================================== -->
     <div class="row g-3 mb-4">
+        <!-- แจ้งซ่อมทั้งหมด -->
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100">
                 <div class="text-secondary fs-2 mb-2"><i class="bi bi-file-earmark-text"></i></div>
@@ -36,6 +54,7 @@
                 <small class="text-muted">แจ้งซ่อมทั้งหมด</small>
             </div>
         </div>
+        <!-- รอดำเนินการ -->
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100">
                 <div class="text-warning fs-2 mb-2"><i class="bi bi-clock-history"></i></div>
@@ -43,6 +62,7 @@
                 <small class="text-muted">รอดำเนินการ</small>
             </div>
         </div>
+        <!-- กำลังซ่อม -->
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100">
                 <div class="text-primary fs-2 mb-2"><i class="bi bi-tools"></i></div>
@@ -50,6 +70,7 @@
                 <small class="text-muted">กำลังซ่อม</small>
             </div>
         </div>
+        <!-- ซ่อมเสร็จ -->
         <div class="col-6 col-md-3">
             <div class="card border-0 shadow-sm rounded-4 p-3 text-center h-100">
                 <div class="text-success fs-2 mb-2"><i class="bi bi-check2-circle"></i></div>
@@ -58,8 +79,11 @@
             </div>
         </div>
     </div>
-
+    <!-- ===================================================== -->
+    <!-- ================== เมนูลัด ========================== -->
+    <!-- ===================================================== -->
     <div class="row g-3 mb-4">
+        <!-- แจ้งซ่อมใหม่ -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
                 <div class="d-flex align-items-center gap-3">
@@ -72,6 +96,7 @@
                 </div>
             </div>
         </div>
+        <!-- ประวัติ -->
         <div class="col-md-6">
             <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
                 <div class="d-flex align-items-center gap-3">
@@ -85,20 +110,27 @@
             </div>
         </div>
     </div>
-
+    <!-- ===================================================== -->
+    <!-- ================= ตารางแจ้งซ่อมล่าสุด ============== -->
+    <!-- ===================================================== -->
     <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
         <h5 class="fw-bold mb-3"><i class="bi bi-activity me-2"></i>การแจ้งซ่อมล่าสุด</h5>
         <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
+                        <!-- header -->
                         <th>เลขที่</th>
                         <th>ปัญหา</th>
                         <th>สถานะ</th>
                     </tr>
                 </thead>
+
+                <!-- body -->
                 <tbody>
+                    <!-- loop ข้อมูล -->
                     {% for item in reports %}
+                    <!-- เก็บ data ไว้ใน attribute -->
                     <tr class="record-row" style="cursor: pointer;" 
                         data-building="{{ item.building }}"
                         data-room="{{ item.location.split(' ห้อง ')[1] if ' ห้อง ' in item.location else '' }}"
@@ -109,9 +141,11 @@
                         data-repair-time="{{ item.repair_time }}"
                         data-phone="{{ item.phone }}"
                         data-status="{{ item.status }}">
-                        
+                        <!-- id -->
                         <td class="text-muted small">#REP-{{ "%03d" | format(item.id) }}</td>
+                        <!-- ชื่อปัญหา -->
                         <td class="fw-bold">{{ item.title }}</td>
+                        <!-- status -->
                         <td>
                             <span class="badge rounded-pill {% if item.status == 'เสร็จสิ้น' or item.status == 'เสร็จแล้ว' %}bg-success{% elif item.status == 'กำลังซ่อม' %}bg-primary{% else %}bg-warning{% endif %}">
                                 {{ item.status }}
@@ -119,6 +153,7 @@
                         </td>
                     </tr>
                     {% else %}
+                    <!-- ไม่มีข้อมูล -->
                     <tr>
                         <td colspan="3" class="text-center py-4 text-muted">ยังไม่มีประวัติการแจ้งซ่อม</td>
                     </tr>
@@ -127,7 +162,9 @@
             </table>
         </div>
     </div>
-
+    <!-- ===================================================== -->
+    <!-- =================== ติดต่อ =========================== -->
+    <!-- ===================================================== -->
     <div class="row g-3 mb-4">
         <div class="col-12">
             <div class="card border-0 shadow-sm rounded-4 p-5 text-center h-100" style="background: white;">
@@ -139,6 +176,7 @@
                         <h4 class="fw-bold mb-1">ติดต่อสอบถามเพิ่มเติม</h4>
                         <p class="text-muted">หากพบปัญหาการใช้งานหรือต้องการความช่วยเหลือด่วน</p>
                     </div>
+                    <!-- ปุ่มโทร -->
                     <a href="tel:0657162623" class="btn btn-success rounded-pill py-3 px-5 shadow d-flex align-items-center justify-content-center hover-phone" style="font-size: 1.5rem; min-width: 300px;">
                         <i class="bi bi-telephone-fill me-3"></i>
                         <span class="fw-bold">065-7162623</span>
@@ -151,9 +189,13 @@
         
 </div>
 </div>
-
+<!-- ===================================================== -->
+<!-- ===============  Modal แสดงรูป ===================== -->
+<!-- ===================================================== -->
 {% include 'components/image_modal.html' %}
-
+<!-- ===================================================== -->
+<!-- =============== CSS เพิ่มเติม ===================== -->
+<!-- ===================================================== -->
 <style>
     .table-hover tbody tr:hover { background-color: #f1f9f7 !important; }
     .hover-phone:hover {
@@ -163,14 +205,21 @@
     }
     .overflow-hidden { overflow: hidden !important; }
 </style>
-
+<!-- ===================================================== -->
+<!-- ===============  JavaScript ======================= -->
+<!-- ===================================================== -->
 <script>
+    /* โหลดหน้าเสร็จ */
     document.addEventListener('DOMContentLoaded', function() {
+        /* เลือก row ทั้งหมด */
         const rows = document.querySelectorAll('.record-row');
         rows.forEach(row => {
+            /* เมื่อคลิก */
             row.addEventListener('click', function() {
+                /* เรียก modal */
                 const modalElement = document.getElementById('reportDetailModal');
                 let modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                /* แสดง modal */
                 modal.show(this);
             });
         });

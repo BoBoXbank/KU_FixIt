@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+
+    <!-- ===================================================== -->
+    <!-- =============== ส่วนตั้งค่าพื้นฐาน ================= -->
+    <!-- ===================================================== -->
+    <!-- กำหนด charset เพื่อรองรับภาษาไทย -->
     <meta charset="UTF-8">
+
+    <!-- ทำให้หน้าเว็บรองรับ responsive (มือถือ/แท็บเล็ต/คอม) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ชื่อหน้าเว็บที่แสดงบน tab -->
     <title>Login - KU FixIt</title>
+    
+    <!-- ===================================================== -->
+    <!-- =============== ส่วนโหลด Library =================== -->
+    <!-- ===================================================== -->
+    <!-- Tailwind CSS ใช้สำหรับจัด layout และตกแต่ง -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- โหลดฟอนต์ Kanit จาก Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- ===================================================== -->
+    <!-- =============== ส่วน CSS Custom ===================== -->
+    <!-- ===================================================== -->
     <style>
+        /* กำหนดให้ทั้งหน้าใช้ฟอนต์ Kanit */
         body { font-family: 'Kanit', sans-serif; }
         
         /* ปุ่มเข้าสู่ระบบ สีเขียวเข้มตามแบบ */
@@ -14,6 +35,7 @@
             background-color: #2E8B6F;
             transition: all 0.3s;
         }
+        /* เมื่อ hover ปุ่ม */
         .btn-login-dark:hover {
             background-color: #246D57;
             transform: translateY(-1px);
@@ -30,43 +52,86 @@
         }
     </style>
 </head>
-<body class="bg-[#D8F2E9] min-h-screen flex items-center justify-center p-4">
 
+<!-- ===================================================== -->
+<!-- =============== ส่วน Body Layout ===================== -->
+<!-- ===================================================== -->
+<body class="bg-[#D8F2E9] min-h-screen flex items-center justify-center p-4">
+    
+    <!-- ===================================================== -->
+    <!-- =============== กล่อง Login Card ==================== -->
+    <!-- ===================================================== -->
+    <!-- เป็น container หลักของหน้า login -->
     <div class="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-sm text-center border border-gray-100">
+        
+        <!-- ===================================================== -->
+        <!-- =============== ส่วนโลโก้และหัวข้อ ================= -->
+        <!-- ===================================================== -->
         <div class="mb-4">
+            
+            <!-- แสดงโลโก้จาก static folder -->
             <img src="{{ url_for('static', filename='picture/logo.png') }}" alt="KU Logo" class="h-28 mx-auto mb-2 object-contain">
             
+            <!-- ชื่อระบบ -->
             <h2 class="text-3xl font-bold text-[#006652] mb-1">ระบบแจ้งซ่อม</h2>
+
+            <!-- คำอธิบาย -->           
             <p class="text-gray-400 text-sm mb-8">หอพักนักศึกษา</p>
         </div>
 
+        <!-- ===================================================== -->
+        <!-- =============== Flash Message ======================= -->
+        <!-- ===================================================== -->
+        <!-- ใช้แสดงข้อความจาก Flask เช่น login ผิด -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <!-- วน loop แสดงทุก message -->
                 {% for category, message in messages %}
                     <div class="text-red-500 text-xs mb-4 bg-red-50 py-2 rounded-xl border border-red-100">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
+        <!-- ===================================================== -->
+        <!-- =============== ฟอร์ม Login ========================= -->
+        <!-- ===================================================== -->
+        <!-- เมื่อกด submit จะส่งข้อมูลไปที่ route user.login -->
         <form action="{{ url_for('user.login') }}" method="POST" class="space-y-4">
+            <!-- ===================================================== -->
+            <!-- =============== ช่องกรอก Username ================= -->
+            <!-- ===================================================== -->
             <div class="relative">
+                <!-- icon แสดงด้านซ้าย -->
                 <span class="absolute left-4 top-3.5 text-gray-400 text-lg">👤</span>
+
+                <!-- input รับค่า username -->
                 <input type="text" name="username" placeholder="Username" required
                     class="w-full pl-12 pr-4 py-3 bg-[#F1F8F6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#006652]/20 border-none placeholder:text-gray-400">
             </div>
-
+            <!-- ===================================================== -->
+            <!-- =============== ช่องกรอก Password ================= -->
+            <!-- ===================================================== -->
             <div class="relative">
+                <!-- icon lock -->
                 <span class="absolute left-4 top-3.5 text-gray-400 text-lg">🔒</span>
+                <!-- input password -->
                 <input type="password" id="loginPassword" name="password" placeholder="Password" required
                     class="w-full pl-12 pr-12 py-3 bg-[#F1F8F6] rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#006652]/20 border-none placeholder:text-gray-400">
-                
+                <!-- ===================================================== -->
+                <!-- =============== ปุ่มแสดง/ซ่อน Password ============ -->
+                <!-- ===================================================== -->
+                <!-- เรียกฟังก์ชัน toggleLoginPassword() -->
                 <button type="button" onclick="toggleLoginPassword()" class="absolute right-4 top-3.5 text-gray-400 hover:text-[#2E8B6F] transition-colors">
+                    <!-- icon ตา (SVG) -->
                     <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <!-- icon เริ่มต้น (ตาปิด) -->
                         <path id="eyePath" d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7 7 0 0 0-2.79.588l.77.771A6 6 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755q-.247.248-.517.486z"/><path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/><path d="M3.35 5.47q-.27.24-.518.487A13 13 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7 7 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12z"/>
                     </svg>
                 </button>
             </div>
-
+            <!-- ===================================================== -->
+            <!-- =============== ปุ่ม Submit ======================== -->
+            <!-- ===================================================== -->
             <div class="pt-2">
                 <button type="submit" 
                     class="btn-login-dark w-3/5 text-white font-medium py-3 rounded-2xl shadow-lg shadow-gray-200 active:scale-95">
@@ -74,13 +139,17 @@
                 </button>
             </div>
         </form>
-
+        <!-- ===================================================== -->
+        <!-- =============== ลิงก์ลืมรหัสผ่าน ================== -->
+        <!-- ===================================================== -->
         <div class="mt-4">
             <a href="{{ url_for('user.forgot_password') }}" class="text-gray-500 text-sm hover:text-[#006652] transition-colors">
                 Forget <span class="text-gray-400">password?</span>
             </a>
         </div>
-
+        <!-- ===================================================== -->
+        <!-- =============== ลิงก์สมัครสมาชิก ================== -->
+        <!-- ===================================================== -->
         <div class="mt-0 border-t border-gray-50 pt-6">
             <a href="{{ url_for('user.register') }}" 
                 class="btn-register-gradient inline-block w-4/5 text-white font-medium py-3 rounded-2xl shadow-lg shadow-green-100 active:scale-95 text-center transition-all">
@@ -88,13 +157,22 @@
             </a>
         </div>
     </div>
-
+    <!-- ===================================================== -->
+    <!-- =============== JavaScript =========================== -->
+    <!-- ===================================================== -->
     <script>
+        /* ===================================================== */
+        /* ฟังก์ชัน toggleLoginPassword() */
+        /* ใช้สลับการแสดง/ซ่อนรหัสผ่าน */
+        /* ===================================================== */
         function toggleLoginPassword() {
+            /* ดึง element input password */
             const passwordInput = document.getElementById("loginPassword");
+            /* ดึง element icon */
             const eyeIcon = document.getElementById("eyeIcon");
-            
+            /* ถ้าปัจจุบันเป็น password (ซ่อน) */
             if (passwordInput.type === "password") {
+               /* เปลี่ยนเป็น text (แสดง) */
                 passwordInput.type = "text";
                 // เปลี่ยนเป็นไอคอนเปิดตา
                 eyeIcon.innerHTML = '<path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>';
