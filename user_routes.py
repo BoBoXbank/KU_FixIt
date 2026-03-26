@@ -10,11 +10,16 @@ from database import get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 
+# ==============================================================================
+# ส่วนที่ 1: การตั้งค่า BLUEPRINT สำหรับผู้ใช้งานทั่วไป
+# หน้าที่: ใช้ลงทะเบียนเส้นทาง (Routes) ทั้งหมดที่เกี่ยวข้องกับการทำงานของ User
+# ==============================================================================
 user_bp = Blueprint('user', __name__)
 
-# ========================================================
-# 🚀 ฟังก์ชันสำหรับโยนงานยิง API SendGrid ไปทำหลังบ้าน
-# ========================================================
+# ==============================================================================
+# ส่วนที่ 2: ฟังก์ชันสำหรับยิง API ไปยัง SendGrid (ทำงานอยู่เบื้องหลัง)
+# หน้าที่: ส่งอีเมลแจ้งรหัส OTP ให้ผู้ใช้ผ่านระบบของ SendGrid
+# ==============================================================================
 def send_sendgrid_email(sendgrid_api_key, email, otp):
     try:
         url = "https://api.sendgrid.com/v3/mail/send"
@@ -54,6 +59,10 @@ def send_sendgrid_email(sendgrid_api_key, email, otp):
                 self.text = str(e)
         return MockResponse()
 
+# ==============================================================================
+# ส่วนที่ 3: ระบบขอรับและตรวจสอบรหัส OTP (OTP AUTHENTICATION)
+# หน้าที่: ตรวจสอบความถูกต้องของอีเมล สุ่มรหัส OTP และยืนยันรหัสผ่านฝั่งผู้ใช้
+# ==============================================================================
 @user_bp.route('/send_otp', methods=['POST'])
 def send_otp():
     data = request.get_json()
@@ -111,6 +120,10 @@ def verify_otp():
     else:
         return jsonify({"success": False, "message": "รหัส OTP ไม่ถูกต้อง"})
 
+# ==============================================================================
+# ส่วนที่ 4: ระบบตรวจสอบผู้ใช้ก่อนโหลดหน้าเว็บ (MIDDLEWARE)
+# หน้าที่: ตรวจสอบ IP Address หากตรงกับรายชื่อที่ถูกแบน จะไม่อนุญาตให้เข้าเว็บไซต์
+# ==============================================================================
 @user_bp.before_app_request
 def check_banned_ip():
     client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
@@ -126,6 +139,10 @@ def check_banned_ip():
         finally:
             conn.close()
 
+# ==============================================================================
+# ส่วนที่ 5: ฟังก์ชันสำหรับบีบอัดรูปภาพ (IMAGE PROCESSING HELPER)
+# หน้าที่: ลดขนาดรูปและแปลงข้อมูลภาพให้เป็น Base64 ก่อนบันทึกหรืออัปโหลด
+# ==============================================================================
 def process_and_compress_image(file):
     if not file or file.filename == '':
         return None
@@ -155,6 +172,10 @@ def process_and_compress_image(file):
         print(f"Error compressing image: {e}")
         return None
 
+# ==============================================================================
+# ส่วนที่ 6: การส่งข้อมูลติดไปกับทุกเทมเพลต (CONTEXT PROCESSOR)
+# หน้าที่: นำข้อมูลโปรไฟล์พื้นฐานไปใช้งานได้ในทุกๆ หน้า HTML โดยไม่ต้องส่งค่าใหม่ซ้ำๆ
+# ==============================================================================
 @user_bp.app_context_processor
 def inject_user_info():
     user_info = None
@@ -165,6 +186,10 @@ def inject_user_info():
         }
     return dict(current_user_info=user_info)
 
+# ==============================================================================
+# ส่วนที่ 7: ระบบนำทางหลักของเว็บไซต์ (CORE NAVIGATION)
+# หน้าที่: นำทางผู้ใช้เข้าสู่ระบบ แดชบอร์ด (แยกตามตำแหน่งผู้ใช้งาน) และการออกจากระบบ
+# ==============================================================================
 @user_bp.route('/logout')
 def logout():
     session.clear() 
@@ -200,6 +225,10 @@ def home():
             conn.close()
     return render_template('user/home.html', stats=stats, reports=recent_reports)
 
+# ==============================================================================
+# ส่วนที่ 8: ระบบจัดการบัญชีผู้ใช้งาน (AUTHENTICATION SYSTEM)
+# หน้าที่: สมัครสมาชิก, ล็อกอิน (มีการบันทึกการล็อกอินและจำกัดการล็อกอินผิด), เปลี่ยนรหัสผ่าน
+# ==============================================================================
 @user_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -411,7 +440,7 @@ def change_password():
         return redirect(url_for('user.profile'))
 
     conn = get_db_connection()
-    # 🛠️ แก้ไขจุดที่ 1: ใช้ cursor ปกติ (ลบ dictionary=True ออก)
+    # ใช้ cursor ปกติสำหรับการอัปเดตข้อมูล
     cursor = conn.cursor() 
     
     try:
@@ -419,13 +448,13 @@ def change_password():
         cursor.execute("SELECT password_hash FROM users WHERE id = %s", (user_id,))
         user = cursor.fetchone()
 
-        # 🛠️ แก้ไขจุดที่ 2: ตรวจสอบข้อมูลแบบยืดหยุ่น (รองรับทั้ง Dict และ Tuple)
+        # ตรวจสอบข้อมูลแบบยืดหยุ่น (รองรับทั้ง Dictionary และ Tuple)
         db_password_hash = None
         if user:
             if isinstance(user, dict):
                 db_password_hash = user.get('password_hash')
             else:
-                db_password_hash = user[0] # ถ้าเป็น Tuple/List จะดึงตัวแรก
+                db_password_hash = user[0] # กรณีผลลัพธ์เป็น Tuple/List
 
         if db_password_hash and check_password_hash(db_password_hash, current_pw):
             new_hashed_pw = generate_password_hash(new_pw)
@@ -443,6 +472,10 @@ def change_password():
 
     return redirect(url_for('user.profile'))
 
+# ==============================================================================
+# ส่วนที่ 9: ระบบแจ้งเรื่องและฟอร์มใบซ่อม (REPORT SUBMISSION)
+# หน้าที่: รับข้อมูลรายละเอียดการแจ้งซ่อม รูปภาพ เวลาที่สะดวก และเพิ่มข้อมูลลงในฐานข้อมูล
+# ==============================================================================
 @user_bp.route('/report', methods=['GET', 'POST'])
 def report():
     if 'user_id' not in session: return redirect(url_for('user.login'))
@@ -507,6 +540,10 @@ def report():
 
     return render_template('user/report_form.html')
 
+# ==============================================================================
+# ส่วนที่ 10: การจัดการโปรไฟล์ผู้ใช้งาน (USER PROFILE MANAGEMENT)
+# หน้าที่: ดูข้อมูลรายละเอียดผู้ใช้ และอัปเดต/เปลี่ยนรูปภาพโปรไฟล์ 
+# ==============================================================================
 @user_bp.route('/profile', methods=['GET', 'POST'])
 def profile():
     if 'user_id' not in session: return redirect(url_for('user.login'))
@@ -537,6 +574,10 @@ def profile():
             conn.close()
     return render_template('user/profile.html', user=user_data)
 
+# ==============================================================================
+# ส่วนที่ 11: ประวัติการแจ้งซ่อม และ การแก้ไขรายงาน (REPORT HISTORY & EDITING)
+# หน้าที่: แสดงใบแจ้งซ่อมทั้งหมดที่ผู้ใช้เคยส่ง และเปิดให้แก้ไขใบงานที่ยังไม่ได้ดำเนินการ
+# ==============================================================================
 @user_bp.route('/record_user')
 def record_user():
     if 'user_id' not in session: return redirect(url_for('user.login'))

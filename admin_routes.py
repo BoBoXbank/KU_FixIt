@@ -2,18 +2,29 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from database import get_db_connection
 import base64
 
+# ==============================================================================
+# การตั้งค่า BLUEPRINT สำหรับ ADMIN
+# ใช้งานในไฟล์: app.py (ใช้สำหรับลงทะเบียน Route ทั้งหมดที่ขึ้นต้นด้วย /admin)
+# ==============================================================================
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+# ==============================================================================
+# ฟังก์ชันตรวจสอบสิทธิ์การเข้าถึง (HELPER FUNCTION)
+# หน้าที่: ใช้ตรวจสอบว่าผู้ใช้ที่กำลังใช้งานระบบมีสิทธิ์เป็น 'admin' หรือไม่
+# ==============================================================================
 def is_admin():
     return session.get('role') == 'admin'
 
-# 🚀 ลบฟังก์ชัน get_current_user_data() ทิ้งไปเลยครับ เพราะระบบอ่านจาก Session แล้ว!
-
+# ==============================================================================
+# ส่วนที่ 1: หน้าแดชบอร์ดหลักของผู้ดูแลระบบ (ADMIN DASHBOARD)
+# หน้าที่: ดึงข้อมูลการแจ้งซ่อมทั้งหมดมาคำนวณสถิติ (รอซ่อม, กำลังซ่อม, เสร็จสิ้น)
+# ใช้งานในไฟล์: templates/admin/dashboard.html
+# ==============================================================================
 @admin_bp.route('/')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('user.login'))
     if not is_admin():
-        flash('⛔ ไม่มีสิทธิ์เข้าถึงส่วนผู้ดูแลระบบ', 'danger')
+        flash('ไม่มีสิทธิ์เข้าถึงส่วนผู้ดูแลระบบ', 'danger')
         return redirect(url_for('user.home'))
 
     conn = get_db_connection()
@@ -33,9 +44,13 @@ def dashboard():
         finally:
             conn.close()
 
-    # 🚀 เอา current_user_info ออกไปได้เลย ประหยัดเวลาได้เยอะ
     return render_template('admin/dashboard.html', reports=reports, stats=stats)
 
+# ==============================================================================
+# ส่วนที่ 2: หน้ารายการแจ้งซ่อมทั้งหมด (ALL REPORTS RECORD)
+# หน้าที่: ดึงข้อมูลประวัติการแจ้งซ่อมทั้งหมดจากฐานข้อมูลมาแสดงในรูปแบบตาราง
+# ใช้งานในไฟล์: templates/admin/record.html
+# ==============================================================================
 @admin_bp.route('/record')
 def record():
     if not is_admin(): return redirect(url_for('user.home'))
@@ -50,6 +65,11 @@ def record():
             conn.close()
     return render_template('admin/record.html', reports=reports)
 
+# ==============================================================================
+# ส่วนที่ 3: ระบบจัดการผู้ใช้งานและตรวจสอบ IP (MANAGE USERS & IP TRACKING)
+# หน้าที่: ค้นหาผู้ใช้งาน, ดูประวัติการล็อกอิน (IP Address), และดึงรายชื่อ IP ที่ถูกแบน
+# ใช้งานในไฟล์: templates/admin/manage_users.html
+# ==============================================================================
 @admin_bp.route('/users')
 def manage_users():
     if not is_admin(): return redirect(url_for('user.home'))
@@ -104,6 +124,11 @@ def manage_users():
         
     return render_template('admin/manage_users.html', users=users, ip_map=ip_map, banned_ips_list=banned_ips_list)
 
+# ==============================================================================
+# ส่วนที่ 4: ระบบรักษาความปลอดภัย - แบนและปลดแบน IP (IP BAN MANAGEMENT)
+# หน้าที่: บล็อกหรือปลดบล็อก IP Address ไม่ให้เข้าใช้งานเว็บไซต์
+# ใช้งานในไฟล์: ปุ่มกดในหน้า templates/admin/manage_users.html
+# ==============================================================================
 @admin_bp.route('/ban_ip/<ip>', methods=['POST'])
 def ban_ip(ip):
     if not is_admin(): return redirect(url_for('user.home'))
@@ -115,9 +140,9 @@ def ban_ip(ip):
             if not cursor.fetchone():
                 cursor.execute("INSERT INTO banned_ips (ip_address) VALUES (%s)", (ip,))
                 conn.commit()
-                flash(f'🚫 แบน IP: {ip} อย่างถาวรเรียบร้อยแล้ว!', 'success')
+                flash(f'แบน IP: {ip} อย่างถาวรเรียบร้อยแล้ว!', 'success')
             else:
-                flash(f'⚠️ IP: {ip} นี้ถูกแบนไปแล้ว', 'warning')
+                flash(f'IP: {ip} นี้ถูกแบนไปแล้ว', 'warning')
         except Exception as e:
             flash(f'เกิดข้อผิดพลาด: โปรดสร้างตาราง Banned_ips ก่อน', 'danger')
             print(e)
@@ -134,13 +159,18 @@ def unban_ip(ip):
             cursor = conn.cursor()
             cursor.execute("DELETE FROM banned_ips WHERE ip_address = %s", (ip,))
             conn.commit()
-            flash(f'✅ ปลดแบน IP: {ip} เรียบร้อยแล้ว! ผู้ใช้สามารถเข้าเว็บได้ตามปกติ', 'success')
+            flash(f'ปลดแบน IP: {ip} เรียบร้อยแล้ว! ผู้ใช้สามารถเข้าเว็บได้ตามปกติ', 'success')
         except Exception as e:
-            flash(f'❌ เกิดข้อผิดพลาดในการปลดแบน: {e}', 'danger')
+            flash(f'เกิดข้อผิดพลาดในการปลดแบน: {e}', 'danger')
         finally:
             conn.close()
     return redirect(request.referrer or url_for('admin.manage_users'))
 
+# ==============================================================================
+# ส่วนที่ 5: การจัดการใบแจ้งซ่อมแบบรายบุคคล (SINGLE REPORT MANAGEMENT)
+# หน้าที่: อัปเดตสถานะ (รอซ่อม -> กำลังซ่อม -> เสร็จสิ้น) และการลบใบแจ้งซ่อม
+# ใช้งานในไฟล์: ตารางแสดงผลใน templates/admin/record.html
+# ==============================================================================
 @admin_bp.route('/update/<int:id>', methods=['POST'])
 def update_status(id):
     if not is_admin(): return redirect(url_for('user.home'))
@@ -167,13 +197,18 @@ def delete_report(id):
             conn.close()
     return redirect(request.referrer or url_for('admin.manage_users'))
 
+# ==============================================================================
+# ส่วนที่ 6: การจัดการสิทธิ์และบัญชีผู้ใช้งาน (USER ROLE & ACCOUNT MANAGEMENT)
+# หน้าที่: เปลี่ยนตำแหน่งผู้ใช้ (เช่น user -> technician) หรือลบบัญชีผู้ใช้ออกจากระบบ
+# ใช้งานในไฟล์: ตารางแสดงผู้ใช้ใน templates/admin/manage_users.html
+# ==============================================================================
 @admin_bp.route('/users/change_role/<int:id>')
 def change_role(id):
     if not is_admin(): return redirect(url_for('user.home'))
     
     new_role = request.args.get('role')
     if id == session.get('user_id'):
-        flash('❌ ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้', 'danger')
+        flash('ไม่สามารถเปลี่ยนสิทธิ์ของตัวเองได้', 'danger')
         return redirect(url_for('admin.manage_users'))
 
     conn = get_db_connection()
@@ -182,7 +217,7 @@ def change_role(id):
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET role = %s WHERE id = %s", (new_role, id))
             conn.commit()
-            flash(f'✅ เปลี่ยนสถานะเป็น {new_role} เรียบร้อย', 'success')
+            flash(f'เปลี่ยนสถานะเป็น {new_role} เรียบร้อย', 'success')
         finally:
             conn.close()
     return redirect(url_for('admin.manage_users'))
@@ -192,7 +227,7 @@ def delete_user(id):
     if not is_admin(): return redirect(url_for('user.home'))
     
     if id == session.get('user_id'):
-        flash('❌ ไม่สามารถลบบัญชีของตัวเองได้!', 'danger')
+        flash('ไม่สามารถลบบัญชีของตัวเองได้!', 'danger')
         return redirect(url_for('admin.manage_users'))
 
     conn = get_db_connection()
@@ -201,17 +236,25 @@ def delete_user(id):
             cursor = conn.cursor()
             cursor.execute("DELETE FROM users WHERE id = %s", (id,))
             conn.commit()
-            flash('🗑️ ลบบัญชีผู้ใช้เรียบร้อย', 'success')
+            flash('ลบบัญชีผู้ใช้เรียบร้อย', 'success')
         finally:
             conn.close()
     return redirect(url_for('admin.manage_users'))
 
+# ==============================================================================
+# ส่วนที่ 7: ระบบออกจากระบบของผู้ดูแล (ADMIN LOGOUT)
+# หน้าที่: เคลียร์ค่า Session และส่งกลับไปหน้า Home
+# ==============================================================================
 @admin_bp.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('user.home'))
 
-
+# ==============================================================================
+# ส่วนที่ 8: การจัดการข้อมูลแบบกลุ่ม (BULK ACTIONS)
+# หน้าที่: อัปเดตสถานะทีละหลายๆ รายการพร้อมกัน หรือลบทีละหลายๆ รายการพร้อมกัน
+# ใช้งานในไฟล์: Checkbox ในตารางของ templates/admin/record.html
+# ==============================================================================
 @admin_bp.route('/bulk_update', methods=['POST'])
 def bulk_update():
     if not is_admin(): return redirect(url_for('user.home'))
@@ -228,7 +271,7 @@ def bulk_update():
                 query = f"UPDATE reports SET status = %s WHERE id IN ({format_strings})"
                 cursor.execute(query, [new_status] + report_ids)
                 conn.commit()
-                flash(f'✅ อัปเดต {len(report_ids)} รายการเรียบร้อย', 'success')
+                flash(f'อัปเดต {len(report_ids)} รายการเรียบร้อย', 'success')
             finally:
                 conn.close()
     return redirect(request.referrer or url_for('admin.record'))
@@ -245,8 +288,7 @@ def delete_multiple():
                 format_strings = ','.join(['%s'] * len(report_ids))
                 cursor.execute(f"DELETE FROM reports WHERE id IN ({format_strings})", tuple(report_ids))
                 conn.commit()
-                flash(f'🗑️ ลบ {len(report_ids)} รายการเรียบร้อยแล้ว', 'success')
+                flash(f'ลบ {len(report_ids)} รายการเรียบร้อยแล้ว', 'success')
             finally:
                 conn.close()
     return redirect(request.referrer or url_for('admin.record'))
-
